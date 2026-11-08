@@ -23,6 +23,9 @@ class ConfirmOverlay(QWidget):
         heading.setObjectName("wordmark")
         text = QLabel(body)
         text.setWordWrap(True)
+        # wrapped labels don't report their height: reserve it for the narrowest card
+        text.ensurePolished()
+        text.setMinimumHeight(text.heightForWidth(card.minimumWidth() - 56) + 2)
         row = QHBoxLayout()
         row.addStretch()
         for label, role, callback in buttons:

@@ -60,6 +60,8 @@ entstanden – und sollte mit vielen Netzwerkdruckern funktionieren, die eSCL un
 - Ein Fenster: Editor, Einstellungen und Meldungen bleiben darin; ein zweiter Start nutzt das vorhandene Fenster
 - Optional, standardmäßig aus: Symbol im Infobereich mit **Schnell-Scan**, Toner-Warnung
   (unter 15 %, je Farbe höchstens einmal am Tag) und *Mit Windows starten*
+- Optional, standardmäßig aus: Update-Prüfung über GitHub – mit dem Installer ist ein Update ein
+  Klick, der Download wird automatisch geprüft
 - Kommandozeile für Skripte
 
 <table>
@@ -89,6 +91,23 @@ Deinstallieren über *Einstellungen → Apps*; deine Einstellungen bleiben erhal
 Beide sind noch nicht signiert (siehe [Downloads prüfen](VERIFYING.md)), daher
 kann Windows SmartScreen warnen. Die Lizenzen der mitgelieferten Komponenten sind in
 `THIRD_PARTY_NOTICES.md` aufgeführt; ihre vollständigen Texte stehen im Ordner `licenses/`.
+
+### Updates
+
+Ist *Nach Updates suchen* an (siehe [Datenschutz & Sicherheit](#datenschutz--sicherheit)), zeigt
+Glassbed einen Hinweis im Fenster, sobald eine neue Version verfügbar ist: *Aktualisieren ·
+Was ist neu · Später · Diese Version überspringen*; mit aktivem Symbol im Infobereich zusätzlich
+eine Windows-Benachrichtigung.
+
+- **Mit dem Setup installiert (Windows):** *Aktualisieren* lädt das neue Setup und seine
+  `.sha256`-Datei aus dem GitHub-Release, prüft die SHA-256-Prüfsumme (stimmt sie nicht, bricht
+  Glassbed ab, löscht die Datei und installiert nichts) und startet das Setup im Hintergrund.
+  Glassbed schließt sich, wird aktualisiert und startet wieder; Einstellungen, Verknüpfungen und
+  *Mit Windows starten* bleiben erhalten. Du siehst den Fortschritt und kannst abbrechen.
+- **Portable ZIP, aus dem Quellcode, macOS und Linux:** nur ein Hinweis mit Link zur
+  Release-Seite; heruntergeladen wird nichts.
+- **Von 0.2.0 kommend:** einmal von Hand aktualisieren – das neue Setup herunterladen und über die
+  alte Version installieren (deine Einstellungen bleiben erhalten). Ab 0.3.0 reicht ein Klick.
 
 ### Aus dem Quellcode (Windows, macOS, Linux)
 
@@ -157,8 +176,15 @@ Ohne Installation `python -m glassbed …` statt `glassbed-cli` verwenden.
 
 ## Datenschutz & Sicherheit
 
-- Glassbed spricht nur mit **deinem Drucker** im lokalen Netzwerk. Keine Cloud, kein Konto,
-  keine Telemetrie. Webseiten öffnen sich nur, wenn du sie anklickst (Drucker-Webseite, arfep.de).
+- Glassbed spricht nur mit **deinem Drucker** im lokalen Netzwerk – und, nur wenn du zustimmst,
+  mit GitHub für die Update-Prüfung. Keine Cloud, kein Konto, keine Telemetrie. Webseiten öffnen
+  sich nur, wenn du sie anklickst (Drucker-Webseite, arfep.de).
+- **Update-Prüfung** – standardmäßig aus; Glassbed fragt einmal beim ersten Start, ändern kannst
+  du es in den *Einstellungen*. Ist sie an, fragt Glassbed GitHub (`api.github.com`) höchstens
+  einmal in 24 Stunden beim Start, oder wenn du auf *Jetzt suchen* klickst, nach dem neuesten
+  veröffentlichten Release. GitHub sieht dabei deine IP-Adresse; die Anfrage gibt sich nur als
+  `Glassbed/<version>` zu erkennen. Update-Downloads kommen von `github.com` und den Dateiservern
+  von GitHub, nur über HTTPS. Installiert wird nichts automatisch.
 - **Schwärzungen werden eingebrannt.** Die verdeckten Pixel werden ersetzt, bevor die Seite
   gedreht, zugeschnitten oder gespeichert wird – darunter liegt keine versteckte Ebene, die man
   freilegen könnte. Für Zahlen wie eine IBAN *Schwarz* verwenden; *Unscharf* ist für Gesichter und Fotos gedacht.

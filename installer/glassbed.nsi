@@ -2,6 +2,8 @@
 ; Per-user installation without administrator rights. Built by build.ps1:
 ;   makensis /DVERSION=<version> installer\glassbed.nsi
 ; Silent install: Glassbed-<version>-setup.exe /S [/DESKTOP] [/AUTOSTART]
+; Update from the app: /S /UPDATE – waits until Glassbed has exited, updates it and starts it again;
+; shortcuts, autostart and settings stay as they are.
 ; /DNOCOMPRESS builds an uncompressed copy for content checks, /DOUTDIR=<folder> writes it elsewhere.
 
 !ifndef VERSION
@@ -31,6 +33,8 @@ Name "${APPNAME}"
 !endif
 OutFile "${OUTDIR}\${APPNAME}-${VERSION}-setup.exe"
 InstallDir "$LOCALAPPDATA\Programs\${APPNAME}"
+; an update goes where the existing installation is
+InstallDirRegKey HKCU "${UNINSTKEY}" "InstallLocation"
 BrandingText "${APPNAME} ${VERSION}"
 
 VIProductVersion "${VERSION}.0"
@@ -80,6 +84,8 @@ LangString AppRunning   ${LANG_ENGLISH} "${APPNAME} is running. Please close it 
 LangString AppRunning   ${LANG_GERMAN}  "${APPNAME} läuft noch. Bitte beende es und klicke auf Wiederholen."
 LangString AppRunning   ${LANG_TURKISH} "${APPNAME} çalışıyor. Lütfen kapatın ve Yeniden Dene'ye tıklayın."
 
+Var UpdateMode   ; 1 when started by the app's updater (/UPDATE)
+
 ; ------------------------------------------------------------------ running app
 !macro CHECK_RUNNING un
 Function ${un}CheckRunning
@@ -98,11 +104,30 @@ FunctionEnd
 !insertmacro CHECK_RUNNING ""
 !insertmacro CHECK_RUNNING "un."
 
+; the updater starts the setup and then quits the app: give it up to 60 seconds to exit
+Function WaitForApp
+  StrCpy $2 0
+  ${Do}
+    nsExec::ExecToStack 'cmd.exe /c tasklist /FI "IMAGENAME eq ${APPEXE}" /NH | find /I "${APPEXE}"'
+    Pop $0
+    Pop $1
+    ${If} $0 != 0
+    ${OrIf} $2 >= 120
+      ${Break}
+    ${EndIf}
+    Sleep 500
+    IntOp $2 $2 + 1
+  ${Loop}
+FunctionEnd
+
 ; ------------------------------------------------------------------ install
 Section "$(SecApp)" SecMain
   SectionIn RO
   SetShellVarContext current
   SetOutPath "$INSTDIR"
+  ; replace the program files completely, so nothing of an older version is left behind
+  RMDir /r "$INSTDIR\_internal"
+  RMDir /r "$INSTDIR\licenses"
   ; the whole PyInstaller folder: Glassbed.exe, the _internal folder (Qt stays replaceable),
   ; LICENSE, THIRD_PARTY_NOTICES.md and the licenses folder
   File /r "..\dist\Glassbed\*.*"
@@ -155,7 +180,20 @@ Function .onInit
   ${IfNot} ${Errors}
     SectionSetFlags ${SecAutostart} ${SF_SELECTED}
   ${EndIf}
+  StrCpy $UpdateMode 0
+  ClearErrors
+  ${GetOptions} $R0 "/UPDATE" $R1
+  ${IfNot} ${Errors}
+    StrCpy $UpdateMode 1
+    Call WaitForApp
+  ${EndIf}
   Call CheckRunning
+FunctionEnd
+
+Function .onInstSuccess
+  ${If} $UpdateMode == 1
+    Exec '"$INSTDIR\${APPEXE}"'     ; start the updated version again
+  ${EndIf}
 FunctionEnd
 
 ; ------------------------------------------------------------------ uninstall

@@ -8,6 +8,9 @@
 #   dist/Glassbed-<version>-setup.exe             per-user installer
 #   *.sha256                                      checksums of both
 #   build/bundled-components.md                   what PyInstaller bundled, with versions and licenses
+# -UpdateTestHooks builds a test version that can be pointed at a local test release
+# (glassbed/_update_testing.py); release builds always leave that module out.
+param([switch]$UpdateTestHooks)
 $ErrorActionPreference = "Stop"
 Set-Location $PSScriptRoot
 
@@ -90,45 +93,55 @@ Write-Host "Building Glassbed $version (Python $pyVersion, NSIS $NsisVersion)"
 # PyInstaller resolves DLL dependencies through PATH; with the full PATH it once picked up the
 # OpenSSL DLLs of an unrelated program (XAMPP's PHP) for Qt's TLS plugin. Only Windows and the
 # build venv are visible from here on, so local builds and the workflow see the same files.
-$env:PATH = @((Join-Path $venv "Scripts"), "$env:SystemRoot\System32", $env:SystemRoot,
-              "$env:SystemRoot\System32\Wbem", "$env:SystemRoot\System32\WindowsPowerShell\v1.0") -join ";"
+# The caller's PATH is restored at the end (the script runs in the caller's session).
+$savedPath = $env:PATH
+try {
+    $env:PATH = @((Join-Path $venv "Scripts"), "$env:SystemRoot\System32", $env:SystemRoot,
+                  "$env:SystemRoot\System32\Wbem", "$env:SystemRoot\System32\WindowsPowerShell\v1.0") -join ";"
 
-Invoke-Checked "tests" { & $py -m pytest -q }
+    Invoke-Checked "tests" { & $py -m pytest -q }
 
-Invoke-Checked "PyInstaller" {
-    & $py -m PyInstaller --noconfirm --clean --windowed `
-        --name Glassbed `
-        --icon glassbed/assets/icon/glassbed.ico `
-        --add-data "glassbed/assets;glassbed/assets" `
-        --collect-all pypdfium2 `
-        --collect-submodules zeroconf `
-        --exclude-module tkinter `
-        --exclude-module PySide6.QtWebEngineCore `
-        --exclude-module PySide6.QtQuick `
-        --exclude-module PySide6.QtQml `
-        --exclude-module PySide6.Qt3DCore `
-        --exclude-module pypdfium2_cli `
-        launcher.py
+    $testHooks = if ($UpdateTestHooks) { @("--hidden-import", "glassbed._update_testing") }
+                 else { @("--exclude-module", "glassbed._update_testing") }
+    if ($UpdateTestHooks) { Write-Host "TEST BUILD: update test hooks included - not for release" }
+
+    Invoke-Checked "PyInstaller" {
+        & $py -m PyInstaller @testHooks --noconfirm --clean --windowed `
+            --name Glassbed `
+            --icon glassbed/assets/icon/glassbed.ico `
+            --add-data "glassbed/assets;glassbed/assets" `
+            --collect-all pypdfium2 `
+            --collect-submodules zeroconf `
+            --exclude-module tkinter `
+            --exclude-module PySide6.QtWebEngineCore `
+            --exclude-module PySide6.QtQuick `
+            --exclude-module PySide6.QtQml `
+            --exclude-module PySide6.Qt3DCore `
+            --exclude-module pypdfium2_cli `
+            launcher.py
+    }
+
+    # licenses of exactly what PyInstaller bundled; stops on anything without a license entry
+    Invoke-Checked "license collection" {
+        & $py tools/third_party_notices.py --toc build/Glassbed/Analysis-00.toc --nsis-version $NsisVersion
+    }
+    Copy-Item LICENSE, THIRD_PARTY_NOTICES.md dist/Glassbed/
+    Copy-Item licenses dist/Glassbed/licenses -Recurse -Force
+
+    # optional code signing step (not used): sign dist/Glassbed/Glassbed.exe here, before packaging
+
+    $zip = "dist/Glassbed-$version-windows-portable.zip"
+    $setup = "dist/Glassbed-$version-setup.exe"
+    Invoke-Checked "ZIP packaging" { & $py tools/package.py zip dist/Glassbed $zip }
+
+    # /WX: any warning fails the build (a stray line continuation once dropped all files silently)
+    Invoke-Checked "NSIS" { & $makensis /V2 /WX "/DVERSION=$version" installer\glassbed.nsi }
+
+    # optional code signing step (not used): sign the setup.exe here, before the checksums are written
+
+    Invoke-Checked "checksum" { & $py tools/package.py sha256 $zip $setup }
+
+    Write-Host "Done: $zip, $setup"
+} finally {
+    $env:PATH = $savedPath
 }
-
-# licenses of exactly what PyInstaller bundled; stops on anything without a license entry
-Invoke-Checked "license collection" {
-    & $py tools/third_party_notices.py --toc build/Glassbed/Analysis-00.toc --nsis-version $NsisVersion
-}
-Copy-Item LICENSE, THIRD_PARTY_NOTICES.md dist/Glassbed/
-Copy-Item licenses dist/Glassbed/licenses -Recurse -Force
-
-# optional code signing step (not used): sign dist/Glassbed/Glassbed.exe here, before packaging
-
-$zip = "dist/Glassbed-$version-windows-portable.zip"
-$setup = "dist/Glassbed-$version-setup.exe"
-Invoke-Checked "ZIP packaging" { & $py tools/package.py zip dist/Glassbed $zip }
-
-# /WX: any warning fails the build (a stray line continuation once dropped all files silently)
-Invoke-Checked "NSIS" { & $makensis /V2 /WX "/DVERSION=$version" installer\glassbed.nsi }
-
-# optional code signing step (not used): sign the setup.exe here, before the checksums are written
-
-Invoke-Checked "checksum" { & $py tools/package.py sha256 $zip $setup }
-
-Write-Host "Done: $zip, $setup"

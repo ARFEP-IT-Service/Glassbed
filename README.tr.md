@@ -60,6 +60,8 @@ geliştirildi – ve eSCL ile IPP'yi destekleyen birçok ağ yazıcısıyla çal
 - Tek pencere: düzenleyici, ayarlar ve mesajlar pencerenin içinde kalır; Glassbed'i yeniden başlatmak mevcut pencereyi kullanır
 - İsteğe bağlı, varsayılan olarak kapalı: **Hızlı tarama** içeren bildirim alanı simgesi, toner uyarısı
   (%15'in altında, renk başına günde en fazla bir kez) ve *Windows ile başlat*
+- İsteğe bağlı, varsayılan olarak kapalı: GitHub üzerinden güncelleme denetimi – kurulum programıyla
+  güncelleme tek tıktır, indirilen dosya otomatik doğrulanır
 - Betikler için komut satırı arayüzü
 
 <table>
@@ -89,6 +91,22 @@ menüsüne bir kayıt ekler; masaüstü kısayolu ve *Windows ile başlat* iste�
 İkisi de henüz imzalı değildir (bkz. [indirilen dosyaları doğrulama](VERIFYING.md)); bu yüzden
 Windows SmartScreen uyarı gösterebilir. Birlikte gelen bileşenlerin lisansları
 `THIRD_PARTY_NOTICES.md` dosyasında listelenmiştir; tam metinleri `licenses/` klasöründedir.
+
+### Güncellemeler
+
+*Güncellemeleri denetle* açıksa (bkz. [Gizlilik ve güvenlik](#gizlilik-ve-güvenlik)), yeni bir
+sürüm çıktığında Glassbed pencerede bir bildirim şeridi gösterir: *Güncelle · Yenilikler · Sonra ·
+Bu sürümü atla*; bildirim alanı simgesi etkinse ayrıca bir Windows bildirimi.
+
+- **Kurulum programıyla kurulduysa (Windows):** *Güncelle*, yeni kurulum dosyasını ve `.sha256`
+  dosyasını GitHub sürümünden indirir, SHA-256 sağlama toplamını denetler (uyuşmazsa işlemi durdurur,
+  dosyayı siler ve hiçbir şey kurmaz) ve kurulumu sessizce çalıştırır. Glassbed kapanır, güncellenir
+  ve yeniden başlar; ayarlar, kısayollar ve *Windows ile başlat* korunur. İlerlemeyi görürsünüz ve
+  iptal edebilirsiniz.
+- **Taşınabilir ZIP, kaynak koddan çalıştırma, macOS ve Linux:** yalnızca sürüm sayfasına bağlantı
+  içeren bir bildirim; hiçbir şey indirilmez.
+- **0.2.0'dan geçiş:** bir kez elle güncelleyin – yeni kurulum dosyasını indirip eski sürümün
+  üzerine kurun (ayarlarınız korunur). 0.3.0'dan itibaren güncelleme tek tıktır.
 
 ### Kaynak koddan (Windows, macOS, Linux)
 
@@ -157,8 +175,15 @@ Kurmadan kullanmak için `glassbed-cli` yerine `python -m glassbed …` yazın.
 
 ## Gizlilik ve güvenlik
 
-- Glassbed yalnızca yerel ağınızdaki **yazıcınızla** konuşur. Bulut yok, hesap yok, telemetri yok.
-  Yalnızca tıkladığınız web sayfaları açılır (yazıcının web arayüzü, arfep.de).
+- Glassbed yalnızca yerel ağınızdaki **yazıcınızla** konuşur – ve yalnızca izin verirseniz,
+  güncelleme denetimi için GitHub ile. Bulut yok, hesap yok, telemetri yok. Yalnızca tıkladığınız
+  web sayfaları açılır (yazıcının web arayüzü, arfep.de).
+- **Güncelleme denetimi** – varsayılan olarak kapalıdır; Glassbed ilk açılışta bir kez sorar,
+  *Ayarlar*'dan değiştirebilirsiniz. Açıksa Glassbed, başlangıçta en fazla 24 saatte bir veya
+  *Şimdi denetle*'ye tıkladığınızda, en son yayımlanan sürümü GitHub'a (`api.github.com`) sorar.
+  GitHub IP adresinizi görür; istek kendini yalnızca `Glassbed/<version>` olarak tanıtır.
+  Güncelleme dosyaları yalnızca HTTPS üzerinden `github.com` ve GitHub'ın dosya sunucularından
+  indirilir. Hiçbir şey otomatik olarak kurulmaz.
 - **Karartmalar kalıcıdır.** Örtülen pikseller, sayfa döndürülmeden, kırpılmadan veya
   kaydedilmeden önce değiştirilir – altında açığa çıkarılabilecek gizli bir katman yoktur. IBAN gibi
   numaralar için *Siyah* kullanın; *Bulanık* yüzler ve fotoğraflar içindir.

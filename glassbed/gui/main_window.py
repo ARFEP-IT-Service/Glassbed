@@ -24,6 +24,8 @@ from .toast import Toast
 from .toast import style as toast_style
 from .icons import app_icon
 from .tray import TrayController
+from . import update_ui
+from .update_ui import UpdateBanner, UpdateController
 from .widgets import CmykStripe, TonerBar
 from .worker import run_task
 
@@ -40,6 +42,7 @@ class MainWindow(QMainWindow):
         self._status = (tr("Connecting…"), theme.T["muted"])
         self._markers: list = []
         self._caps = None
+        self.updates = UpdateController(self)
 
         self._build_ui(int(self.settings.value("ui/tab", 0)))
         self.resize(1180, 780)
@@ -63,6 +66,12 @@ class MainWindow(QMainWindow):
             self.search_devices()
         if files:
             self.open_files(files)
+        self.updates.start()
+
+    def showEvent(self, event) -> None:
+        super().showEvent(event)
+        if self.updates.needs_question():       # once, when the window is first really visible
+            QTimer.singleShot(400, self.updates.ask_once)
 
     # -- UI -----------------------------------------------------------------
     def _build_ui(self, tab: int) -> None:
@@ -161,6 +170,8 @@ class MainWindow(QMainWindow):
         lay.setSpacing(0)
         lay.addWidget(self.header)
         lay.addWidget(CmykStripe())
+        self.update_banner = UpdateBanner()
+        lay.addWidget(self.update_banner)
         lay.addWidget(self.views, 1)
         self.setCentralWidget(central)          # deletes the previous central widget
         self.toast = Toast(central)
@@ -172,6 +183,7 @@ class MainWindow(QMainWindow):
         self._set_status(*self._status)
         self.toner.set_markers(self._markers)
         self.scan_tab.apply_capabilities(self._caps)
+        self.updates.attach(self.update_banner)
 
     # -- in-window views ----------------------------------------------------
     def show_page(self, page: QWidget) -> None:
@@ -251,6 +263,11 @@ class MainWindow(QMainWindow):
             return
         self._close_now()
 
+    def quit_for_update(self) -> None:
+        """The setup is running and waits for Glassbed to exit; it starts Glassbed again."""
+        self._close_now()
+        QApplication.quit()
+
     def _repair_autostart(self) -> None:
         if not getattr(sys, "frozen", False):
             return
@@ -264,7 +281,7 @@ class MainWindow(QMainWindow):
 
     # -- settings -----------------------------------------------------------
     def open_settings(self) -> None:
-        page = SettingsPage(self.settings)
+        page = SettingsPage(self.settings, self.updates)
         page.applied.connect(lambda: self._apply_settings(page))
         self.show_page(page)
 
@@ -277,10 +294,18 @@ class MainWindow(QMainWindow):
         theme_changed = new_theme != self.settings.value("ui/theme", "system")
         self.settings.setValue("ui/theme", new_theme)
         self._apply_tray(page.chosen_tray(), page.chosen_autostart())
+        self._apply_updates(page.chosen_updates())
         language = page.chosen_language()
         if language != i18n.LANG or theme_changed:
             # rebuild after the settings view has closed
             QTimer.singleShot(0, lambda: self._rebuild(language))
+
+    def _apply_updates(self, on: bool) -> None:
+        was_on = update_ui.enabled(self.settings)
+        self.settings.setValue(update_ui.KEY_ENABLED, on)
+        self.settings.setValue(update_ui.KEY_ASKED, True)      # decided here: never ask again
+        if on and not was_on:
+            self.updates.start()
 
     def _apply_tray(self, tray: bool, auto: bool) -> None:
         tray, auto = autostart.effective(tray, auto)

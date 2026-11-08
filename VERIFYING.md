@@ -25,3 +25,10 @@ On macOS versions without `sha256sum`, use `shasum -a 256` instead.
 
 With the `.sha256` file in the same folder, `sha256sum -c Glassbed-<version>-setup.exe.sha256`
 checks it automatically. Use the same commands for `Glassbed-<version>-windows-portable.zip`.
+
+## Updates from within the app
+
+From version 0.3.0 on, the built-in updater (installed version on Windows) does this check for
+you: it downloads the setup together with its published `.sha256` file from the GitHub release
+and compares the SHA-256 checksum before installing. If they do not match, it stops, deletes the
+download and installs nothing.

@@ -1,4 +1,4 @@
-"""Settings page (inside the main window): language, appearance, folder, tray, autostart."""
+"""Settings page (inside the main window): language, appearance, folder, tray, autostart, updates."""
 from __future__ import annotations
 
 from pathlib import Path
@@ -12,6 +12,7 @@ from .. import __version__, autostart, brand, i18n
 from ..i18n import tr
 from . import theme
 from .tray import available as tray_available
+from .update_ui import enabled as updates_enabled
 from .widgets import FolderPicker, Segmented, eyebrow, svg_pixmap
 
 THEMES = [("system", "System"), ("light", "Light"), ("dark", "Dark")]
@@ -22,9 +23,10 @@ class SettingsPage(QWidget):
     applied = Signal()
     closed = Signal()
 
-    def __init__(self, settings: QSettings, parent=None):
+    def __init__(self, settings: QSettings, updater=None, parent=None):
         super().__init__(parent)
         self.settings = settings
+        self._updater = updater
 
         self.language = Segmented([(name, code) for code, name in i18n.LANGUAGES.items()])
         self.language.setCurrentIndex(self.language.findData(i18n.LANG))
@@ -55,6 +57,22 @@ class SettingsPage(QWidget):
             tray_hint.setText(tr("This system has no notification area."))
         self.tray.toggled.connect(self._tray_toggled)
         self._tray_toggled(self.tray.isChecked())
+        # update check – off unless chosen; "Check now" asks GitHub right away
+        self.check_updates = QCheckBox(tr("Check for updates"))
+        self.check_updates.setChecked(updates_enabled(settings))
+        updates_hint = QLabel(tr("At most once a day Glassbed asks GitHub whether a new version exists. "
+                                 "GitHub sees your IP address. Nothing is installed automatically."))
+        updates_hint.setObjectName("hint")
+        updates_hint.setWordWrap(True)
+        self.check_now = QPushButton(tr("Check now"))
+        self.check_now.clicked.connect(self._check_now)
+        self.check_now.setVisible(updater is not None)
+        self.check_result = QLabel()
+        self.check_result.setObjectName("hint")
+        self.check_result.setWordWrap(True)
+        self.check_result.hide()
+        self.check_updates.toggled.connect(self.check_now.setEnabled)
+        self.check_now.setEnabled(self.check_updates.isChecked())
         about = QLabel(f"Glassbed {__version__}  ·  MIT")
         about.setObjectName("count")
 
@@ -119,6 +137,15 @@ class SettingsPage(QWidget):
         lay.addWidget(self.tray)
         lay.addWidget(self.autostart)
         lay.addWidget(tray_hint)
+        lay.addSpacing(12)
+        lay.addWidget(eyebrow(tr("Updates")))
+        updates_row = QHBoxLayout()
+        updates_row.addWidget(self.check_updates)
+        updates_row.addStretch()
+        updates_row.addWidget(self.check_now)
+        lay.addLayout(updates_row)
+        lay.addWidget(updates_hint)
+        lay.addWidget(self.check_result)
         lay.addSpacing(18)
         lay.addWidget(divider)
         lay.addSpacing(14)
@@ -162,6 +189,26 @@ class SettingsPage(QWidget):
         if not on:
             self.autostart.setChecked(False)
 
+    def _check_now(self) -> None:
+        self.check_now.setEnabled(False)
+        self.check_result.setText(tr("Checking…"))
+        self.check_result.show()
+
+        def result(release, error) -> None:
+            try:
+                if error is not None:
+                    text = tr("Could not check for updates: {error}", error=str(error))
+                elif release is not None:
+                    text = tr("Glassbed {version} is available", version=release.version)
+                else:
+                    text = tr("Glassbed {version} is up to date.", version=__version__)
+                self.check_result.setText(text)
+                self.check_now.setEnabled(self.check_updates.isChecked())
+            except RuntimeError:
+                pass                            # the settings page was closed meanwhile
+
+        self._updater.check(silent=False, on_result=result)
+
     def _done(self) -> None:
         self.applied.emit()
         self.closed.emit()
@@ -187,3 +234,6 @@ class SettingsPage(QWidget):
 
     def chosen_autostart(self) -> bool:
         return self.autostart.isChecked()
+
+    def chosen_updates(self) -> bool:
+        return self.check_updates.isChecked()

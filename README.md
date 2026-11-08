@@ -60,6 +60,8 @@ and should work with many network printers that support eSCL and IPP.
 - One window: editor, settings and messages stay inside it; starting Glassbed again reuses it
 - Optional, off by default: icon in the notification area with **Quick scan**, a toner warning
   (below 15 %, at most once a day per colour) and *Start with Windows*
+- Optional, off by default: update check via GitHub – with the installer, updating takes one
+  click and the download is verified automatically
 - Command line interface for scripts
 
 <table>
@@ -89,6 +91,21 @@ Start menu entry; a desktop shortcut and *Start with Windows* are optional. Unin
 Both are not code-signed yet (see [verifying downloads](VERIFYING.md)), so Windows
 SmartScreen may show a warning. The licenses of the bundled components are listed in
 `THIRD_PARTY_NOTICES.md`; their full texts are in the `licenses/` folder.
+
+### Updates
+
+With *Check for updates* on (see [Privacy & security](#privacy--security)), Glassbed shows a
+banner when a new version is available: *Update · What's new · Later · Skip this version*; with
+the notification area icon active, also a Windows notification.
+
+- **Installed with the setup (Windows):** *Update* downloads the new setup and its `.sha256` file
+  from the GitHub release, checks the SHA-256 checksum (on a mismatch it stops, deletes the file
+  and installs nothing) and runs the setup silently. Glassbed closes, is updated and starts again;
+  settings, shortcuts and *Start with Windows* are kept. You see the progress and can cancel.
+- **Portable ZIP, from source, macOS and Linux:** only a notice with a link to the release page;
+  nothing is downloaded.
+- **Coming from 0.2.0:** update manually once – download the new setup and install it over the old
+  version (your settings are kept). From 0.3.0 on, updating takes one click.
 
 ### From source (Windows, macOS, Linux)
 
@@ -157,8 +174,14 @@ Without installing, use `python -m glassbed …` instead of `glassbed-cli`.
 
 ## Privacy & security
 
-- Glassbed only talks to **your printer** in your local network. No cloud, no account,
-  no telemetry. The only web pages it opens are the ones you click (printer web page, arfep.de).
+- Glassbed only talks to **your printer** in your local network – and, only if you agree, to
+  GitHub for the update check. No cloud, no account, no telemetry. The only web pages it opens
+  are the ones you click (printer web page, arfep.de).
+- **Update check** – off by default; Glassbed asks once on the first start and you can change it
+  in *Settings*. When on, it asks GitHub (`api.github.com`) at most once every 24 hours at
+  start-up, or when you click *Check now*, for the latest published release. GitHub sees your IP
+  address; the request only identifies itself as `Glassbed/<version>`. Update downloads come
+  from `github.com` and GitHub's file hosts, over HTTPS only. Nothing is installed automatically.
 - **Redactions are burned in.** The covered pixels are replaced before the page is rotated,
   cropped or saved – there is no hidden layer underneath that could be uncovered. For numbers
   such as an IBAN, use *Black*; *Blur* is meant for faces and photos.
