@@ -179,6 +179,9 @@ Ohne Installation `python -m glassbed …` statt `glassbed-cli` verwenden.
 
 ## Datenschutz & Sicherheit
 
+Datenschutzerklärung für Glassbed: [arfep.de/datenschutz-glassbed](https://arfep.de/datenschutz-glassbed)
+(Update-Prüfung: [Abschnitt „Update-Prüfung“](https://arfep.de/datenschutz-glassbed#update-pruefung)).
+
 - Glassbed spricht nur mit **deinem Drucker** im lokalen Netzwerk – und, nur wenn du zustimmst,
   mit GitHub für die Update-Prüfung. Keine Cloud, kein Konto, keine Telemetrie. Webseiten öffnen
   sich nur, wenn du sie anklickst (Drucker-Webseite, arfep.de).
@@ -262,4 +265,4 @@ HP, Apple oder Microsoft und wird von diesen nicht unterstützt.
 Glassbed kommt von **[ARFEP IT-Service](https://arfep.de)** – Netzwerk, Drucker, Server,
 Backup und Microsoft 365, in Göttingen und per Fernwartung bundesweit.
 
-Impressum / Legal notice: [arfep.de/impressum](https://arfep.de/impressum)
+Impressum / Legal notice: [arfep.de/impressum](https://arfep.de/impressum) · Datenschutz / Privacy: [arfep.de/datenschutz-glassbed](https://arfep.de/datenschutz-glassbed)

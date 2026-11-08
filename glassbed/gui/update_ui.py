@@ -10,7 +10,7 @@ from PySide6.QtCore import QObject, Qt, QTimer, QUrl
 from PySide6.QtGui import QDesktopServices
 from PySide6.QtWidgets import QFrame, QHBoxLayout, QLabel, QPushButton, QSystemTrayIcon
 
-from .. import __version__, updates
+from .. import __version__, brand, updates
 from ..i18n import tr
 from . import theme
 from .overlay import ConfirmOverlay
@@ -109,7 +109,8 @@ class UpdateController(QObject):
         self._question = ConfirmOverlay(
             self.window.centralWidget(), tr("Check for updates?"), body,
             [(tr("Yes"), "", lambda: answer(True)), (tr("No"), "primary", lambda: answer(False))],
-            on_cancel=lambda: answer(False))
+            on_cancel=lambda: answer(False),
+            link=(tr("Learn more"), brand.PRIVACY_UPDATES_URL))
         return self._question
 
     # -- checking -------------------------------------------------------------

@@ -4,8 +4,11 @@ from __future__ import annotations
 from pathlib import Path
 
 from PIL import Image
-from PySide6.QtCore import QRect, QRectF, QSize, Qt, Signal
-from PySide6.QtGui import QColor, QFont, QImage, QPainter, QPen, QPixmap, QTextOption
+from html import escape
+
+from PySide6.QtCore import QRect, QRectF, QSize, Qt, QUrl, Signal
+from PySide6.QtGui import (QColor, QDesktopServices, QFont, QImage, QPainter, QPen, QPixmap,
+                           QTextOption)
 from PySide6.QtWidgets import (QAbstractItemView, QButtonGroup, QHBoxLayout, QLabel,
                                QListView, QListWidget, QPlainTextEdit, QPushButton, QScrollArea,
                                QSizePolicy, QSlider, QStyledItemDelegate, QStyle, QVBoxLayout,
@@ -48,6 +51,26 @@ def svg_pixmap(path, height: int, ratio: float = 2.0) -> QPixmap:
     painter.end()
     pix.setDevicePixelRatio(ratio)
     return pix
+
+
+class LinkLabel(QLabel):
+    """A text link that opens ``url`` in the browser – only when it is clicked, nothing before."""
+
+    def __init__(self, text: str, url: str, parent=None):
+        super().__init__(parent)
+        self.url = url
+        self.setObjectName("link")
+        self.setTextFormat(Qt.TextFormat.RichText)
+        self.setText(f'<a href="{escape(url, quote=True)}" style="color: {theme.T["accent"]}; '
+                     f'text-decoration: none;">{escape(text)}</a>')
+        self.setTextInteractionFlags(Qt.TextInteractionFlag.LinksAccessibleByMouse)
+        self.setOpenExternalLinks(False)
+        self.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.setToolTip(url)
+        self.linkActivated.connect(self.open)
+
+    def open(self, *_args) -> None:
+        QDesktopServices.openUrl(QUrl(self.url))
 
 
 def eyebrow(text: str) -> QLabel:

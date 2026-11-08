@@ -178,6 +178,9 @@ Kurmadan kullanmak için `glassbed-cli` yerine `python -m glassbed …` yazın.
 
 ## Gizlilik ve güvenlik
 
+Glassbed gizlilik bildirimi: [arfep.de/datenschutz-glassbed](https://arfep.de/datenschutz-glassbed)
+(güncelleme denetimi: [„Update-Prüfung“ bölümü](https://arfep.de/datenschutz-glassbed#update-pruefung)).
+
 - Glassbed yalnızca yerel ağınızdaki **yazıcınızla** konuşur – ve yalnızca izin verirseniz,
   güncelleme denetimi için GitHub ile. Bulut yok, hesap yok, telemetri yok. Yalnızca tıkladığınız
   web sayfaları açılır (yazıcının web arayüzü, arfep.de).
@@ -261,4 +264,4 @@ bir bağlantısı yoktur ve bu şirketler tarafından desteklenmez.
 Glassbed, **[ARFEP IT-Service](https://arfep.de/tr/)** tarafından geliştirilmiştir – ağ, yazıcı,
 sunucu, yedekleme ve Microsoft 365; Göttingen'de ve uzaktan tüm Almanya'da.
 
-Impressum / Legal notice: [arfep.de/impressum](https://arfep.de/impressum)
+Impressum / Legal notice: [arfep.de/impressum](https://arfep.de/impressum) · Datenschutz / Privacy: [arfep.de/datenschutz-glassbed](https://arfep.de/datenschutz-glassbed)

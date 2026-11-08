@@ -13,7 +13,7 @@ from ..i18n import tr
 from . import theme
 from .tray import available as tray_available
 from .update_ui import enabled as updates_enabled
-from .widgets import FolderPicker, Segmented, eyebrow, svg_pixmap
+from .widgets import FolderPicker, LinkLabel, Segmented, eyebrow, svg_pixmap
 
 THEMES = [("system", "System"), ("light", "Light"), ("dark", "Dark")]
 CARD_WIDTH, CARD_MARGIN = 500, 28
@@ -64,6 +64,7 @@ class SettingsPage(QWidget):
                                  "GitHub sees your IP address. Nothing is installed automatically."))
         updates_hint.setObjectName("hint")
         updates_hint.setWordWrap(True)
+        self.updates_more = LinkLabel(tr("Learn more"), brand.PRIVACY_UPDATES_URL)
         self.check_now = QPushButton(tr("Check now"))
         self.check_now.clicked.connect(self._check_now)
         self.check_now.setVisible(updater is not None)
@@ -89,22 +90,35 @@ class SettingsPage(QWidget):
         site_btn.clicked.connect(lambda: self._open(brand.website(i18n.LANG)))
         help_btn = QPushButton(tr("Get IT help"))
         help_btn.clicked.connect(lambda: self._open(brand.contact(i18n.LANG)))
-        about_text = QVBoxLayout()
+        about_box = QWidget()
+        about_text = QVBoxLayout(about_box)
+        about_text.setContentsMargins(0, 0, 0, 0)
         about_text.setSpacing(4)
         about_text.addWidget(made_by)
         about_text.addWidget(tagline)
         about_row = QHBoxLayout()
         about_row.setSpacing(16)
         about_row.addWidget(logo, 0, Qt.AlignmentFlag.AlignVCenter)
-        about_row.addLayout(about_text, 1)
-        # wrapped labels in a nested row don't report their height: reserve it explicitly
+        about_row.addWidget(about_box, 1)
+        # wrapped labels in a nested row don't report their height: reserve it explicitly,
+        # for the label and for the box around both lines
         text_width = CARD_WIDTH - 2 * CARD_MARGIN - logo.sizeHint().width() - about_row.spacing()
         made_by.ensurePolished()                # measure with the stylesheet's font
-        made_by.setMinimumHeight(made_by.heightForWidth(text_width) + 2)
+        tagline.ensurePolished()
+        made_by.setMinimumHeight(made_by.heightForWidth(text_width - 24) + 2)
+        about_box.setMinimumHeight(made_by.minimumHeight() + about_text.spacing() + tagline.sizeHint().height())
         links = QHBoxLayout()
         links.addWidget(site_btn)
         links.addWidget(help_btn)
         links.addStretch()
+        # legal pages of ARFEP IT-Service (open in the browser only when clicked)
+        self.imprint_link = LinkLabel(tr("Legal notice"), brand.IMPRINT_URL)
+        self.privacy_link = LinkLabel(tr("Privacy"), brand.PRIVACY_URL)
+        legal = QHBoxLayout()
+        legal.setSpacing(14)
+        legal.addWidget(self.imprint_link)
+        legal.addWidget(self.privacy_link)
+        legal.addStretch()
         divider = QWidget()
         divider.setObjectName("divider")
         divider.setFixedHeight(1)
@@ -141,6 +155,8 @@ class SettingsPage(QWidget):
         lay.addWidget(eyebrow(tr("Updates")))
         updates_row = QHBoxLayout()
         updates_row.addWidget(self.check_updates)
+        updates_row.addSpacing(8)
+        updates_row.addWidget(self.updates_more)
         updates_row.addStretch()
         updates_row.addWidget(self.check_now)
         lay.addLayout(updates_row)
@@ -154,6 +170,8 @@ class SettingsPage(QWidget):
         lay.addLayout(about_row)
         lay.addSpacing(6)
         lay.addLayout(links)
+        lay.addSpacing(6)
+        lay.addLayout(legal)
         lay.addSpacing(20)
         bottom = QHBoxLayout()
         bottom.addWidget(about)

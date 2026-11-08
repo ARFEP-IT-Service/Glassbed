@@ -9,10 +9,14 @@ from PySide6.QtWidgets import QHBoxLayout, QLabel, QPushButton, QVBoxLayout, QWi
 
 
 class ConfirmOverlay(QWidget):
-    """``buttons``: (label, role, callback) with role "primary", "danger" or "" – Esc cancels."""
+    """``buttons``: (label, role, callback) with role "primary", "danger" or "" – Esc cancels.
+
+    ``link``: optional (label, url) shown under the text; opens in the browser when clicked.
+    """
 
     def __init__(self, host: QWidget, title: str, body: str,
-                 buttons: list[tuple[str, str, Callable[[], None]]], on_cancel: Callable[[], None]):
+                 buttons: list[tuple[str, str, Callable[[], None]]], on_cancel: Callable[[], None],
+                 link: tuple[str, str] | None = None):
         super().__init__(host)
         self._on_cancel = on_cancel
         card = QWidget()
@@ -46,6 +50,11 @@ class ConfirmOverlay(QWidget):
         lay.setSpacing(10)
         lay.addWidget(heading)
         lay.addWidget(text)
+        self.link = None
+        if link:
+            from .widgets import LinkLabel
+            self.link = LinkLabel(*link)
+            lay.addWidget(self.link)
         lay.addSpacing(10)
         lay.addLayout(row)
         outer = QVBoxLayout(self)

@@ -51,6 +51,9 @@ TRANSLATIONS: dict[str, dict[str, str]] = {
         "At most once a day Glassbed asks GitHub whether a new version exists. GitHub sees your IP address. Nothing is installed automatically.":
             "Höchstens einmal am Tag fragt Glassbed bei GitHub, ob es eine neue Version gibt. GitHub sieht deine IP-Adresse. Es wird nichts automatisch installiert.",
         "Check now": "Jetzt suchen",
+        "Learn more": "Mehr dazu",
+        "Legal notice": "Impressum",
+        "Privacy": "Datenschutz",
         "Updates": "Updates",
         "Checking…": "Suche läuft…",
         "Could not check for updates: {error}": "Suche nach Updates fehlgeschlagen: {error}",
@@ -238,6 +241,9 @@ TRANSLATIONS: dict[str, dict[str, str]] = {
         "At most once a day Glassbed asks GitHub whether a new version exists. GitHub sees your IP address. Nothing is installed automatically.":
             "Glassbed en fazla günde bir kez GitHub'a yeni bir sürüm olup olmadığını sorar. GitHub IP adresinizi görür. Hiçbir şey otomatik olarak yüklenmez.",
         "Check now": "Şimdi denetle",
+        "Learn more": "Daha fazla bilgi",
+        "Legal notice": "Künye",
+        "Privacy": "Gizlilik",
         "Updates": "Güncellemeler",
         "Checking…": "Denetleniyor…",
         "Could not check for updates: {error}": "Güncellemeler denetlenemedi: {error}",

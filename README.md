@@ -177,6 +177,9 @@ Without installing, use `python -m glassbed …` instead of `glassbed-cli`.
 
 ## Privacy & security
 
+Full privacy policy for Glassbed: [arfep.de/datenschutz-glassbed](https://arfep.de/datenschutz-glassbed)
+(update check: [section “Update-Prüfung”](https://arfep.de/datenschutz-glassbed#update-pruefung)).
+
 - Glassbed only talks to **your printer** in your local network – and, only if you agree, to
   GitHub for the update check. No cloud, no account, no telemetry. The only web pages it opens
   are the ones you click (printer web page, arfep.de).
@@ -260,4 +263,4 @@ endorsed by HP, Apple or Microsoft.
 Glassbed is made by **[ARFEP IT-Service](https://arfep.de)** – networks, printers, servers,
 backup and Microsoft 365, in Göttingen and remotely across Germany.
 
-Impressum / Legal notice: [arfep.de/impressum](https://arfep.de/impressum)
+Impressum / Legal notice: [arfep.de/impressum](https://arfep.de/impressum) · Datenschutz / Privacy: [arfep.de/datenschutz-glassbed](https://arfep.de/datenschutz-glassbed)
