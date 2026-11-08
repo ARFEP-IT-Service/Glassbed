@@ -21,12 +21,12 @@
 
 ---
 
-Glassbed, çok işlevli yazıcınızla ağ üzerinden doğrudan konuşur ve her modern cihazın desteklediği
+Glassbed, çok işlevli yazıcınızla ağ üzerinden doğrudan konuşur ve birçok modern cihazın desteklediği
 açık standartları kullanır: tarama için **eSCL (AirScan)**, yazdırma için **IPP (AirPrint)**.
 Yazıcıya kurulum yok, arka plan servisi yok, hesap yok.
 
 Glassbed, **HP Color Laser MFP 178/179** için resmi uygulamaya hafif bir alternatif olarak
-geliştirildi – ve yaklaşık 2015'ten beri üretilen çoğu ağ yazıcısıyla çalışır.
+geliştirildi – ve eSCL ile IPP'yi destekleyen birçok ağ yazıcısıyla çalışması beklenir.
 
 ## Özellikler
 
@@ -86,7 +86,7 @@ Python 3.10 veya daha yenisi gerekir.
 
 ```bash
 git clone https://github.com/ARFEP-IT-Service/Glassbed.git
-cd glassbed
+cd Glassbed
 pip install .
 glassbed
 ```
@@ -203,7 +203,7 @@ eksik girişler İngilizce görünür.
 
 ## Lisans
 
-[MIT](LICENSE) – © 2026 Halil Ayberk Bulut (ARFEP IT-Service) ve Glassbed katkıda bulunanları.
+[MIT](LICENSE) – © 2026 Halil Ayberk Bulut (ARFEP IT-Service) ve Glassbed'e katkıda bulunanlar.
 
 Windows sürümü, kendi lisanslarına tabi üçüncü taraf bileşenler içerir – bkz.
 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md); tam metinler [`licenses/`](licenses) klasöründedir.

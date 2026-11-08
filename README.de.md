@@ -22,11 +22,11 @@ Ein Open-Source-Projekt von [ARFEP IT-Service](https://arfep.de) · Göttingen
 ---
 
 Glassbed spricht direkt über das Netzwerk mit deinem Multifunktionsdrucker – über die offenen
-Standards, die jedes moderne Gerät beherrscht: **eSCL (AirScan)** zum Scannen und
+Standards, die viele moderne Geräte unterstützen: **eSCL (AirScan)** zum Scannen und
 **IPP (AirPrint)** zum Drucken. Keine Installation am Drucker, keine Hintergrunddienste, kein Konto.
 
 Glassbed ist als schlanke Alternative zur offiziellen App für den **HP Color Laser MFP 178/179**
-entstanden – und funktioniert mit den meisten Netzwerkdruckern ab etwa 2015.
+entstanden – und sollte mit vielen Netzwerkdruckern funktionieren, die eSCL und IPP unterstützen.
 
 ## Funktionen
 
@@ -86,7 +86,7 @@ Benötigt Python 3.10 oder neuer.
 
 ```bash
 git clone https://github.com/ARFEP-IT-Service/Glassbed.git
-cd glassbed
+cd Glassbed
 pip install .
 glassbed
 ```

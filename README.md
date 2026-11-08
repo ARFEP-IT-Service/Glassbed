@@ -22,11 +22,11 @@ An open-source project by [ARFEP IT-Service](https://arfep.de) · Göttingen
 ---
 
 Glassbed talks to your multifunction printer directly over the network, using the open
-standards every modern device speaks: **eSCL (AirScan)** for scanning and **IPP (AirPrint)**
+standards that many modern devices support: **eSCL (AirScan)** for scanning and **IPP (AirPrint)**
 for printing. Nothing to install on the printer side, no background services, no account.
 
 It was built as a lightweight alternative to the official app for the **HP Color Laser MFP 178/179** –
-and works with most network printers made since about 2015.
+and should work with many network printers that support eSCL and IPP.
 
 ## Features
 
@@ -86,7 +86,7 @@ Requires Python 3.10 or newer.
 
 ```bash
 git clone https://github.com/ARFEP-IT-Service/Glassbed.git
-cd glassbed
+cd Glassbed
 pip install .
 glassbed
 ```
