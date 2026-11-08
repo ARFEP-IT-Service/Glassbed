@@ -1,28 +1,22 @@
 """Optional update check against the project's GitHub releases – off unless the user agrees.
 
 Nothing here runs on its own: the GUI calls ``fetch_latest`` only when the user switched the
-check on (at most once a day) or clicked "Check now". Downloads are only accepted over HTTPS
-from the release download URL of this repository and the hosts GitHub serves release files
-from (``ALLOWED_HOSTS``); any other redirect aborts. The setup file is installed only when its
-SHA-256 matches the ``.sha256`` file published with it.
+check on (at most once a day) or clicked "Check now". The only connection is one HTTPS request
+to the GitHub API (``ALLOWED_HOSTS``). Glassbed downloads and starts nothing itself: "Update"
+opens the setup's download link or the release page in the browser.
 """
 from __future__ import annotations
 
-import hashlib
 import json
 import os
 import re
-import shutil
 import ssl
-import subprocess
 import sys
-import tempfile
 import urllib.error
 import urllib.request
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from typing import Callable
 from urllib.parse import urlsplit
 
 from . import __version__
@@ -31,23 +25,16 @@ REPO = "ARFEP-IT-Service/Glassbed"
 API_URL = f"https://api.github.com/repos/{REPO}/releases/latest"
 RELEASES_URL = f"https://github.com/{REPO}/releases"
 DOWNLOAD_PREFIX = f"https://github.com/{REPO}/releases/download/"
-# GitHub answers release downloads with a redirect to one of its file hosts
-ALLOWED_HOSTS = frozenset({"api.github.com", "github.com",
-                           "release-assets.githubusercontent.com", "objects.githubusercontent.com"})
+# the update check talks to the GitHub API only
+ALLOWED_HOSTS = frozenset({"api.github.com"})
 TIMEOUT = 10
 CHECK_INTERVAL = timedelta(hours=24)
 USER_AGENT = f"Glassbed/{__version__}"
-TEMP_PARENT = "Glassbed-update"
 UNINSTALL_KEY = r"Software\Microsoft\Windows\CurrentVersion\Uninstall\Glassbed"
-MAX_DOWNLOAD = 400 * 1024 * 1024
 
 
 class UpdateError(Exception):
-    """Anything that stops a check or a download; the message is shown to the user."""
-
-
-class Cancelled(UpdateError):
-    pass
+    """Anything that stops a check; the message is shown after "Check now"."""
 
 
 # --------------------------------------------------------------------------- settings
@@ -104,9 +91,7 @@ def stamp(now: datetime | None = None) -> str:
 class Release:
     version: str
     page_url: str
-    setup_name: str | None = None
-    setup_url: str | None = None
-    sha256_url: str | None = None
+    setup_url: str | None = None           # direct download link of Glassbed-X-setup.exe
 
 
 def should_notify(release: Release | None, current: str = __version__, skipped: str = "") -> bool:
@@ -128,11 +113,10 @@ def parse_release(data: dict, cfg: Config | None = None) -> Release | None:
     setup_name = f"Glassbed-{version}-setup.exe"
     urls = {str(a.get("name")): str(a.get("browser_download_url") or "")
             for a in data.get("assets") or [] if isinstance(a, dict)}
-    setup_url, sha_url = urls.get(setup_name), urls.get(setup_name + ".sha256")
-    if not (setup_url and sha_url and setup_url.startswith(cfg.download_prefix)
-            and sha_url.startswith(cfg.download_prefix)):
-        setup_url = sha_url = None              # only the release page can be offered then
-    return Release(version, page, setup_name if setup_url else None, setup_url, sha_url)
+    # exactly the setup of this release in this repository – anything else: release page only
+    expected = f"{cfg.download_prefix}v{version}/{setup_name}"
+    setup_url = expected if urls.get(setup_name) == expected else None
+    return Release(version, page, setup_url)
 
 
 # --------------------------------------------------------------------------- network
@@ -179,72 +163,6 @@ def fetch_latest(cfg: Config | None = None) -> Release | None:
     return parse_release(data, cfg)
 
 
-def parse_sha256(text: str, filename: str) -> str:
-    """``<hash>  <name>`` (sha256sum format) or a bare hash → the lowercase hash."""
-    for line in text.splitlines():
-        parts = line.strip().split()
-        if not parts or not re.fullmatch(r"[0-9a-fA-F]{64}", parts[0]):
-            continue
-        if len(parts) == 1 or parts[-1].lstrip("*") == filename:
-            return parts[0].lower()
-    raise UpdateError("The checksum file has no SHA-256 for " + filename)
-
-
-def download(release: Release, folder: Path, progress: Callable[[int, int], None] | None = None,
-             cancelled: Callable[[], bool] = lambda: False, cfg: Config | None = None) -> Path:
-    """Download the setup file and verify it against the published SHA-256.
-
-    On any problem the partial file is deleted and UpdateError is raised.
-    """
-    cfg = cfg or config()
-    if not (release.setup_url and release.sha256_url and release.setup_name):
-        raise UpdateError("This release has no installer")
-    for url in (release.setup_url, release.sha256_url):
-        if not url.startswith(cfg.download_prefix):
-            raise UpdateError("Unexpected download address")
-    with _open(release.sha256_url, cfg) as resp:
-        expected = parse_sha256(resp.read(64 * 1024).decode("utf-8", "replace"), release.setup_name)
-    target = folder / release.setup_name
-    digest = hashlib.sha256()
-    try:
-        with _open(release.setup_url, cfg) as resp, open(target, "wb") as out:
-            total = int(resp.headers.get("Content-Length") or 0)
-            done = 0
-            while chunk := resp.read(256 * 1024):
-                if cancelled():
-                    raise Cancelled("Cancelled")
-                out.write(chunk)
-                digest.update(chunk)
-                done += len(chunk)
-                if done > MAX_DOWNLOAD:
-                    raise UpdateError("The download is unexpectedly large")
-                if progress:
-                    progress(done, total)
-        if digest.hexdigest() != expected:
-            raise UpdateError("The downloaded file does not match its published SHA-256 checksum. "
-                              "It was deleted and nothing was installed.")
-    except BaseException:
-        target.unlink(missing_ok=True)
-        raise
-    return target
-
-
-# --------------------------------------------------------------------------- temp folder
-def temp_root() -> Path:
-    return Path(tempfile.gettempdir()) / TEMP_PARENT
-
-
-def new_temp_dir() -> Path:
-    root = temp_root()
-    root.mkdir(exist_ok=True)
-    return Path(tempfile.mkdtemp(prefix="dl-", dir=root))
-
-
-def cleanup_temp() -> None:
-    """Remove downloads of earlier updates (the setup cannot delete itself while it runs)."""
-    shutil.rmtree(temp_root(), ignore_errors=True)
-
-
 # --------------------------------------------------------------------------- installation
 def install_kind(exe: str | None = None, registry=None) -> str:
     """"installer" (installed with the setup), "portable", "source" or "unsupported" (not Windows)."""
@@ -264,12 +182,3 @@ def install_kind(exe: str | None = None, registry=None) -> str:
         return "portable"
     same = os.path.normcase(os.path.abspath(str(location))) == os.path.normcase(str(folder))
     return "installer" if same else "portable"
-
-
-def start_installer(setup: Path) -> None:
-    """Run the setup silently; it waits for Glassbed to exit, updates and starts it again."""
-    flags = 0
-    if sys.platform == "win32":
-        flags = subprocess.DETACHED_PROCESS | subprocess.CREATE_NEW_PROCESS_GROUP
-    subprocess.Popen([str(setup), "/S", "/UPDATE"], cwd=str(setup.parent), close_fds=True,
-                     creationflags=flags)

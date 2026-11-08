@@ -263,11 +263,6 @@ class MainWindow(QMainWindow):
             return
         self._close_now()
 
-    def quit_for_update(self) -> None:
-        """The setup is running and waits for Glassbed to exit; it starts Glassbed again."""
-        self._close_now()
-        QApplication.quit()
-
     def _repair_autostart(self) -> None:
         if not getattr(sys, "frozen", False):
             return

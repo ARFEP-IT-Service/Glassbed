@@ -1,16 +1,14 @@
-"""Update check in the window: the one-time question, the banner and the update itself.
+"""Update check in the window: the one-time question and the banner.
 
 Nothing connects to GitHub unless the user agreed ("update/enabled"). The question is asked
-once; whatever happens to it (No, Esc, closing the window) counts as No.
+once; whatever happens to it (No, Esc, closing the window) counts as No. Glassbed downloads
+and starts nothing itself: "Update" opens the download in the browser.
 """
 from __future__ import annotations
 
-import threading
-
 from PySide6.QtCore import QObject, Qt, QTimer, QUrl
 from PySide6.QtGui import QDesktopServices
-from PySide6.QtWidgets import (QFrame, QHBoxLayout, QLabel, QProgressBar, QPushButton,
-                               QSystemTrayIcon)
+from PySide6.QtWidgets import QFrame, QHBoxLayout, QLabel, QPushButton, QSystemTrayIcon
 
 from .. import __version__, updates
 from ..i18n import tr
@@ -28,31 +26,23 @@ def enabled(settings) -> bool:
 
 
 class UpdateBanner(QFrame):
-    """Slim bar under the header: "Glassbed X is available" + actions, or the download progress."""
+    """Slim bar under the header: "Glassbed X is available" and what to do about it."""
 
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setObjectName("updatebanner")
         self.text = QLabel()
         self.text.setObjectName("updatetext")
-        self.progress = QProgressBar()
-        self.progress.setFixedWidth(220)
-        self.progress.setTextVisible(False)
-        self.amount = QLabel()
-        self.amount.setObjectName("hint")
         self.update_btn = QPushButton(tr("Update"))
         self.update_btn.setObjectName("primary")
         self.notes_btn = QPushButton(tr("What's new"))
         self.later_btn = QPushButton(tr("Later"))
         self.skip_btn = QPushButton(tr("Skip this version"))
-        self.cancel_btn = QPushButton(tr("Cancel"))
         lay = QHBoxLayout(self)
         lay.setContentsMargins(20, 6, 20, 6)
         lay.setSpacing(8)
         lay.addWidget(self.text, 1)
-        lay.addWidget(self.amount)
-        lay.addWidget(self.progress)
-        for b in (self.update_btn, self.notes_btn, self.later_btn, self.skip_btn, self.cancel_btn):
+        for b in (self.update_btn, self.notes_btn, self.later_btn, self.skip_btn):
             b.setCursor(Qt.CursorShape.PointingHandCursor)
             lay.addWidget(b)
         self.setStyleSheet(
@@ -60,33 +50,9 @@ class UpdateBanner(QFrame):
             "QLabel#updatetext {{ background: transparent; font-weight: 600; }}".format(**theme.T))
         self.hide()
 
-    def show_offer(self, version: str, can_update: bool) -> None:
+    def show_offer(self, version: str) -> None:
         self.text.setText(tr("Glassbed {version} is available", version=version))
-        self.progress.hide()
-        self.amount.hide()
-        self.cancel_btn.hide()
-        self.update_btn.setVisible(can_update)
-        for b in (self.notes_btn, self.later_btn, self.skip_btn):
-            b.show()
         self.show()
-
-    def show_progress(self, version: str) -> None:
-        self.text.setText(tr("Downloading Glassbed {version}…", version=version))
-        self.progress.setRange(0, 0)
-        self.amount.setText("")
-        self.amount.show()
-        self.progress.show()
-        self.cancel_btn.show()
-        self.cancel_btn.setEnabled(True)
-        for b in (self.update_btn, self.notes_btn, self.later_btn, self.skip_btn):
-            b.hide()
-        self.show()
-
-    def set_progress(self, done: int, total: int) -> None:
-        if total > 0:
-            self.progress.setRange(0, 1000)
-            self.progress.setValue(int(done * 1000 / total))
-            self.amount.setText(f"{done / 1e6:.1f} / {total / 1e6:.1f} MB")
 
 
 class UpdateController(QObject):
@@ -101,7 +67,6 @@ class UpdateController(QObject):
         self.banner: UpdateBanner | None = None
         self._dismissed = False                 # "Later": hidden until the next check
         self._question = None
-        self._cancel: threading.Event | None = None
         self._checking = False
 
     # -- wiring ---------------------------------------------------------------
@@ -111,15 +76,10 @@ class UpdateController(QObject):
         banner.notes_btn.clicked.connect(self.open_release_page)
         banner.later_btn.clicked.connect(self.later)
         banner.skip_btn.clicked.connect(self.skip)
-        banner.cancel_btn.clicked.connect(self.cancel_download)
-        if self._cancel is not None and self.release:
-            banner.show_progress(self.release.version)
-        else:
-            self._refresh_banner()
+        self._refresh_banner()
 
     def start(self) -> None:
-        """At start-up: tidy old downloads and, only if switched on, check once a day."""
-        updates.cleanup_temp()
+        """At start-up, only if switched on: check once a day."""
         if enabled(self.settings) and updates.check_due(self.settings.value(KEY_LAST, None)):
             QTimer.singleShot(START_DELAY_MS, lambda: self.check(silent=True))
 
@@ -187,7 +147,7 @@ class UpdateController(QObject):
         show = rel is not None and not self._dismissed and (
             force or updates.should_notify(rel, __version__, self.settings.value(KEY_SKIPPED, "")))
         if show:
-            self.banner.show_offer(rel.version, self.kind == "installer" and rel.setup_url is not None)
+            self.banner.show_offer(rel.version)
         else:
             self.banner.hide()
 
@@ -212,48 +172,18 @@ class UpdateController(QObject):
         self._dismissed = True
         self._refresh_banner()
 
-    def update_now(self) -> None:
+    def update_url(self) -> str:
+        """Installed with the setup: the new setup's download link; otherwise the release page."""
         rel = self.release
-        if rel is None:
-            return
-        if self.kind != "installer" or not rel.setup_url:
-            self.open_release_page()            # portable / source / macOS / Linux: only the page
-            return
-        if self.window.scan_tab.has_unsaved():
-            self.window.show_alert("info", tr("Save your scans first"),
-                                   tr("Glassbed restarts for the update. Save or remove the scanned pages first."))
-            return
-        self._cancel = threading.Event()
-        cancel = self._cancel
-        folder = updates.new_temp_dir()
-        self.banner.show_progress(rel.version)
+        if rel is not None and self.kind == "installer" and rel.setup_url:
+            return rel.setup_url
+        return rel.page_url if rel is not None else updates.RELEASES_URL
 
-        def job(progress):
-            return updates.download(rel, folder, lambda d, t: progress((d, t)), cancel.is_set)
-
-        def done(setup):
-            self._cancel = None
-            try:
-                updates.start_installer(setup)
-            except OSError as e:
-                updates.cleanup_temp()
-                self._refresh_banner(force=True)
-                self.window.show_alert("error", tr("Update failed"), str(e))
-                return
-            self.window.quit_for_update()
-
-        def failed(exc):
-            self._cancel = None
-            updates.cleanup_temp()
-            self._refresh_banner(force=True)
-            if not isinstance(exc, updates.Cancelled):
-                self.window.show_alert("error", tr("Update failed"), str(exc))
-
-        run_task(job, on_done=done, on_error=failed,
-                 on_progress=lambda v: self.banner and self.banner.set_progress(*v))
-
-    def cancel_download(self) -> None:
-        if self._cancel is not None:
-            self._cancel.set()
-            if self.banner:
-                self.banner.cancel_btn.setEnabled(False)
+    def update_now(self) -> None:
+        """Open the download in the browser – Glassbed itself downloads and starts nothing."""
+        url = self.update_url()
+        QDesktopServices.openUrl(QUrl(url))
+        if self.release is not None and url == self.release.setup_url:
+            self.window.show_alert("info", tr("Glassbed {version} is downloading in your browser",
+                                              version=self.release.version),
+                                   tr("Start the setup after the download – your settings are kept."))

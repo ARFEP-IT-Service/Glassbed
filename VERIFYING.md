@@ -28,7 +28,7 @@ checks it automatically. Use the same commands for `Glassbed-<version>-windows-p
 
 ## Updates from within the app
 
-From version 0.3.0 on, the built-in updater (installed version on Windows) does this check for
-you: it downloads the setup together with its published `.sha256` file from the GitHub release
-and compares the SHA-256 checksum before installing. If they do not match, it stops, deletes the
-download and installs nothing.
+From version 0.3.0 on, Glassbed can tell you about new versions, but the app itself does not
+download anything: *Update* opens the download (or the release page) in your browser. Before you
+start the downloaded setup, compare its SHA-256 checksum with the one in the release notes (or in
+the `.sha256` file) using the commands above.

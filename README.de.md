@@ -60,8 +60,8 @@ entstanden – und sollte mit vielen Netzwerkdruckern funktionieren, die eSCL un
 - Ein Fenster: Editor, Einstellungen und Meldungen bleiben darin; ein zweiter Start nutzt das vorhandene Fenster
 - Optional, standardmäßig aus: Symbol im Infobereich mit **Schnell-Scan**, Toner-Warnung
   (unter 15 %, je Farbe höchstens einmal am Tag) und *Mit Windows starten*
-- Optional, standardmäßig aus: Update-Prüfung über GitHub – mit dem Installer ist ein Update ein
-  Klick, der Download wird automatisch geprüft
+- Optional, standardmäßig aus: Update-Prüfung über GitHub – meldet neue Versionen und öffnet den
+  Download im Browser
 - Kommandozeile für Skripte
 
 <table>
@@ -99,15 +99,18 @@ Glassbed einen Hinweis im Fenster, sobald eine neue Version verfügbar ist: *Akt
 Was ist neu · Später · Diese Version überspringen*; mit aktivem Symbol im Infobereich zusätzlich
 eine Windows-Benachrichtigung.
 
-- **Mit dem Setup installiert (Windows):** *Aktualisieren* lädt das neue Setup und seine
-  `.sha256`-Datei aus dem GitHub-Release, prüft die SHA-256-Prüfsumme (stimmt sie nicht, bricht
-  Glassbed ab, löscht die Datei und installiert nichts) und startet das Setup im Hintergrund.
-  Glassbed schließt sich, wird aktualisiert und startet wieder; Einstellungen, Verknüpfungen und
-  *Mit Windows starten* bleiben erhalten. Du siehst den Fortschritt und kannst abbrechen.
-- **Portable ZIP, aus dem Quellcode, macOS und Linux:** nur ein Hinweis mit Link zur
-  Release-Seite; heruntergeladen wird nichts.
-- **Von 0.2.0 kommend:** einmal von Hand aktualisieren – das neue Setup herunterladen und über die
-  alte Version installieren (deine Einstellungen bleiben erhalten). Ab 0.3.0 reicht ein Klick.
+Glassbed lädt und startet selbst nie Programme – *Aktualisieren* öffnet deinen Browser:
+
+- **Mit dem Setup installiert (Windows):** Der Browser lädt das neue
+  `Glassbed-<version>-setup.exe` direkt von GitHub, und Glassbed zeigt den Hinweis *„Nach dem
+  Download das Setup starten – deine Einstellungen bleiben erhalten.“* Installiere es über die alte
+  Version: Einstellungen, Verknüpfungen und *Mit Windows starten* bleiben erhalten; läuft Glassbed
+  noch, bittet dich das Setup, es zu schließen. Wie du den Download vorher prüfst, steht unter
+  [Downloads prüfen](VERIFYING.md).
+- **Portable ZIP, aus dem Quellcode, macOS und Linux:** Die Release-Seite öffnet sich.
+- **Von 0.2.0 kommend:** 0.2.0 hat keine Update-Prüfung – lade das neue Setup einmal von Hand
+  herunter und installiere es über die alte Version (deine Einstellungen bleiben erhalten). Ab
+  0.3.0 meldet Glassbed neue Versionen, wenn du es erlaubst.
 
 ### Aus dem Quellcode (Windows, macOS, Linux)
 
@@ -183,8 +186,8 @@ Ohne Installation `python -m glassbed …` statt `glassbed-cli` verwenden.
   du es in den *Einstellungen*. Ist sie an, fragt Glassbed GitHub (`api.github.com`) höchstens
   einmal in 24 Stunden beim Start, oder wenn du auf *Jetzt suchen* klickst, nach dem neuesten
   veröffentlichten Release. GitHub sieht dabei deine IP-Adresse; die Anfrage gibt sich nur als
-  `Glassbed/<version>` zu erkennen. Update-Downloads kommen von `github.com` und den Dateiservern
-  von GitHub, nur über HTTPS. Installiert wird nichts automatisch.
+  `Glassbed/<version>` zu erkennen. Glassbed selbst lädt und installiert nichts –
+  *Aktualisieren* öffnet nur den Download oder die Release-Seite in deinem Browser.
 - **Schwärzungen werden eingebrannt.** Die verdeckten Pixel werden ersetzt, bevor die Seite
   gedreht, zugeschnitten oder gespeichert wird – darunter liegt keine versteckte Ebene, die man
   freilegen könnte. Für Zahlen wie eine IBAN *Schwarz* verwenden; *Unscharf* ist für Gesichter und Fotos gedacht.

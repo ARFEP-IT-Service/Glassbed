@@ -41,14 +41,12 @@ TRANSLATIONS: dict[str, dict[str, str]] = {
         "Yes": "Ja",
         "No": "Nein",
         "Glassbed {version} is available": "Glassbed {version} ist verfügbar",
-        "Downloading Glassbed {version}…": "Glassbed {version} wird heruntergeladen…",
+        "Glassbed {version} is downloading in your browser": "Glassbed {version} wird im Browser heruntergeladen",
+        "Start the setup after the download – your settings are kept.":
+            "Nach dem Download das Setup starten – deine Einstellungen bleiben erhalten.",
         "Check for updates?": "Nach Updates suchen?",
         "Glassbed can look for a new version on GitHub – at most once a day. GitHub sees your IP address when it does. Nothing is installed automatically; you decide each time. You can change this later in the settings.":
             "Glassbed kann auf GitHub nach einer neuen Version suchen – höchstens einmal am Tag. GitHub sieht dabei deine IP-Adresse. Es wird nichts automatisch installiert; du entscheidest jedes Mal selbst. Du kannst das später in den Einstellungen ändern.",
-        "Save your scans first": "Speichere zuerst deine Scans",
-        "Glassbed restarts for the update. Save or remove the scanned pages first.":
-            "Glassbed startet für das Update neu. Speichere oder entferne zuerst die gescannten Seiten.",
-        "Update failed": "Update fehlgeschlagen",
         "Check for updates": "Nach Updates suchen",
         "At most once a day Glassbed asks GitHub whether a new version exists. GitHub sees your IP address. Nothing is installed automatically.":
             "Höchstens einmal am Tag fragt Glassbed bei GitHub, ob es eine neue Version gibt. GitHub sieht deine IP-Adresse. Es wird nichts automatisch installiert.",
@@ -230,14 +228,12 @@ TRANSLATIONS: dict[str, dict[str, str]] = {
         "Yes": "Evet",
         "No": "Hayır",
         "Glassbed {version} is available": "Glassbed {version} kullanıma sunuldu",
-        "Downloading Glassbed {version}…": "Glassbed {version} indiriliyor…",
+        "Glassbed {version} is downloading in your browser": "Glassbed {version} tarayıcıda indiriliyor",
+        "Start the setup after the download – your settings are kept.":
+            "İndirme bittikten sonra kurulumu başlatın – ayarlarınız korunur.",
         "Check for updates?": "Güncellemeler denetlensin mi?",
         "Glassbed can look for a new version on GitHub – at most once a day. GitHub sees your IP address when it does. Nothing is installed automatically; you decide each time. You can change this later in the settings.":
             "Glassbed, GitHub'da yeni bir sürüm olup olmadığına bakabilir – en fazla günde bir kez. Bu sırada GitHub IP adresinizi görür. Hiçbir şey otomatik olarak yüklenmez; her seferinde siz karar verirsiniz. Bunu daha sonra ayarlardan değiştirebilirsiniz.",
-        "Save your scans first": "Önce taramalarınızı kaydedin",
-        "Glassbed restarts for the update. Save or remove the scanned pages first.":
-            "Glassbed güncelleme için yeniden başlar. Önce taranan sayfaları kaydedin veya kaldırın.",
-        "Update failed": "Güncelleme başarısız oldu",
         "Check for updates": "Güncellemeleri denetle",
         "At most once a day Glassbed asks GitHub whether a new version exists. GitHub sees your IP address. Nothing is installed automatically.":
             "Glassbed en fazla günde bir kez GitHub'a yeni bir sürüm olup olmadığını sorar. GitHub IP adresinizi görür. Hiçbir şey otomatik olarak yüklenmez.",
