@@ -7,7 +7,7 @@ included in the `licenses/` folder next to `Glassbed.exe`.
 
 | Component | Used for | License |
 |---|---|---|
-| [Python](https://www.python.org/) | runtime (bundled in the Windows release) | PSF License |
+| [Python](https://www.python.org/) | runtime (bundled in the Windows release) | PSF License (plus the licenses of the libraries built into Python: expat, libffi, zlib-ng, libmpdec, mimalloc, HACL\*, bzip2, XZ, Zstandard and others) |
 | [PySide6 / Qt for Python](https://www.qt.io/qt-for-python) incl. shiboken6 and Qt libraries | user interface | LGPL-3.0-only (also GPL-2.0/3.0) |
 | [Pillow](https://python-pillow.org/) | image processing | MIT-CMU (plus licenses of bundled image libraries) |
 | [NumPy](https://numpy.org/) | image processing | BSD-3-Clause (plus 0BSD, MIT, Zlib, CC0-1.0 for bundled parts) |
@@ -15,7 +15,6 @@ included in the `licenses/` folder next to `Glassbed.exe`.
 | [python-zeroconf](https://github.com/python-zeroconf/python-zeroconf) | printer discovery (mDNS) | LGPL-2.1-or-later |
 | [ifaddr](https://github.com/pydron/ifaddr) | network interfaces (used by zeroconf) | MIT |
 | [OpenSSL](https://www.openssl.org/) (bundled with Python) | encrypted connections | Apache-2.0 |
-| [typing_extensions](https://github.com/python/typing_extensions) | required by the libraries above | PSF-2.0 |
 | Microsoft Visual C++ Runtime | Windows runtime (Windows build only) | Microsoft Software License Terms (redistributable) |
 | [PyInstaller](https://pyinstaller.org/) bootloader | Windows build only | GPL-2.0-or-later with bootloader exception |
 | [NSIS](https://nsis.sourceforge.io/) | Windows installer (setup.exe only) | zlib/libpng; LZMA module CPL-1.0 with linking exception (source: https://sourceforge.net/projects/nsis/files/) |

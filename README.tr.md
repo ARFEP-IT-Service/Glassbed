@@ -110,10 +110,10 @@ python -m glassbed
 
 ### Windows uygulamasını kendiniz derleyin
 
-Kurulum programı için [NSIS 3](https://nsis.sourceforge.io/) gerekir.
+Tam olarak `.python-version` dosyasındaki Python sürümü gerekir. `build.ps1`, sabitlenmiş
+`build-requirements.txt` dosyasından yeni bir sanal ortam oluşturur ve belirlenen NSIS sürümünü indirir.
 
 ```powershell
-pip install -e ".[dev]"
 ./build.ps1          # → dist/Glassbed-<version>-setup.exe ve dist/Glassbed-<version>-windows-portable.zip
 ```
 

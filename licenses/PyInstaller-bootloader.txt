@@ -1,7 +1,7 @@
 PyInstaller bootloader 6.22.3
 License: GPL-2.0-or-later with the PyInstaller bootloader exception
 Website: https://pyinstaller.org/
-Note: `Glassbed.exe` starts through the PyInstaller bootloader. Its license explicitly allows distributing programs built with it under any license.
+Note: `Glassbed.exe` starts through the PyInstaller bootloader, and PyInstaller's runtime hooks are bundled. Its license explicitly allows distributing programs built with it under any license.
 
 ==============================================================================
 COPYING.txt

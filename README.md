@@ -110,10 +110,10 @@ python -m glassbed
 
 ### Build the Windows app yourself
 
-Requires [NSIS 3](https://nsis.sourceforge.io/) for the installer.
+Requires exactly the Python version in `.python-version`. `build.ps1` creates a fresh virtual
+environment from the pinned `build-requirements.txt` and downloads the pinned NSIS version.
 
 ```powershell
-pip install -e ".[dev]"
 ./build.ps1          # → dist/Glassbed-<version>-setup.exe and dist/Glassbed-<version>-windows-portable.zip
 ```
 

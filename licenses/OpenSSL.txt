@@ -1,4 +1,4 @@
-OpenSSL 3.5.7
+OpenSSL 3.5.9
 License: Apache-2.0
 Website: https://www.openssl.org/
 Note: Bundled with the Python runtime as `libssl-3*.dll` and `libcrypto-3*.dll`.
