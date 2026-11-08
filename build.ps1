@@ -118,7 +118,7 @@ Invoke-Checked "license collection" {
 Copy-Item LICENSE, THIRD_PARTY_NOTICES.md dist/Glassbed/
 Copy-Item licenses dist/Glassbed/licenses -Recurse -Force
 
-# >>> SignPath: sign dist/Glassbed/Glassbed.exe here, before it is packaged (not set up yet) <<<
+# optional code signing step (not used): sign dist/Glassbed/Glassbed.exe here, before packaging
 
 $zip = "dist/Glassbed-$version-windows-portable.zip"
 $setup = "dist/Glassbed-$version-setup.exe"
@@ -127,7 +127,7 @@ Invoke-Checked "ZIP packaging" { & $py tools/package.py zip dist/Glassbed $zip }
 # /WX: any warning fails the build (a stray line continuation once dropped all files silently)
 Invoke-Checked "NSIS" { & $makensis /V2 /WX "/DVERSION=$version" installer\glassbed.nsi }
 
-# >>> SignPath: sign the setup.exe here, before the checksums are written (not set up yet) <<<
+# optional code signing step (not used): sign the setup.exe here, before the checksums are written
 
 Invoke-Checked "checksum" { & $py tools/package.py sha256 $zip $setup }
 

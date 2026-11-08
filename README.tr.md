@@ -86,7 +86,7 @@ menüsüne bir kayıt ekler; masaüstü kısayolu ve *Windows ile başlat* iste�
 **Taşınabilir ZIP:** `Glassbed-<version>-windows-portable.zip` dosyasını indirin, açın ve
 **`Glassbed.exe`** dosyasını başlatın. Klasörü bir arada tutun – `.exe` yanındaki dosyalara ihtiyaç duyar.
 
-İkisi de henüz imzalı değildir (bkz. [kod imzalama politikası](CODE_SIGNING_POLICY.md)); bu yüzden
+İkisi de henüz imzalı değildir (bkz. [indirilen dosyaları doğrulama](VERIFYING.md)); bu yüzden
 Windows SmartScreen uyarı gösterebilir. Birlikte gelen bileşenlerin lisansları
 `THIRD_PARTY_NOTICES.md` dosyasında listelenmiştir; tam metinleri `licenses/` klasöründedir.
 
@@ -219,7 +219,7 @@ eksik girişler İngilizce görünür.
 
 Windows sürümü, kendi lisanslarına tabi üçüncü taraf bileşenler içerir – bkz.
 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md); tam metinler [`licenses/`](licenses) klasöründedir.
-Windows sürümlerinin nasıl imzalandığı: [CODE_SIGNING_POLICY.md](CODE_SIGNING_POLICY.md).
+Windows indirmelerini doğrulama: [VERIFYING.md](VERIFYING.md).
 
 [`glassbed/assets/arfep/`](glassbed/assets/arfep/NOTICE.md) içindeki ARFEP logosu MIT lisansına
 **dahil değildir**; ARFEP IT-Service ile bağlantısı olmayan fork'lar logoyu kaldırmalı veya değiştirmelidir.

@@ -86,7 +86,7 @@ Start menu entry; a desktop shortcut and *Start with Windows* are optional. Unin
 **Portable ZIP:** download `Glassbed-<version>-windows-portable.zip`, unzip it and start
 **`Glassbed.exe`**. Keep the whole folder together – the `.exe` needs the files next to it.
 
-Both are not code-signed yet (see the [code signing policy](CODE_SIGNING_POLICY.md)), so Windows
+Both are not code-signed yet (see [verifying downloads](VERIFYING.md)), so Windows
 SmartScreen may show a warning. The licenses of the bundled components are listed in
 `THIRD_PARTY_NOTICES.md`; their full texts are in the `licenses/` folder.
 
@@ -220,7 +220,7 @@ back to English.
 
 The Windows build bundles third-party components under their own licenses – see
 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md); their full texts are in [`licenses/`](licenses).
-How Windows releases are signed: [CODE_SIGNING_POLICY.md](CODE_SIGNING_POLICY.md).
+How to verify Windows downloads: [VERIFYING.md](VERIFYING.md).
 
 The ARFEP logo in [`glassbed/assets/arfep/`](glassbed/assets/arfep/NOTICE.md) is **not** part
 of the MIT license; forks that are not affiliated with ARFEP IT-Service must remove or replace it.

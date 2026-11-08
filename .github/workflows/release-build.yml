@@ -33,12 +33,8 @@ jobs:
           Get-Content build/bundled-components.md
           Get-Content build/bundled-components.md | Add-Content $env:GITHUB_STEP_SUMMARY
 
-      # ------------------------------------------------------------------------------
-      # CODE SIGNING – placeholder for SignPath (application pending, NOT active yet).
-      # Once approved, Glassbed.exe has to be signed before packaging and the setup.exe
-      # afterwards (see the two ">>> SignPath" markers in build.ps1). No token or secret
-      # is configured in this repository.
-      # ------------------------------------------------------------------------------
+      # Optional code signing step: not used. If added later, Glassbed.exe is signed before
+      # packaging and the setup.exe afterwards (see the two markers in build.ps1).
 
       - name: Show checksums
         shell: pwsh

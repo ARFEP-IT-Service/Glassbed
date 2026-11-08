@@ -86,7 +86,7 @@ Deinstallieren über *Einstellungen → Apps*; deine Einstellungen bleiben erhal
 **Portable ZIP:** Lade `Glassbed-<version>-windows-portable.zip` herunter, entpacke sie und starte
 **`Glassbed.exe`**. Lass den Ordner zusammen – die `.exe` braucht die Dateien daneben.
 
-Beide sind noch nicht signiert (siehe [Code-Signing-Richtlinie](CODE_SIGNING_POLICY.md)), daher
+Beide sind noch nicht signiert (siehe [Downloads prüfen](VERIFYING.md)), daher
 kann Windows SmartScreen warnen. Die Lizenzen der mitgelieferten Komponenten sind in
 `THIRD_PARTY_NOTICES.md` aufgeführt; ihre vollständigen Texte stehen im Ordner `licenses/`.
 
@@ -219,7 +219,7 @@ Einträge erscheinen auf Englisch.
 
 Die Windows-Version enthält Komponenten von Drittanbietern unter deren eigenen Lizenzen – siehe
 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md); die vollständigen Texte stehen in [`licenses/`](licenses).
-Wie Windows-Versionen signiert werden: [CODE_SIGNING_POLICY.md](CODE_SIGNING_POLICY.md).
+So prüfst du Windows-Downloads: [VERIFYING.md](VERIFYING.md).
 
 Das ARFEP-Logo in [`glassbed/assets/arfep/`](glassbed/assets/arfep/NOTICE.md) fällt **nicht** unter
 die MIT-Lizenz; Forks ohne Verbindung zu ARFEP IT-Service müssen es entfernen oder ersetzen.
