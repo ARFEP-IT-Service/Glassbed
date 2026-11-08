@@ -6,6 +6,7 @@ Run after changing dependencies:  python tools/third_party_notices.py
 """
 from __future__ import annotations
 
+import os
 import platform
 import re
 import sys
@@ -107,6 +108,14 @@ component("PyInstaller bootloader", version("pyinstaller"),
           dist_files("pyinstaller"),
           "`Glassbed.exe` starts through the PyInstaller bootloader. Its license explicitly allows "
           "distributing programs built with it under any license.")
+
+component("Inno Setup", os.environ.get("INNO_SETUP_VERSION", "6"),
+          "Inno Setup License (permissive; commercial use allowed)",
+          "https://jrsoftware.org/isinfo.php",
+          [("Inno Setup License (license.txt)", (LICENSES / "InnoSetup.txt").read_text(encoding="utf-8").strip())],
+          "Used only to build the installer (Glassbed-<version>-setup.exe); the setup program and "
+          "uninstaller contain Inno Setup code. Copyright (C) 1997-2026 Jordan Russell, portions "
+          "Copyright (C) 2000-2026 Martijn Laan, https://jrsoftware.org/. Not part of the portable ZIP.")
 
 component("Microsoft Visual C++ Runtime", "14 (`VCRUNTIME140.dll`, `VCRUNTIME140_1.dll`)",
           "Microsoft Software License Terms (redistributable)",

@@ -58,6 +58,8 @@ entstanden – und sollte mit vielen Netzwerkdruckern funktionieren, die eSCL un
 - Druckerstatus und Tonerstand in der Kopfzeile
 - Deutsch, Englisch und Türkisch · helles, dunkles oder System-Design
 - Ein Fenster: Editor, Einstellungen und Meldungen bleiben darin; ein zweiter Start nutzt das vorhandene Fenster
+- Optional, standardmäßig aus: Symbol im Infobereich mit **Schnell-Scan**, Toner-Warnung
+  (unter 15 %, je Farbe höchstens einmal am Tag) und *Mit Windows starten*
 - Kommandozeile für Skripte
 
 <table>
@@ -75,10 +77,18 @@ entstanden – und sollte mit vielen Netzwerkdruckern funktionieren, die eSCL un
 
 ### Windows
 
-Lade die aktuelle Version von der Seite [Releases](../../releases/latest) herunter, entpacke sie
-und starte **`Glassbed.exe`**. Lass den Ordner zusammen – die `.exe` braucht die Dateien daneben.
-Die Lizenzen der mitgelieferten Komponenten sind in `THIRD_PARTY_NOTICES.md` aufgeführt;
-ihre vollständigen Texte stehen im Ordner `licenses/`.
+**Installer (empfohlen):** Lade `Glassbed-<version>-setup.exe` von der Seite
+[Releases](../../releases/latest) herunter und starte ihn per Doppelklick. Er installiert nur für
+dein Benutzerkonto – **ohne Administratorrechte** – nach `%LOCALAPPDATA%\Programs\Glassbed` und legt
+einen Eintrag im Startmenü an; Desktop-Verknüpfung und *Mit Windows starten* sind optional.
+Deinstallieren über *Einstellungen → Apps*; deine Einstellungen bleiben erhalten.
+
+**Portable ZIP:** Lade `Glassbed-<version>-windows-portable.zip` herunter, entpacke sie und starte
+**`Glassbed.exe`**. Lass den Ordner zusammen – die `.exe` braucht die Dateien daneben.
+
+Beide sind noch nicht signiert (siehe [Code-Signing-Richtlinie](CODE_SIGNING_POLICY.md)), daher
+kann Windows SmartScreen warnen. Die Lizenzen der mitgelieferten Komponenten sind in
+`THIRD_PARTY_NOTICES.md` aufgeführt; ihre vollständigen Texte stehen im Ordner `licenses/`.
 
 ### Aus dem Quellcode (Windows, macOS, Linux)
 
@@ -100,9 +110,11 @@ python -m glassbed
 
 ### Windows-App selbst bauen
 
+Für den Installer wird [Inno Setup 6](https://jrsoftware.org/isinfo.php) benötigt.
+
 ```powershell
 pip install -e ".[dev]"
-./build.ps1          # → dist/Glassbed/Glassbed.exe
+./build.ps1          # → dist/Glassbed-<version>-setup.exe und dist/Glassbed-<version>-windows-portable.zip
 ```
 
 ## Erste Schritte
@@ -207,6 +219,7 @@ Einträge erscheinen auf Englisch.
 
 Die Windows-Version enthält Komponenten von Drittanbietern unter deren eigenen Lizenzen – siehe
 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md); die vollständigen Texte stehen in [`licenses/`](licenses).
+Wie Windows-Versionen signiert werden: [CODE_SIGNING_POLICY.md](CODE_SIGNING_POLICY.md).
 
 Das ARFEP-Logo in [`glassbed/assets/arfep/`](glassbed/assets/arfep/NOTICE.md) fällt **nicht** unter
 die MIT-Lizenz; Forks ohne Verbindung zu ARFEP IT-Service müssen es entfernen oder ersetzen.

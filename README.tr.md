@@ -58,6 +58,8 @@ geliştirildi – ve eSCL ile IPP'yi destekleyen birçok ağ yazıcısıyla çal
 - Üst çubukta yazıcı durumu ve toner seviyeleri
 - Türkçe, Almanca ve İngilizce · açık, koyu veya sistem teması
 - Tek pencere: düzenleyici, ayarlar ve mesajlar pencerenin içinde kalır; Glassbed'i yeniden başlatmak mevcut pencereyi kullanır
+- İsteğe bağlı, varsayılan olarak kapalı: **Hızlı tarama** içeren bildirim alanı simgesi, toner uyarısı
+  (%15'in altında, renk başına günde en fazla bir kez) ve *Windows ile başlat*
 - Betikler için komut satırı arayüzü
 
 <table>
@@ -75,10 +77,18 @@ geliştirildi – ve eSCL ile IPP'yi destekleyen birçok ağ yazıcısıyla çal
 
 ### Windows
 
-En son sürümü [Releases](../../releases/latest) sayfasından indirin, zip dosyasını açın ve
+**Kurulum programı (önerilen):** [Releases](../../releases/latest) sayfasından
+`Glassbed-<version>-setup.exe` dosyasını indirin ve çift tıklayın. Yalnızca kendi kullanıcı hesabınız
+için – **yönetici hakları gerekmeden** – `%LOCALAPPDATA%\Programs\Glassbed` klasörüne kurar ve Başlat
+menüsüne bir kayıt ekler; masaüstü kısayolu ve *Windows ile başlat* isteğe bağlıdır. Kaldırmak için
+*Ayarlar → Uygulamalar*; ayarlarınız korunur.
+
+**Taşınabilir ZIP:** `Glassbed-<version>-windows-portable.zip` dosyasını indirin, açın ve
 **`Glassbed.exe`** dosyasını başlatın. Klasörü bir arada tutun – `.exe` yanındaki dosyalara ihtiyaç duyar.
-Birlikte gelen bileşenlerin lisansları `THIRD_PARTY_NOTICES.md` dosyasında listelenmiştir;
-tam metinleri `licenses/` klasöründedir.
+
+İkisi de henüz imzalı değildir (bkz. [kod imzalama politikası](CODE_SIGNING_POLICY.md)); bu yüzden
+Windows SmartScreen uyarı gösterebilir. Birlikte gelen bileşenlerin lisansları
+`THIRD_PARTY_NOTICES.md` dosyasında listelenmiştir; tam metinleri `licenses/` klasöründedir.
 
 ### Kaynak koddan (Windows, macOS, Linux)
 
@@ -100,9 +110,11 @@ python -m glassbed
 
 ### Windows uygulamasını kendiniz derleyin
 
+Kurulum programı için [Inno Setup 6](https://jrsoftware.org/isinfo.php) gerekir.
+
 ```powershell
 pip install -e ".[dev]"
-./build.ps1          # → dist/Glassbed/Glassbed.exe
+./build.ps1          # → dist/Glassbed-<version>-setup.exe ve dist/Glassbed-<version>-windows-portable.zip
 ```
 
 ## Başlarken
@@ -207,6 +219,7 @@ eksik girişler İngilizce görünür.
 
 Windows sürümü, kendi lisanslarına tabi üçüncü taraf bileşenler içerir – bkz.
 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md); tam metinler [`licenses/`](licenses) klasöründedir.
+Windows sürümlerinin nasıl imzalandığı: [CODE_SIGNING_POLICY.md](CODE_SIGNING_POLICY.md).
 
 [`glassbed/assets/arfep/`](glassbed/assets/arfep/NOTICE.md) içindeki ARFEP logosu MIT lisansına
 **dahil değildir**; ARFEP IT-Service ile bağlantısı olmayan fork'lar logoyu kaldırmalı veya değiştirmelidir.

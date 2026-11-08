@@ -58,6 +58,8 @@ and should work with many network printers that support eSCL and IPP.
 - Printer status and toner levels in the header
 - English, German and Turkish · light, dark or system theme
 - One window: editor, settings and messages stay inside it; starting Glassbed again reuses it
+- Optional, off by default: icon in the notification area with **Quick scan**, a toner warning
+  (below 15 %, at most once a day per colour) and *Start with Windows*
 - Command line interface for scripts
 
 <table>
@@ -75,10 +77,18 @@ and should work with many network printers that support eSCL and IPP.
 
 ### Windows
 
-Download the latest build from the [Releases](../../releases/latest) page, unzip it and start
+**Installer (recommended):** download `Glassbed-<version>-setup.exe` from the
+[Releases](../../releases/latest) page and double-click it. It installs for your user account
+only – **no administrator rights needed** – into `%LOCALAPPDATA%\Programs\Glassbed` and adds a
+Start menu entry; a desktop shortcut and *Start with Windows* are optional. Uninstall via
+*Settings → Apps*; your settings are kept.
+
+**Portable ZIP:** download `Glassbed-<version>-windows-portable.zip`, unzip it and start
 **`Glassbed.exe`**. Keep the whole folder together – the `.exe` needs the files next to it.
-The licenses of the bundled components are listed in `THIRD_PARTY_NOTICES.md`;
-their full texts are in the `licenses/` folder.
+
+Both are not code-signed yet (see the [code signing policy](CODE_SIGNING_POLICY.md)), so Windows
+SmartScreen may show a warning. The licenses of the bundled components are listed in
+`THIRD_PARTY_NOTICES.md`; their full texts are in the `licenses/` folder.
 
 ### From source (Windows, macOS, Linux)
 
@@ -100,9 +110,11 @@ python -m glassbed
 
 ### Build the Windows app yourself
 
+Requires [Inno Setup 6](https://jrsoftware.org/isinfo.php) for the installer.
+
 ```powershell
 pip install -e ".[dev]"
-./build.ps1          # → dist/Glassbed/Glassbed.exe
+./build.ps1          # → dist/Glassbed-<version>-setup.exe and dist/Glassbed-<version>-windows-portable.zip
 ```
 
 ## Getting started
@@ -208,6 +220,7 @@ back to English.
 
 The Windows build bundles third-party components under their own licenses – see
 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md); their full texts are in [`licenses/`](licenses).
+How Windows releases are signed: [CODE_SIGNING_POLICY.md](CODE_SIGNING_POLICY.md).
 
 The ARFEP logo in [`glassbed/assets/arfep/`](glassbed/assets/arfep/NOTICE.md) is **not** part
 of the MIT license; forks that are not affiliated with ARFEP IT-Service must remove or replace it.

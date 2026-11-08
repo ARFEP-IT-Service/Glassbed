@@ -1,37 +1,57 @@
-"""Generate glassbed/assets/icon.png and icon.ico (run once, results are committed)."""
+"""Render the app icon from glassbed/assets/icon/glassbed.svg (results are committed).
+
+Writes glassbed-<size>.png for 16–512 px and glassbed.ico (16–256 px). The small sizes
+(16 and 24 px) are drawn without the folded corner so they stay crisp.
+Run:  python tools/make_icon.py
+"""
+from __future__ import annotations
+
+import re
+import sys
 from pathlib import Path
 
-from PIL import Image, ImageDraw
+from PIL import Image
+from PySide6.QtCore import QByteArray, QRectF, Qt
+from PySide6.QtGui import QGuiApplication, QImage, QPainter
+from PySide6.QtSvg import QSvgRenderer
 
-OUT = Path(__file__).resolve().parent.parent / "glassbed" / "assets"
-S = 1024
+ICON_DIR = Path(__file__).resolve().parent.parent / "glassbed" / "assets" / "icon"
+SVG = ICON_DIR / "glassbed.svg"
+SIZES = (16, 24, 32, 48, 64, 128, 256, 512)
+ICO_SIZES = (16, 24, 32, 48, 64, 128, 256)
+SMALL = (16, 24)                                  # without the folded corner
+DOG_EAR = re.compile(r'\s*<path d="M154 44 L154 80 L190 80 Z"[^>]*/>')
 
 
-def draw() -> Image.Image:
-    img = Image.new("RGBA", (S, S), (0, 0, 0, 0))
-    d = ImageDraw.Draw(img)
-    d.rounded_rectangle((40, 40, S - 40, S - 40), radius=220, fill=(28, 86, 168))
-    # paper sheet
-    d.rounded_rectangle((300, 150, 724, 560), radius=30, fill=(255, 255, 255))
-    for i, w in enumerate((300, 260, 320, 200)):
-        y = 230 + i * 70
-        d.rounded_rectangle((360, y, 360 + w, y + 30), radius=15, fill=(160, 180, 210))
-    # printer body
-    d.rounded_rectangle((170, 470, 854, 800), radius=70, fill=(240, 244, 250))
-    d.rounded_rectangle((260, 560, 764, 600), radius=20, fill=(28, 86, 168))
-    # colour dots (toner)
-    for i, c in enumerate(((0, 180, 220), (230, 0, 140), (250, 210, 0), (30, 30, 30))):
-        x = 290 + i * 90
-        d.ellipse((x, 680, x + 54, 734), fill=c)
-    return img
+def render(svg: str, size: int) -> Image.Image:
+    renderer = QSvgRenderer(QByteArray(svg.encode("utf-8")))
+    img = QImage(size, size, QImage.Format.Format_ARGB32)
+    img.fill(Qt.GlobalColor.transparent)
+    painter = QPainter(img)
+    painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+    renderer.render(painter, QRectF(0, 0, size, size))
+    painter.end()
+    rgba = img.convertToFormat(QImage.Format.Format_RGBA8888)
+    return Image.frombuffer("RGBA", (size, size), bytes(rgba.constBits()), "raw", "RGBA", 0, 1).copy()
+
+
+_APP = None                                         # Qt needs a living application object to render
 
 
 def main() -> None:
-    OUT.mkdir(parents=True, exist_ok=True)
-    img = draw()
-    img.resize((256, 256), Image.LANCZOS).save(OUT / "icon.png")
-    img.save(OUT / "icon.ico", sizes=[(16, 16), (24, 24), (32, 32), (48, 48), (64, 64), (128, 128), (256, 256)])
-    print("written to", OUT)
+    global _APP
+    _APP = QGuiApplication.instance() or QGuiApplication(sys.argv)
+    full = SVG.read_text(encoding="utf-8")
+    simple = DOG_EAR.sub("", full)
+    assert simple != full, "folded-corner path not found in the SVG"
+    images = {}
+    for size in SIZES:
+        images[size] = render(simple if size in SMALL else full, size)
+        images[size].save(ICON_DIR / f"glassbed-{size}.png", optimize=True)
+    largest = images[max(ICO_SIZES)]
+    largest.save(ICON_DIR / "glassbed.ico", format="ICO", sizes=[(s, s) for s in ICO_SIZES],
+                 append_images=[images[s] for s in ICO_SIZES if s != max(ICO_SIZES)])
+    print("written:", ", ".join(f"glassbed-{s}.png" for s in SIZES), "+ glassbed.ico")
 
 
 if __name__ == "__main__":

@@ -1,15 +1,16 @@
 """Main window: device bar, status, tabs – and every other view, in this one window."""
 from __future__ import annotations
 
-from pathlib import Path
-
 from PySide6.QtCore import Qt, QTimer, QUrl
-from PySide6.QtGui import QDesktopServices, QIcon
+from PySide6.QtGui import QDesktopServices
 from PySide6.QtWidgets import (QApplication, QButtonGroup, QComboBox, QHBoxLayout, QLabel,
                                QMainWindow, QPushButton, QStackedWidget, QToolButton,
                                QVBoxLayout, QWidget)
 
-from .. import __version__, brand, config, i18n
+import sys
+from pathlib import Path
+
+from .. import __version__, autostart, brand, config, i18n
 from ..discovery import Device, discover
 from ..escl import EsclScanner
 from ..i18n import tr
@@ -21,10 +22,11 @@ from .settings_page import SettingsPage
 from .overlay import ConfirmOverlay
 from .toast import Toast
 from .toast import style as toast_style
+from .icons import app_icon
+from .tray import TrayController
 from .widgets import CmykStripe, TonerBar
 from .worker import run_task
 
-ASSETS = Path(__file__).resolve().parent.parent / "assets"
 
 
 class MainWindow(QMainWindow):
@@ -32,9 +34,7 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.settings = config.settings()
         self.setWindowTitle(f"Glassbed {__version__}")
-        icon = ASSETS / "icon.png"
-        if icon.exists():
-            self.setWindowIcon(QIcon(str(icon)))
+        self.setWindowIcon(app_icon())
         self._device: Device | None = None
         self._devices: dict[str, Device] = {}
         self._status = (tr("Connecting…"), theme.T["muted"])
@@ -50,6 +50,11 @@ class MainWindow(QMainWindow):
         self._timer = QTimer(self)
         self._timer.timeout.connect(self.refresh_status)
         self._timer.start(30_000)
+
+        self._closing = False
+        self.tray = TrayController(self)
+        self.tray.set_enabled(self.settings.value("ui/tray", False, type=bool))
+        self._repair_autostart()
 
         host = self.settings.value("device/host", "")
         if host:
@@ -216,12 +221,46 @@ class MainWindow(QMainWindow):
 
     def bring_to_front(self, files: list[str] | None = None) -> None:
         """Called when Glassbed is started again: reuse this window instead of a new one."""
+        files = files or []
+        if any(Path(f).name == autostart.TRAY_FLAG for f in files):
+            return                              # started again "into the tray": stay where we are
         if self.isMinimized():
             self.showNormal()
         self.show()
         self.raise_()
         self.activateWindow()
-        self.open_files(files or [])
+        self.open_files(files)
+
+    # -- tray ---------------------------------------------------------------
+    def current_device(self) -> Device | None:
+        return self._device
+
+    def quick_scan(self) -> None:
+        """Tray: scan with the last used settings; the pages land in the scan tab."""
+        self.bring_to_front()
+        self.close_page()
+        self.tabs.setCurrentWidget(self.scan_tab)
+        if self.scan_tab._cancel is None:      # not while a scan is already running
+            self.scan_tab.start_scan()
+
+    def quit_app(self) -> None:
+        """Tray: really quit – unsaved scans are still protected by the question."""
+        if self.scan_tab.has_unsaved():
+            self.bring_to_front()
+            self._confirm_close()
+            return
+        self._close_now()
+
+    def _repair_autostart(self) -> None:
+        if not getattr(sys, "frozen", False):
+            return
+        tray, auto = autostart.effective(self.settings.value("ui/tray", False, type=bool),
+                                         self.settings.value("ui/autostart", False, type=bool))
+        if auto:
+            try:
+                autostart.ensure()
+            except OSError:
+                pass                            # registry not writable: keep running without it
 
     # -- settings -----------------------------------------------------------
     def open_settings(self) -> None:
@@ -237,10 +276,24 @@ class MainWindow(QMainWindow):
         new_theme = page.chosen_theme()
         theme_changed = new_theme != self.settings.value("ui/theme", "system")
         self.settings.setValue("ui/theme", new_theme)
+        self._apply_tray(page.chosen_tray(), page.chosen_autostart())
         language = page.chosen_language()
         if language != i18n.LANG or theme_changed:
             # rebuild after the settings view has closed
             QTimer.singleShot(0, lambda: self._rebuild(language))
+
+    def _apply_tray(self, tray: bool, auto: bool) -> None:
+        tray, auto = autostart.effective(tray, auto)
+        self.settings.setValue("ui/tray", tray)
+        self.settings.setValue("ui/autostart", auto)
+        self.tray.set_enabled(tray)
+        try:
+            if auto:
+                autostart.enable()
+            else:
+                autostart.disable()
+        except OSError as e:
+            self.show_alert("error", tr("Start with Windows"), str(e))
 
     def _rebuild(self, code: str) -> None:
         """Switch language/theme in this same window, keeping pages, files and settings."""
@@ -270,6 +323,7 @@ class MainWindow(QMainWindow):
         if files:
             self.print_tab.add_files(files)
         self.statusBar().clearMessage()
+        self.tray.retranslate()
         self.refresh_status()
 
     def _save_state(self) -> None:
@@ -279,12 +333,21 @@ class MainWindow(QMainWindow):
         self.print_tab.save_settings()
 
     def closeEvent(self, event) -> None:
-        if not getattr(self, "_closing", False) and self.scan_tab.has_unsaved():
+        if not self._closing and self.tray.active:
+            event.ignore()                      # the X only hides the window into the tray
+            self._save_state()
+            self.hide()
+            self.tray.notify_hidden()
+            return
+        if not self._closing and self.scan_tab.has_unsaved():
             event.ignore()                      # ask first – inside the window
             self._confirm_close()
             return
         self._save_state()
         super().closeEvent(event)
+        if self.tray.active:                    # nothing else keeps the app alive then
+            self.tray.set_enabled(False)
+            QApplication.quit()
 
     def _confirm_close(self) -> None:
         if getattr(self, "_close_overlay", None) is not None:

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "glassbed"
-version = "0.1.0"
+version = "0.2.0"
 description = "Driverless scan & print app for network multifunction printers (eSCL/AirScan + IPP/AirPrint)"
 readme = "README.md"
 license = "MIT"
@@ -39,7 +39,7 @@ glassbed = "glassbed.__main__:main"
 include = ["glassbed*"]
 
 [tool.setuptools.package-data]
-glassbed = ["assets/*", "assets/arfep/*"]
+glassbed = ["assets/*", "assets/arfep/*", "assets/icon/*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

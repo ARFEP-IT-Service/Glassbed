@@ -18,6 +18,7 @@ included in the `licenses/` folder next to `Glassbed.exe`.
 | [typing_extensions](https://github.com/python/typing_extensions) | required by the libraries above | PSF-2.0 |
 | Microsoft Visual C++ Runtime | Windows runtime (Windows build only) | Microsoft Software License Terms (redistributable) |
 | [PyInstaller](https://pyinstaller.org/) bootloader | Windows build only | GPL-2.0-or-later with bootloader exception |
+| [Inno Setup](https://jrsoftware.org/isinfo.php) | Windows installer (setup.exe only) | Inno Setup License (permissive) – © Jordan Russell, Martijn Laan |
 
 ## LGPL components (Qt / PySide6, python-zeroconf)
 
