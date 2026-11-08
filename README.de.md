@@ -110,7 +110,7 @@ python -m glassbed
 
 ### Windows-App selbst bauen
 
-Für den Installer wird [Inno Setup 6](https://jrsoftware.org/isinfo.php) benötigt.
+Für den Installer wird [NSIS 3](https://nsis.sourceforge.io/) benötigt.
 
 ```powershell
 pip install -e ".[dev]"

@@ -1,4 +1,4 @@
-# Builds the Windows release of Glassbed (requires: pip install -e ".[dev]" and Inno Setup 6):
+# Builds the Windows release of Glassbed (requires: pip install -e ".[dev]" and NSIS 3):
 #   dist/Glassbed/                                the program folder
 #   dist/Glassbed-<version>-windows-portable.zip  portable ZIP
 #   dist/Glassbed-<version>-setup.exe             per-user installer
@@ -9,23 +9,18 @@ Set-Location $PSScriptRoot
 $version = python -c "import glassbed; print(glassbed.__version__)"
 if ($LASTEXITCODE -ne 0 -or -not $version) { throw "could not read the version from glassbed/__init__.py" }
 
-# Inno Setup compiler: PATH, then the usual per-user and per-machine locations
-$iscc = (Get-Command ISCC.exe -ErrorAction SilentlyContinue).Source
-if (-not $iscc) {
-    $iscc = @("$env:LOCALAPPDATA\Programs\Inno Setup 6\ISCC.exe",
-              "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe",
-              "$env:ProgramFiles\Inno Setup 6\ISCC.exe") | Where-Object { Test-Path $_ } | Select-Object -First 1
+# NSIS compiler: PATH, the usual install locations, then a portable copy under %LOCALAPPDATA%\Programs
+$makensis = (Get-Command makensis.exe -ErrorAction SilentlyContinue).Source
+if (-not $makensis) {
+    $makensis = @("${env:ProgramFiles(x86)}\NSIS\makensis.exe", "$env:ProgramFiles\NSIS\makensis.exe") +
+                @(Get-ChildItem "$env:LOCALAPPDATA\Programs\nsis-*\makensis.exe" -ErrorAction SilentlyContinue |
+                  Sort-Object FullName -Descending | ForEach-Object FullName) |
+                Where-Object { $_ -and (Test-Path $_) } | Select-Object -First 1
 }
-if (-not $iscc) { throw "Inno Setup 6 (ISCC.exe) not found - install it from https://jrsoftware.org/isinfo.php" }
-# ISCC.exe carries no version number; Inno Setup's own uninstall entry does (per-user or per-machine)
-$innoVersion = Get-ChildItem "HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall",
-                             "HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall",
-                             "HKLM:\Software\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall" -ErrorAction SilentlyContinue |
-    ForEach-Object { Get-ItemProperty $_.PSPath } | Where-Object { $_.DisplayName -like "Inno Setup*" } |
-    Select-Object -ExpandProperty DisplayVersion -First 1
-$env:INNO_SETUP_VERSION = if ($innoVersion) { $innoVersion } else { "6" }
+if (-not $makensis) { throw "NSIS 3 (makensis.exe) not found - install it from https://nsis.sourceforge.io/" }
+$env:NSIS_VERSION = (& $makensis /VERSION).Trim().TrimStart("v")
 
-Write-Host "Building Glassbed $version (Inno Setup $env:INNO_SETUP_VERSION)"
+Write-Host "Building Glassbed $version (NSIS $env:NSIS_VERSION)"
 
 python -m PyInstaller --noconfirm --clean --windowed `
     --name Glassbed `
@@ -63,8 +58,9 @@ $setup = "dist/Glassbed-$version-setup.exe"
 python tools/package.py zip dist/Glassbed $zip
 if ($LASTEXITCODE -ne 0) { throw "ZIP packaging failed" }
 
-& $iscc /Q "/DAppVersion=$version" installer\glassbed.iss
-if ($LASTEXITCODE -ne 0) { throw "Inno Setup failed" }
+# /WX: any warning fails the build (a stray line continuation once dropped all files silently)
+& $makensis /V2 /WX "/DVERSION=$version" installer\glassbed.nsi
+if ($LASTEXITCODE -ne 0) { throw "NSIS failed" }
 
 # >>> SignPath: sign the setup.exe here, before the checksums are written (not set up yet) <<<
 

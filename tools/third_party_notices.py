@@ -109,13 +109,16 @@ component("PyInstaller bootloader", version("pyinstaller"),
           "`Glassbed.exe` starts through the PyInstaller bootloader. Its license explicitly allows "
           "distributing programs built with it under any license.")
 
-component("Inno Setup", os.environ.get("INNO_SETUP_VERSION", "6"),
-          "Inno Setup License (permissive; commercial use allowed)",
-          "https://jrsoftware.org/isinfo.php",
-          [("Inno Setup License (license.txt)", (LICENSES / "InnoSetup.txt").read_text(encoding="utf-8").strip())],
-          "Used only to build the installer (Glassbed-<version>-setup.exe); the setup program and "
-          "uninstaller contain Inno Setup code. Copyright (C) 1997-2026 Jordan Russell, portions "
-          "Copyright (C) 2000-2026 Martijn Laan, https://jrsoftware.org/. Not part of the portable ZIP.")
+component("NSIS (Nullsoft Scriptable Install System)", os.environ.get("NSIS_VERSION", "3"),
+          "zlib/libpng; LZMA compression module: CPL-1.0 with linking exception",
+          "https://nsis.sourceforge.io/",
+          [("NSIS COPYING (zlib/libpng, bzip2 and CPL-1.0 incl. the LZMA exception)",
+            (LICENSES / "NSIS-COPYING.txt").read_text(encoding="utf-8").strip())],
+          "Used only to build the installer (Glassbed-<version>-setup.exe). The setup program and the "
+          "uninstaller contain the NSIS installer stub and plug-ins (zlib/libpng license) and the LZMA "
+          "decompressor, which is distributed under the Common Public License 1.0; thanks to its "
+          "linking exception, Glassbed itself is not subject to the CPL. Source code of NSIS, including "
+          "the LZMA module: https://sourceforge.net/projects/nsis/files/ . Not part of the portable ZIP.")
 
 component("Microsoft Visual C++ Runtime", "14 (`VCRUNTIME140.dll`, `VCRUNTIME140_1.dll`)",
           "Microsoft Software License Terms (redistributable)",

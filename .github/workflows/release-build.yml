@@ -27,13 +27,13 @@ jobs:
       - name: Run tests
         run: python -m pytest -q
 
-      - name: Install Inno Setup (if the runner has none)
+      - name: Provide NSIS (preinstalled on most runners, otherwise install it)
         shell: pwsh
         run: |
-          $found = (Get-Command ISCC.exe -ErrorAction SilentlyContinue) -or
-                   (Test-Path "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe") -or
-                   (Test-Path "$env:ProgramFiles\Inno Setup 6\ISCC.exe")
-          if (-not $found) { choco install innosetup --yes --no-progress }
+          $found = (Get-Command makensis.exe -ErrorAction SilentlyContinue) -or
+                   (Test-Path "${env:ProgramFiles(x86)}\NSIS\makensis.exe") -or
+                   (Test-Path "$env:ProgramFiles\NSIS\makensis.exe")
+          if ($found) { Write-Host "NSIS found" } else { choco install nsis --yes --no-progress }
 
       - name: Build portable ZIP and installer
         shell: pwsh

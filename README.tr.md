@@ -110,7 +110,7 @@ python -m glassbed
 
 ### Windows uygulamasını kendiniz derleyin
 
-Kurulum programı için [Inno Setup 6](https://jrsoftware.org/isinfo.php) gerekir.
+Kurulum programı için [NSIS 3](https://nsis.sourceforge.io/) gerekir.
 
 ```powershell
 pip install -e ".[dev]"
