@@ -85,7 +85,7 @@ ihre vollständigen Texte stehen im Ordner `licenses/`.
 Benötigt Python 3.10 oder neuer.
 
 ```bash
-git clone https://github.com/ARFEP-IT-Service/glassbed.git
+git clone https://github.com/ARFEP-IT-Service/Glassbed.git
 cd glassbed
 pip install .
 glassbed

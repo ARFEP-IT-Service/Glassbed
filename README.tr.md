@@ -85,7 +85,7 @@ tam metinleri `licenses/` klasöründedir.
 Python 3.10 veya daha yenisi gerekir.
 
 ```bash
-git clone https://github.com/ARFEP-IT-Service/glassbed.git
+git clone https://github.com/ARFEP-IT-Service/Glassbed.git
 cd glassbed
 pip install .
 glassbed

@@ -90,7 +90,9 @@ component("pypdfium2 and PDFium", version("pypdfium2"),
 
 component("python-zeroconf", version("zeroconf"), "LGPL-2.1-or-later",
           "https://github.com/python-zeroconf/python-zeroconf",
-          dist_files("zeroconf"),
+          dist_files("zeroconf")
+          + [("GNU Lesser General Public License v2.1 – complete official text (gnu.org)",
+              (LICENSES / "LGPL-2.1.txt").read_text(encoding="utf-8").strip())],
           "Bundled unmodified. Source code: https://github.com/python-zeroconf/python-zeroconf. "
           "Glassbed's own source code is public, so the program can be rebuilt with a modified zeroconf.")
 
