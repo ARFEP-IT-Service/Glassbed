@@ -1,0 +1,4 @@
+Microsoft Visual C++ Runtime 14 (`VCRUNTIME140.dll`, `VCRUNTIME140_1.dll`)
+License: Microsoft Software License Terms (redistributable)
+Website: https://learn.microsoft.com/cpp/windows/latest-supported-vc-redist
+Note: Redistributed as part of the Python runtime under Microsoft's redistribution terms: https://visualstudio.microsoft.com/license-terms/

@@ -1,0 +1,45 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "glassbed"
+version = "0.1.0"
+description = "Driverless scan & print app for network multifunction printers (eSCL/AirScan + IPP/AirPrint)"
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+requires-python = ">=3.10"
+keywords = ["scanner", "printer", "escl", "airscan", "airprint", "ipp", "hp"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+    "Environment :: X11 Applications :: Qt",
+    "Topic :: Multimedia :: Graphics :: Capture :: Scanners",
+    "Topic :: Printing",
+]
+dependencies = [
+    "PySide6>=6.6",
+    "Pillow>=10",
+    "numpy>=1.24",
+    "pypdfium2>=4",
+    "zeroconf>=0.130",
+]
+
+[project.optional-dependencies]
+dev = ["pytest", "pyflakes", "pyinstaller"]
+
+[project.scripts]
+glassbed-cli = "glassbed.cli:main"
+
+[project.gui-scripts]
+glassbed = "glassbed.__main__:main"
+
+[tool.setuptools.packages.find]
+include = ["glassbed*"]
+
+[tool.setuptools.package-data]
+glassbed = ["assets/*", "assets/arfep/*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

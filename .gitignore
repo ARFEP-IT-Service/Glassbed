@@ -1,0 +1,19 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.venv/
+venv/
+build/
+dist/
+*.spec
+.idea/
+.vscode/
+dist_next/
+
+# local AI assistant / editor configuration – never published
+CLAUDE.md
+.claude/
+AGENTS.md
+.cursor/
+.aider*

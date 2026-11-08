@@ -1,0 +1,5 @@
+# store text with LF in the repository; never touch binary files
+* text=auto eol=lf
+*.ps1 text eol=crlf
+*.png binary
+*.ico binary
