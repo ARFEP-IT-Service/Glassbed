@@ -96,6 +96,11 @@
       "de": "Glassbed {version} wird heruntergeladen…",
       "tr": "Glassbed {version} indiriliyor…"
     },
+    "Starting the setup…": {
+      "en": "Starting the setup…",
+      "de": "Setup wird gestartet…",
+      "tr": "Kurulum başlatılıyor…"
+    },
     "Update failed": {
       "en": "Update failed",
       "de": "Update fehlgeschlagen",

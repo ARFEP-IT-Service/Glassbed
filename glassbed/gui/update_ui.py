@@ -89,6 +89,13 @@ class UpdateBanner(QFrame):
             self.progress.setValue(int(done * 1000 / total))
             self.amount.setText(f"{done / 1e6:.1f} / {total / 1e6:.1f} MB")
 
+    def show_starting(self) -> None:
+        """Verified; the setup is being opened (and checked by SmartScreen) – no cancelling now."""
+        self.text.setText(tr("Starting the setup…"))
+        self.progress.setRange(0, 0)
+        self.amount.hide()
+        self.cancel_btn.hide()
+
 
 class UpdateController(QObject):
     """Owned by the main window. ``attach`` is called again whenever the window rebuilds its UI."""
@@ -236,17 +243,16 @@ class UpdateController(QObject):
         self.banner.show_progress(rel.version)
 
         def job(progress):
-            return updates.download(rel, folder, lambda d, t: progress((d, t)), cancel.is_set)
-
-        def done(setup):
-            self._cancel = None
+            setup = updates.download(rel, folder, lambda d, t: progress((d, t)), cancel.is_set)
+            progress(None)                      # SmartScreen checks the setup: may take seconds
             try:
                 updates.start_installer(setup)
             except OSError as e:
-                updates.cleanup_temp()
-                self._refresh_banner(force=True)
-                self.window.show_alert("error", tr("Update failed"), str(e))
-                return
+                raise updates.UpdateError(str(e)) from None
+            return setup
+
+        def done(_setup):
+            self._cancel = None
             self.window.quit_for_update()
 
         def failed(exc):
@@ -257,7 +263,15 @@ class UpdateController(QObject):
                 self.window.show_alert("error", tr("Update failed"), str(exc))
 
         run_task(job, on_done=done, on_error=failed,
-                 on_progress=lambda v: self.banner and self.banner.set_progress(*v))
+                 on_progress=self._on_progress)
+
+    def _on_progress(self, value) -> None:
+        if self.banner is None:
+            return
+        if value is None:
+            self.banner.show_starting()
+        else:
+            self.banner.set_progress(*value)
 
     def cancel_download(self) -> None:
         if self._cancel is not None:

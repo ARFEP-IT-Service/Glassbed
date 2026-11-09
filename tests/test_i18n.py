@@ -45,7 +45,7 @@ def test_placeholders_match():
 # the in-app update replaced the two "download in your browser" texts with its own
 UPDATE_REMOVED = {"Glassbed {version} is downloading in your browser",
                   "Start the setup after the download – your settings are kept."}
-UPDATE_ADDED = {"Downloading Glassbed {version}…", "Update failed", "Save your scans first",
+UPDATE_ADDED = {"Downloading Glassbed {version}…", "Starting the setup…", "Update failed", "Save your scans first",
                 "Glassbed closes for the update. Save or remove the scanned pages first."}
 
 

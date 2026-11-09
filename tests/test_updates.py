@@ -11,6 +11,7 @@ import json
 import os
 import socket
 import sys
+import threading
 import time
 import urllib.request
 from dataclasses import fields
@@ -715,8 +716,14 @@ def flow(monkeypatch, tmp_path):
             raise rec["error"]
         return rec["result"]
 
+    def fake_start(setup):
+        rec["started"].append(setup)
+        rec["thread"] = threading.current_thread() is threading.main_thread()
+        if rec.get("start_error"):
+            raise rec["start_error"]
+
     monkeypatch.setattr(updates, "download", fake_download)
-    monkeypatch.setattr(updates, "start_installer", lambda setup: rec["started"].append(setup))
+    monkeypatch.setattr(updates, "start_installer", fake_start)
     return rec
 
 
@@ -742,7 +749,19 @@ def test_update_installer_downloads_and_starts_setup(window, opened, flow):
     assert flow["downloads"] == [REL_SETUP]
     assert flow["started"] == [flow["result"]]
     assert window.quit_called is True
+    assert flow["thread"] is False                      # SmartScreen's check must not freeze the window
     assert opened == [] and window.alerts == []
+
+
+def test_update_setup_that_cannot_start(window, flow):
+    flow["start_error"] = OSError("The operation was canceled by the user")
+    ctl = controller(window, "installer", REL_SETUP)
+    with_banner(window, ctl)
+    ctl.update_now()
+    wait(3000, until=lambda: window.alerts)
+    assert not getattr(window, "quit_called", False)
+    assert window.alerts[0][0] == "error" and "canceled" in window.alerts[0][2]
+    assert ctl._cancel is None
 
 
 @pytest.mark.parametrize("kind", ["portable", "source", "unsupported"])
@@ -812,3 +831,5 @@ def test_banner_offer_and_progress(window):
     assert banner.cancel_btn.isVisibleTo(window) and not banner.update_btn.isVisibleTo(window)
     banner.set_progress(5_000_000, 10_000_000)
     assert banner.progress.value() == 500 and banner.amount.text() == "5.0 / 10.0 MB"
+    banner.show_starting()
+    assert banner.text.text() == "Starting the setup…" and not banner.cancel_btn.isVisibleTo(window)

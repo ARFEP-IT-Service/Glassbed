@@ -331,5 +331,17 @@ def start_installer(setup: Path) -> None:
     The shell honours the Zone.Identifier mark (SmartScreen); the user sees and confirms every
     step. /FROMAPP only lets the setup wait a few seconds until Glassbed has closed; it installs
     nothing silently and starts Glassbed afterwards only if the user ticks that on the last page.
+    The call returns only after SmartScreen's check (seconds), so it runs in a worker thread,
+    which the shell needs to be a COM apartment.
     """
-    os.startfile(str(setup), "open", "/FROMAPP", str(setup.parent))
+    com = None
+    if sys.platform == "win32":
+        import ctypes
+        com = ctypes.windll.ole32
+        # COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE, as ShellExecute asks for
+        initialized = com.CoInitializeEx(None, 0x2 | 0x4) in (0, 1)
+    try:
+        os.startfile(str(setup), "open", "/FROMAPP", str(setup.parent))
+    finally:
+        if com is not None and initialized:
+            com.CoUninitialize()
