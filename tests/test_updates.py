@@ -256,12 +256,80 @@ def test_fetch_latest_asks_the_api_only(monkeypatch):
     def fake_open(url, cfg, accept="*/*"):
         calls.append((url, accept))
         updates.check_url(url, cfg)
-        return io.BytesIO(json.dumps(api_answer()).encode())
+        return io.BytesIO(json.dumps([api_answer()]).encode())
 
     monkeypatch.setattr(updates, "_open", fake_open)
     rel = updates.fetch_latest(updates.Config())
     assert calls == [(updates.API_URL, "application/vnd.github+json")]
+    assert updates.API_URL.startswith("https://api.github.com/repos/ARFEP-IT-Service/Glassbed/releases?")
     assert rel == updates.Release("0.3.1", PAGE, PREFIX + "v0.3.1/" + SETUP)
+
+
+# -- Windows and Android share the repository: only vX.Y.Z tags count ----------------------
+def android_release(tag="android-v0.1.0", **extra):
+    data = {"tag_name": tag, "draft": False, "prerelease": False,
+            "html_url": "https://github.com/ARFEP-IT-Service/Glassbed/releases/tag/" + tag,
+            "assets": [{"name": "glassbed-android.apk",
+                        "browser_download_url": PREFIX + tag + "/glassbed-android.apk"}]}
+    data.update(extra)
+    return data
+
+
+def windows_release(version, **extra):
+    data = api_answer(PREFIX + f"v{version}/", tag_name=f"v{version}",
+                      html_url=f"https://github.com/ARFEP-IT-Service/Glassbed/releases/tag/v{version}",
+                      **extra)
+    data["assets"][0] = {"name": f"Glassbed-{version}-setup.exe",
+                         "browser_download_url": PREFIX + f"v{version}/Glassbed-{version}-setup.exe"}
+    return data
+
+
+def test_android_release_on_top_is_ignored():
+    """The newest release is Android's – the Windows updater still offers the newest vX.Y.Z."""
+    rel = updates.select_release([android_release(), windows_release("0.3.1"), windows_release("0.3.0")],
+                                 updates.Config())
+    assert rel is not None and rel.version == "0.3.1"
+    assert rel.setup_url == PREFIX + "v0.3.1/Glassbed-0.3.1-setup.exe"
+
+
+def test_only_android_releases_means_no_update():
+    assert updates.select_release([android_release(), android_release("android-v0.2.0")],
+                                  updates.Config()) is None
+
+
+def test_drafts_and_prereleases_are_ignored():
+    rel = updates.select_release([windows_release("0.4.0", draft=True),
+                                  windows_release("0.3.9", prerelease=True),
+                                  windows_release("0.3.1")], updates.Config())
+    assert rel.version == "0.3.1"
+
+
+def test_highest_v_version_wins_regardless_of_order():
+    rel = updates.select_release([windows_release("0.3.1"), windows_release("0.10.0"),
+                                  windows_release("0.9.2")], updates.Config())
+    assert rel.version == "0.10.0"
+
+
+def test_only_exact_v_tags_count():
+    """No "0.4.0" without v, no "v0.4" or "v0.4.0-rc1", no other prefixes."""
+    odd = [windows_release("0.3.1")]
+    for tag in ("0.4.0", "v0.4", "v0.4.0-rc1", "release-v0.4.0", "V0.4.0", "v0.4.0 "):
+        item = windows_release("0.4.0"); item["tag_name"] = tag; odd.append(item)
+    assert updates.select_release(odd, updates.Config()).version == "0.3.1"
+
+
+def test_fetch_latest_with_android_first(monkeypatch):
+    answer = [android_release(), windows_release("0.3.1")]
+    monkeypatch.setattr(updates, "_open", lambda url, cfg, accept="*/*": io.BytesIO(json.dumps(answer).encode()))
+    assert updates.fetch_latest(updates.Config()).version == "0.3.1"
+
+
+def test_fetch_latest_refuses_a_single_object(monkeypatch):
+    """The list endpoint answers with a list; anything else is an unexpected answer."""
+    monkeypatch.setattr(updates, "_open",
+                        lambda url, cfg, accept="*/*": io.BytesIO(json.dumps(api_answer()).encode()))
+    with pytest.raises(updates.UpdateError):
+        updates.fetch_latest(updates.Config())
 
 
 def test_fetch_latest_bad_answer(monkeypatch):

@@ -1,0 +1,855 @@
+{
+  "_comment": "DE/EN/TR texts of Glassbed (Windows and Android). Edit here; tools/export_shared.py copies them into the apps.",
+  "languages": {
+    "de": "Deutsch",
+    "en": "English",
+    "tr": "Türkçe"
+  },
+  "texts": {
+    "Language": {
+      "en": "Language",
+      "de": "Sprache",
+      "tr": "Dil"
+    },
+    "Edit": {
+      "en": "Edit",
+      "de": "Bearbeiten",
+      "tr": "Düzenle"
+    },
+    "Notification area": {
+      "en": "Notification area",
+      "de": "Infobereich",
+      "tr": "Bildirim alanı"
+    },
+    "Show icon in the notification area": {
+      "en": "Show icon in the notification area",
+      "de": "Symbol im Infobereich anzeigen",
+      "tr": "Simgeyi bildirim alanında göster"
+    },
+    "Start with Windows": {
+      "en": "Start with Windows",
+      "de": "Mit Windows starten",
+      "tr": "Windows ile başlat"
+    },
+    "With the icon, closing the window keeps Glassbed running in the notification area; it can scan from there and warns when toner runs low.": {
+      "en": "With the icon, closing the window keeps Glassbed running in the notification area; it can scan from there and warns when toner runs low.",
+      "de": "Mit dem Symbol läuft Glassbed beim Schließen des Fensters im Infobereich weiter; von dort kann gescannt werden, und es warnt, wenn der Toner zur Neige geht.",
+      "tr": "Simge açıkken pencereyi kapatmak Glassbed'i bildirim alanında çalışır durumda tutar; oradan tarama yapılabilir ve toner azaldığında uyarır."
+    },
+    "This system has no notification area.": {
+      "en": "This system has no notification area.",
+      "de": "Dieses System hat keinen Infobereich.",
+      "tr": "Bu sistemde bildirim alanı yok."
+    },
+    "Quick scan": {
+      "en": "Quick scan",
+      "de": "Schnell-Scan",
+      "tr": "Hızlı tarama"
+    },
+    "Quit": {
+      "en": "Quit",
+      "de": "Beenden",
+      "tr": "Çıkış"
+    },
+    "Glassbed keeps running in the notification area.": {
+      "en": "Glassbed keeps running in the notification area.",
+      "de": "Glassbed läuft im Infobereich weiter.",
+      "tr": "Glassbed bildirim alanında çalışmaya devam ediyor."
+    },
+    "Update": {
+      "en": "Update",
+      "de": "Aktualisieren",
+      "tr": "Güncelle"
+    },
+    "What's new": {
+      "en": "What's new",
+      "de": "Was ist neu",
+      "tr": "Yenilikler"
+    },
+    "Later": {
+      "en": "Later",
+      "de": "Später",
+      "tr": "Sonra"
+    },
+    "Skip this version": {
+      "en": "Skip this version",
+      "de": "Diese Version überspringen",
+      "tr": "Bu sürümü atla"
+    },
+    "Yes": {
+      "en": "Yes",
+      "de": "Ja",
+      "tr": "Evet"
+    },
+    "No": {
+      "en": "No",
+      "de": "Nein",
+      "tr": "Hayır"
+    },
+    "Glassbed {version} is available": {
+      "en": "Glassbed {version} is available",
+      "de": "Glassbed {version} ist verfügbar",
+      "tr": "Glassbed {version} kullanıma sunuldu"
+    },
+    "Glassbed {version} is downloading in your browser": {
+      "en": "Glassbed {version} is downloading in your browser",
+      "de": "Glassbed {version} wird im Browser heruntergeladen",
+      "tr": "Glassbed {version} tarayıcıda indiriliyor"
+    },
+    "Start the setup after the download – your settings are kept.": {
+      "en": "Start the setup after the download – your settings are kept.",
+      "de": "Nach dem Download das Setup starten – deine Einstellungen bleiben erhalten.",
+      "tr": "İndirme bittikten sonra kurulumu başlatın – ayarlarınız korunur."
+    },
+    "Check for updates?": {
+      "en": "Check for updates?",
+      "de": "Nach Updates suchen?",
+      "tr": "Güncellemeler denetlensin mi?"
+    },
+    "Glassbed can look for a new version on GitHub – at most once a day. GitHub sees your IP address when it does. Nothing is installed automatically; you decide each time. You can change this later in the settings.": {
+      "en": "Glassbed can look for a new version on GitHub – at most once a day. GitHub sees your IP address when it does. Nothing is installed automatically; you decide each time. You can change this later in the settings.",
+      "de": "Glassbed kann auf GitHub nach einer neuen Version suchen – höchstens einmal am Tag. GitHub sieht dabei deine IP-Adresse. Es wird nichts automatisch installiert; du entscheidest jedes Mal selbst. Du kannst das später in den Einstellungen ändern.",
+      "tr": "Glassbed, GitHub'da yeni bir sürüm olup olmadığına bakabilir – en fazla günde bir kez. Bu sırada GitHub IP adresinizi görür. Hiçbir şey otomatik olarak yüklenmez; her seferinde siz karar verirsiniz. Bunu daha sonra ayarlardan değiştirebilirsiniz."
+    },
+    "Check for updates": {
+      "en": "Check for updates",
+      "de": "Nach Updates suchen",
+      "tr": "Güncellemeleri denetle"
+    },
+    "At most once a day Glassbed asks GitHub whether a new version exists. GitHub sees your IP address. Nothing is installed automatically.": {
+      "en": "At most once a day Glassbed asks GitHub whether a new version exists. GitHub sees your IP address. Nothing is installed automatically.",
+      "de": "Höchstens einmal am Tag fragt Glassbed bei GitHub, ob es eine neue Version gibt. GitHub sieht deine IP-Adresse. Es wird nichts automatisch installiert.",
+      "tr": "Glassbed en fazla günde bir kez GitHub'a yeni bir sürüm olup olmadığını sorar. GitHub IP adresinizi görür. Hiçbir şey otomatik olarak yüklenmez."
+    },
+    "Check now": {
+      "en": "Check now",
+      "de": "Jetzt suchen",
+      "tr": "Şimdi denetle"
+    },
+    "Learn more": {
+      "en": "Learn more",
+      "de": "Mehr dazu",
+      "tr": "Daha fazla bilgi"
+    },
+    "Legal notice": {
+      "en": "Legal notice",
+      "de": "Impressum",
+      "tr": "Künye"
+    },
+    "Privacy": {
+      "en": "Privacy",
+      "de": "Datenschutz",
+      "tr": "Gizlilik"
+    },
+    "Updates": {
+      "en": "Updates",
+      "de": "Updates",
+      "tr": "Güncellemeler"
+    },
+    "Checking…": {
+      "en": "Checking…",
+      "de": "Suche läuft…",
+      "tr": "Denetleniyor…"
+    },
+    "Could not check for updates: {error}": {
+      "en": "Could not check for updates: {error}",
+      "de": "Suche nach Updates fehlgeschlagen: {error}",
+      "tr": "Güncellemeler denetlenemedi: {error}"
+    },
+    "Glassbed {version} is up to date.": {
+      "en": "Glassbed {version} is up to date.",
+      "de": "Glassbed {version} ist aktuell.",
+      "tr": "Glassbed {version} güncel."
+    },
+    "Toner low": {
+      "en": "Toner low",
+      "de": "Toner fast leer",
+      "tr": "Toner azaldı"
+    },
+    "{name}: {level} % left": {
+      "en": "{name}: {level} % left",
+      "de": "{name}: noch {level} %",
+      "tr": "{name}: %{level} kaldı"
+    },
+    "About": {
+      "en": "About",
+      "de": "Über",
+      "tr": "Hakkında"
+    },
+    "Glassbed is an open-source project by {company}.": {
+      "en": "Glassbed is an open-source project by {company}.",
+      "de": "Glassbed ist ein Open-Source-Projekt von {company}.",
+      "tr": "Glassbed, {company} tarafından geliştirilen açık kaynaklı bir projedir."
+    },
+    "IT service · Göttingen & nationwide": {
+      "en": "IT service · Göttingen & nationwide",
+      "de": "IT-Service · Göttingen & bundesweit",
+      "tr": "BT hizmeti · Göttingen ve tüm Almanya"
+    },
+    "Get IT help": {
+      "en": "Get IT help",
+      "de": "IT-Hilfe anfragen",
+      "tr": "BT desteği al"
+    },
+    "Unsaved scans": {
+      "en": "Unsaved scans",
+      "de": "Ungespeicherte Scans",
+      "tr": "Kaydedilmemiş taramalar"
+    },
+    "{n} scanned page(s) have not been saved yet. If you close Glassbed now, they are lost.": {
+      "en": "{n} scanned page(s) have not been saved yet. If you close Glassbed now, they are lost.",
+      "de": "{n} gescannte Seite(n) sind noch nicht gespeichert. Wenn du Glassbed jetzt schließt, gehen sie verloren.",
+      "tr": "{n} taranmış sayfa henüz kaydedilmedi. Glassbed'yi şimdi kapatırsanız kaybolur."
+    },
+    "A scan is still running. If you close Glassbed now, it is cancelled and the pages are lost.": {
+      "en": "A scan is still running. If you close Glassbed now, it is cancelled and the pages are lost.",
+      "de": "Ein Scan läuft noch. Wenn du Glassbed jetzt schließt, wird er abgebrochen und die Seiten gehen verloren.",
+      "tr": "Bir tarama devam ediyor. Glassbed'yi şimdi kapatırsanız iptal edilir ve sayfalar kaybolur."
+    },
+    "Save and close": {
+      "en": "Save and close",
+      "de": "Speichern und schließen",
+      "tr": "Kaydet ve kapat"
+    },
+    "Close without saving": {
+      "en": "Close without saving",
+      "de": "Ohne Speichern schließen",
+      "tr": "Kaydetmeden kapat"
+    },
+    "Tool": {
+      "en": "Tool",
+      "de": "Werkzeug",
+      "tr": "Araç"
+    },
+    "Blur": {
+      "en": "Blur",
+      "de": "Unscharf",
+      "tr": "Bulanık"
+    },
+    "Blur suits faces and photos. For numbers like an IBAN, black is safer.": {
+      "en": "Blur suits faces and photos. For numbers like an IBAN, black is safer.",
+      "de": "Unscharf passt für Gesichter und Fotos. Für Zahlen wie eine IBAN ist Schwarz sicherer.",
+      "tr": "Bulanık, yüzler ve fotoğraflar için uygundur. IBAN gibi numaralar için siyah daha güvenlidir."
+    },
+    "Fit": {
+      "en": "Fit",
+      "de": "Einpassen",
+      "tr": "Sığdır"
+    },
+    "Zoom in": {
+      "en": "Zoom in",
+      "de": "Vergrößern",
+      "tr": "Yakınlaştır"
+    },
+    "Zoom out": {
+      "en": "Zoom out",
+      "de": "Verkleinern",
+      "tr": "Uzaklaştır"
+    },
+    "Mouse wheel: zoom · Space or right mouse button + drag: move": {
+      "en": "Mouse wheel: zoom · Space or right mouse button + drag: move",
+      "de": "Mausrad: zoomen · Leertaste oder rechte Maustaste + ziehen: verschieben",
+      "tr": "Fare tekerleği: yakınlaştır · Boşluk veya sağ fare tuşu + sürükle: kaydır"
+    },
+    "Redact": {
+      "en": "Redact",
+      "de": "Schwärzen",
+      "tr": "Karart"
+    },
+    "Black": {
+      "en": "Black",
+      "de": "Schwarz",
+      "tr": "Siyah"
+    },
+    "White": {
+      "en": "White",
+      "de": "Weiß",
+      "tr": "Beyaz"
+    },
+    "Remove all": {
+      "en": "Remove all",
+      "de": "Alle entfernen",
+      "tr": "Tümünü kaldır"
+    },
+    "Drag a box over what should disappear. Click a box to select it, Del removes it. It is burned into the saved file and cannot be undone there.": {
+      "en": "Drag a box over what should disappear. Click a box to select it, Del removes it. It is burned into the saved file and cannot be undone there.",
+      "de": "Rechteck über das ziehen, was verschwinden soll. Rechteck anklicken und ziehen zum Verschieben, an den Griffpunkten zum Vergrößern, Pfeiltasten zum Feinjustieren, Entf zum Löschen. Im gespeicherten Dokument ist die Schwärzung fest eingebrannt.",
+      "tr": "Gizlenecek alanın üzerine bir kutu çizin. Taşımak için kutuyu sürükleyin, boyutlandırmak için tutamaçları kullanın, ince ayar için ok tuşları, silmek için Del. Kaydedilen dosyada karartma kalıcıdır."
+    },
+    "{n} redaction(s) on this page": {
+      "en": "{n} redaction(s) on this page",
+      "de": "{n} Schwärzung(en) auf dieser Seite",
+      "tr": "Bu sayfada {n} karartma"
+    },
+    "Back": {
+      "en": "Back",
+      "de": "Zurück",
+      "tr": "Geri"
+    },
+    "Print back sides": {
+      "en": "Print back sides",
+      "de": "Rückseiten drucken",
+      "tr": "Arka yüzleri yazdır"
+    },
+    "Edit page": {
+      "en": "Edit page",
+      "de": "Seite bearbeiten",
+      "tr": "Sayfayı düzenle"
+    },
+    "Edited": {
+      "en": "Edited",
+      "de": "Bearbeitet",
+      "tr": "Düzenlendi"
+    },
+    "Crop, straighten, brightness …": {
+      "en": "Crop, straighten, brightness …",
+      "de": "Zuschneiden, begradigen, Helligkeit …",
+      "tr": "Kırp, düzelt, parlaklık …"
+    },
+    "Crop": {
+      "en": "Crop",
+      "de": "Zuschneiden",
+      "tr": "Kırp"
+    },
+    "Auto": {
+      "en": "Auto",
+      "de": "Automatisch",
+      "tr": "Otomatik"
+    },
+    "Find the document on the scanner glass": {
+      "en": "Find the document on the scanner glass",
+      "de": "Dokument auf dem Scannerglas automatisch finden",
+      "tr": "Tarayıcı camındaki belgeyi otomatik bul"
+    },
+    "Whole page": {
+      "en": "Whole page",
+      "de": "Ganze Seite",
+      "tr": "Tüm sayfa"
+    },
+    "Drag the frame or its handles. Double-click: whole page.": {
+      "en": "Drag the frame or its handles. Double-click: whole page.",
+      "de": "Rahmen oder Griffpunkte ziehen. Doppelklick: ganze Seite.",
+      "tr": "Çerçeveyi veya tutamaçları sürükleyin. Çift tıklama: tüm sayfa."
+    },
+    "Rotate": {
+      "en": "Rotate",
+      "de": "Drehen",
+      "tr": "Döndür"
+    },
+    "Straighten": {
+      "en": "Straighten",
+      "de": "Begradigen",
+      "tr": "Düzelt"
+    },
+    "Brightness": {
+      "en": "Brightness",
+      "de": "Helligkeit",
+      "tr": "Parlaklık"
+    },
+    "Contrast": {
+      "en": "Contrast",
+      "de": "Kontrast",
+      "tr": "Kontrast"
+    },
+    "Double-click to reset": {
+      "en": "Double-click to reset",
+      "de": "Doppelklick zum Zurücksetzen",
+      "tr": "Sıfırlamak için çift tıklayın"
+    },
+    "Reset page": {
+      "en": "Reset page",
+      "de": "Seite zurücksetzen",
+      "tr": "Sayfayı sıfırla"
+    },
+    "Apply": {
+      "en": "Apply",
+      "de": "Übernehmen",
+      "tr": "Uygula"
+    },
+    "Settings": {
+      "en": "Settings",
+      "de": "Einstellungen",
+      "tr": "Ayarlar"
+    },
+    "Appearance": {
+      "en": "Appearance",
+      "de": "Darstellung",
+      "tr": "Görünüm"
+    },
+    "System": {
+      "en": "System",
+      "de": "System",
+      "tr": "Sistem"
+    },
+    "Light": {
+      "en": "Light",
+      "de": "Hell",
+      "tr": "Açık"
+    },
+    "Dark": {
+      "en": "Dark",
+      "de": "Dunkel",
+      "tr": "Koyu"
+    },
+    "Default save folder": {
+      "en": "Default save folder",
+      "de": "Standard-Speicherordner",
+      "tr": "Varsayılan kayıt klasörü"
+    },
+    "Scans are saved here unless you pick another folder in the scan tab.": {
+      "en": "Scans are saved here unless you pick another folder in the scan tab.",
+      "de": "Scans werden hier gespeichert, außer du wählst im Scan-Tab einen anderen Ordner.",
+      "tr": "Tarama sekmesinde başka bir klasör seçmezseniz taramalar buraya kaydedilir."
+    },
+    "Done": {
+      "en": "Done",
+      "de": "Fertig",
+      "tr": "Tamam"
+    },
+    "Choose folder…": {
+      "en": "Choose folder…",
+      "de": "Ordner wählen…",
+      "tr": "Klasör seç…"
+    },
+    "Quality": {
+      "en": "Quality",
+      "de": "Qualität",
+      "tr": "Kalite"
+    },
+    "High": {
+      "en": "High",
+      "de": "Hoch",
+      "tr": "Yüksek"
+    },
+    "Normal": {
+      "en": "Normal",
+      "de": "Normal",
+      "tr": "Normal"
+    },
+    "Compact": {
+      "en": "Compact",
+      "de": "Kompakt",
+      "tr": "Kompakt"
+    },
+    "Files": {
+      "en": "Files",
+      "de": "Dateien",
+      "tr": "Dosyalar"
+    },
+    "One file": {
+      "en": "One file",
+      "de": "Eine Datei",
+      "tr": "Tek dosya"
+    },
+    "Per page": {
+      "en": "Per page",
+      "de": "Je Seite",
+      "tr": "Sayfa başı"
+    },
+    "Every N": {
+      "en": "Every N",
+      "de": "Je N Seiten",
+      "tr": "Her N sayfa"
+    },
+    "pages per file": {
+      "en": "pages per file",
+      "de": "Seiten pro Datei",
+      "tr": "dosya başına sayfa"
+    },
+    "Copy": {
+      "en": "Copy",
+      "de": "Kopie",
+      "tr": "Kopya"
+    },
+    "Saving…": {
+      "en": "Saving…",
+      "de": "Speichere…",
+      "tr": "Kaydediliyor…"
+    },
+    "Saved": {
+      "en": "Saved",
+      "de": "Gespeichert",
+      "tr": "Kaydedildi"
+    },
+    "Already saved": {
+      "en": "Already saved",
+      "de": "Bereits gespeichert",
+      "tr": "Zaten kaydedildi"
+    },
+    "{n} files": {
+      "en": "{n} files",
+      "de": "{n} Dateien",
+      "tr": "{n} dosya"
+    },
+    "Open": {
+      "en": "Open",
+      "de": "Öffnen",
+      "tr": "Aç"
+    },
+    "Show in folder": {
+      "en": "Show in folder",
+      "de": "Im Ordner zeigen",
+      "tr": "Klasörde göster"
+    },
+    "Search": {
+      "en": "Search",
+      "de": "Suchen",
+      "tr": "Ara"
+    },
+    "Searching for devices…": {
+      "en": "Searching for devices…",
+      "de": "Suche Geräte im Netzwerk…",
+      "tr": "Ağdaki cihazlar aranıyor…"
+    },
+    "No devices found. Enter the IP address manually.": {
+      "en": "No devices found. Enter the IP address manually.",
+      "de": "Keine Geräte gefunden. Bitte IP-Adresse eingeben.",
+      "tr": "Cihaz bulunamadı. IP adresini elle girin."
+    },
+    "Found {n} device(s).": {
+      "en": "Found {n} device(s).",
+      "de": "{n} Gerät(e) gefunden.",
+      "tr": "{n} cihaz bulundu."
+    },
+    "Open the printer's built-in web page": {
+      "en": "Open the printer's built-in web page",
+      "de": "Eingebaute Webseite des Druckers öffnen",
+      "tr": "Yazıcının web arayüzünü aç"
+    },
+    "IP address or host name": {
+      "en": "IP address or host name",
+      "de": "IP-Adresse oder Hostname",
+      "tr": "IP adresi veya ana bilgisayar adı"
+    },
+    "Ready": {
+      "en": "Ready",
+      "de": "Bereit",
+      "tr": "Hazır"
+    },
+    "Busy": {
+      "en": "Busy",
+      "de": "Beschäftigt",
+      "tr": "Meşgul"
+    },
+    "Stopped": {
+      "en": "Stopped",
+      "de": "Angehalten",
+      "tr": "Durduruldu"
+    },
+    "Offline": {
+      "en": "Offline",
+      "de": "Nicht erreichbar",
+      "tr": "Erişilemiyor"
+    },
+    "Connecting…": {
+      "en": "Connecting…",
+      "de": "Verbinde…",
+      "tr": "Bağlanıyor…"
+    },
+    "No printer selected.": {
+      "en": "No printer selected.",
+      "de": "Kein Drucker ausgewählt.",
+      "tr": "Yazıcı seçilmedi."
+    },
+    "Scan": {
+      "en": "Scan",
+      "de": "Scannen",
+      "tr": "Tara"
+    },
+    "Print": {
+      "en": "Print",
+      "de": "Drucken",
+      "tr": "Yazdır"
+    },
+    "Source": {
+      "en": "Source",
+      "de": "Quelle",
+      "tr": "Kaynak"
+    },
+    "Glass": {
+      "en": "Glass",
+      "de": "Glas",
+      "tr": "Cam"
+    },
+    "Feeder": {
+      "en": "Feeder",
+      "de": "Einzug",
+      "tr": "Besleyici"
+    },
+    "Mode": {
+      "en": "Mode",
+      "de": "Modus",
+      "tr": "Mod"
+    },
+    "Color": {
+      "en": "Color",
+      "de": "Farbe",
+      "tr": "Renkli"
+    },
+    "Gray": {
+      "en": "Gray",
+      "de": "Grau",
+      "tr": "Gri"
+    },
+    "B/W": {
+      "en": "B/W",
+      "de": "S/W",
+      "tr": "S/B"
+    },
+    "Resolution": {
+      "en": "Resolution",
+      "de": "Auflösung",
+      "tr": "Çözünürlük"
+    },
+    "Paper": {
+      "en": "Paper",
+      "de": "Papier",
+      "tr": "Kâğıt"
+    },
+    "Full area": {
+      "en": "Full area",
+      "de": "Ganze Fläche",
+      "tr": "Tüm alan"
+    },
+    "Content": {
+      "en": "Content",
+      "de": "Inhalt",
+      "tr": "İçerik"
+    },
+    "Document": {
+      "en": "Document",
+      "de": "Dokument",
+      "tr": "Belge"
+    },
+    "Photo": {
+      "en": "Photo",
+      "de": "Foto",
+      "tr": "Fotoğraf"
+    },
+    "Cancel": {
+      "en": "Cancel",
+      "de": "Abbrechen",
+      "tr": "İptal"
+    },
+    "Next scan is added to the current pages.": {
+      "en": "Next scan is added to the current pages.",
+      "de": "Neue Scans werden an die vorhandenen Seiten angehängt.",
+      "tr": "Yeni taramalar mevcut sayfalara eklenir."
+    },
+    "Rotate left": {
+      "en": "Rotate left",
+      "de": "Links drehen",
+      "tr": "Sola döndür"
+    },
+    "Rotate right": {
+      "en": "Rotate right",
+      "de": "Rechts drehen",
+      "tr": "Sağa döndür"
+    },
+    "Delete": {
+      "en": "Delete",
+      "de": "Löschen",
+      "tr": "Sil"
+    },
+    "Clear all": {
+      "en": "Clear all",
+      "de": "Alle entfernen",
+      "tr": "Tümünü kaldır"
+    },
+    "Place a document on the glass or in the feeder\nand click “Scan”.": {
+      "en": "Place a document on the glass or in the feeder\nand click “Scan”.",
+      "de": "Lege ein Dokument auf das Glas oder in den Einzug\nund klicke auf „Scannen“.",
+      "tr": "Belgeyi cama veya besleyiciye yerleştirin\nve “Tara”ya tıklayın."
+    },
+    "File name": {
+      "en": "File name",
+      "de": "Dateiname",
+      "tr": "Dosya adı"
+    },
+    "Format": {
+      "en": "Format",
+      "de": "Format",
+      "tr": "Biçim"
+    },
+    "Folder": {
+      "en": "Folder",
+      "de": "Ordner",
+      "tr": "Klasör"
+    },
+    "Choose folder": {
+      "en": "Choose folder",
+      "de": "Ordner wählen",
+      "tr": "Klasör seç"
+    },
+    "Save": {
+      "en": "Save",
+      "de": "Speichern",
+      "tr": "Kaydet"
+    },
+    "Copies": {
+      "en": "Copies",
+      "de": "Kopien",
+      "tr": "Kopya"
+    },
+    "Print copy": {
+      "en": "Print copy",
+      "de": "Als Kopie drucken",
+      "tr": "Kopya yazdır"
+    },
+    "Clear pages after saving": {
+      "en": "Clear pages after saving",
+      "de": "Seiten nach dem Speichern leeren",
+      "tr": "Kaydettikten sonra sayfaları temizle"
+    },
+    "Open folder after saving": {
+      "en": "Open folder after saving",
+      "de": "Ordner nach dem Speichern öffnen",
+      "tr": "Kaydettikten sonra klasörü aç"
+    },
+    "Scanning…": {
+      "en": "Scanning…",
+      "de": "Scanne…",
+      "tr": "Taranıyor…"
+    },
+    "{n} page(s) scanned.": {
+      "en": "{n} page(s) scanned.",
+      "de": "{n} Seite(n) gescannt.",
+      "tr": "{n} sayfa tarandı."
+    },
+    "Scan cancelled.": {
+      "en": "Scan cancelled.",
+      "de": "Scan abgebrochen.",
+      "tr": "Tarama iptal edildi."
+    },
+    "Saved: {path}": {
+      "en": "Saved: {path}",
+      "de": "Gespeichert: {path}",
+      "tr": "Kaydedildi: {path}"
+    },
+    "{n} page(s)": {
+      "en": "{n} page(s)",
+      "de": "{n} Seite(n)",
+      "tr": "{n} sayfa"
+    },
+    "The document feeder is empty. Insert pages or use the glass.": {
+      "en": "The document feeder is empty. Insert pages or use the glass.",
+      "de": "Der Vorlageneinzug ist leer. Lege Seiten ein oder nutze das Glas.",
+      "tr": "Belge besleyici boş. Sayfa yerleştirin veya camı kullanın."
+    },
+    "The scanner is busy. Try again in a moment.": {
+      "en": "The scanner is busy. Try again in a moment.",
+      "de": "Der Scanner ist beschäftigt. Versuch es gleich nochmal.",
+      "tr": "Tarayıcı meşgul. Birazdan tekrar deneyin."
+    },
+    "Scan failed": {
+      "en": "Scan failed",
+      "de": "Scannen fehlgeschlagen",
+      "tr": "Tarama başarısız"
+    },
+    "Could not save": {
+      "en": "Could not save",
+      "de": "Speichern fehlgeschlagen",
+      "tr": "Kaydedilemedi"
+    },
+    "Add files…": {
+      "en": "Add files…",
+      "de": "Dateien hinzufügen…",
+      "tr": "Dosya ekle…"
+    },
+    "Remove": {
+      "en": "Remove",
+      "de": "Entfernen",
+      "tr": "Kaldır"
+    },
+    "Drop PDFs or images here\nor click “Add files…”.": {
+      "en": "Drop PDFs or images here\nor click “Add files…”.",
+      "de": "PDFs oder Bilder hierher ziehen\noder „Dateien hinzufügen…“ klicken.",
+      "tr": "PDF veya resimleri buraya sürükleyin\nya da “Dosya ekle…”ye tıklayın."
+    },
+    "Pages": {
+      "en": "Pages",
+      "de": "Seiten",
+      "tr": "Sayfalar"
+    },
+    "All": {
+      "en": "All",
+      "de": "Alle",
+      "tr": "Tümü"
+    },
+    "e.g. 1-3, 5": {
+      "en": "e.g. 1-3, 5",
+      "de": "z. B. 1-3, 5",
+      "tr": "örn. 1-3, 5"
+    },
+    "Color mode": {
+      "en": "Color mode",
+      "de": "Farbmodus",
+      "tr": "Renk modu"
+    },
+    "Manual duplex": {
+      "en": "Manual duplex",
+      "de": "Manueller Duplex",
+      "tr": "Elle çift taraflı"
+    },
+    "Print both sides by reinserting the stack": {
+      "en": "Print both sides by reinserting the stack",
+      "de": "Beidseitig drucken durch Wiedereinlegen des Stapels",
+      "tr": "Kâğıt destesini yeniden yerleştirerek iki yüze yazdır"
+    },
+    "Printing…": {
+      "en": "Printing…",
+      "de": "Drucke…",
+      "tr": "Yazdırılıyor…"
+    },
+    "Preparing page {i} of {n}…": {
+      "en": "Preparing page {i} of {n}…",
+      "de": "Bereite Seite {i} von {n} vor…",
+      "tr": "Sayfa {i}/{n} hazırlanıyor…"
+    },
+    "Sent to printer.": {
+      "en": "Sent to printer.",
+      "de": "An den Drucker gesendet.",
+      "tr": "Yazıcıya gönderildi."
+    },
+    "Print failed": {
+      "en": "Print failed",
+      "de": "Drucken fehlgeschlagen",
+      "tr": "Yazdırma başarısız"
+    },
+    "Invalid page range.": {
+      "en": "Invalid page range.",
+      "de": "Ungültiger Seitenbereich.",
+      "tr": "Geçersiz sayfa aralığı."
+    },
+    "Nothing to print.": {
+      "en": "Nothing to print.",
+      "de": "Nichts zu drucken.",
+      "tr": "Yazdırılacak bir şey yok."
+    },
+    "Second side": {
+      "en": "Second side",
+      "de": "Rückseiten",
+      "tr": "Arka yüzler"
+    },
+    "The front sides are printing.\n\nWhen they are done, take the stack from the output tray and put it back into the paper tray so the blank sides get printed (usually: do not flip it, just move it).\n\nTip: try it once with 4 pages.\n\nContinue with the back sides?": {
+      "en": "The front sides are printing.\n\nWhen they are done, take the stack from the output tray and put it back into the paper tray so the blank sides get printed (usually: do not flip it, just move it).\n\nTip: try it once with 4 pages.\n\nContinue with the back sides?",
+      "de": "Die Vorderseiten werden gedruckt.\n\nWenn sie fertig sind, nimm den Stapel aus dem Ausgabefach und lege ihn wieder ins Papierfach, sodass die leeren Seiten bedruckt werden (meist: nicht umdrehen, einfach umlegen).\n\nTipp: Probier es einmal mit 4 Seiten aus.\n\nMit den Rückseiten fortfahren?",
+      "tr": "Ön yüzler yazdırılıyor.\n\nBittiğinde desteyi çıkış tepsisinden alın ve boş yüzler yazdırılacak şekilde kâğıt tepsisine geri koyun (genellikle: çevirmeden, olduğu gibi taşıyın).\n\nİpucu: Bir kez 4 sayfayla deneyin.\n\nArka yüzlerle devam edilsin mi?"
+    },
+    "Could not open file": {
+      "en": "Could not open file",
+      "de": "Datei konnte nicht geöffnet werden",
+      "tr": "Dosya açılamadı"
+    },
+    "Supported files": {
+      "en": "Supported files",
+      "de": "Unterstützte Dateien",
+      "tr": "Desteklenen dosyalar"
+    },
+    "Loading pages…": {
+      "en": "Loading pages…",
+      "de": "Lade Seiten…",
+      "tr": "Sayfalar yükleniyor…"
+    }
+  }
+}

@@ -22,7 +22,10 @@ from urllib.parse import urlsplit
 from . import __version__
 
 REPO = "ARFEP-IT-Service/Glassbed"
-API_URL = f"https://api.github.com/repos/{REPO}/releases/latest"
+# the list of releases: Windows and Android share this repository, so "latest" may be an Android
+# release (tag android-v…); only tags vX.Y.Z belong to the Windows app
+API_URL = f"https://api.github.com/repos/{REPO}/releases?per_page=50"
+WINDOWS_TAG = re.compile(r"v(\d+)\.(\d+)\.(\d+)")
 RELEASES_URL = f"https://github.com/{REPO}/releases"
 DOWNLOAD_PREFIX = f"https://github.com/{REPO}/releases/download/"
 # the update check talks to the GitHub API only
@@ -152,15 +155,36 @@ def _open(url: str, cfg: Config, accept: str = "*/*"):
         raise UpdateError(str(reason)) from None
 
 
+def select_release(releases: list, cfg: Config | None = None) -> Release | None:
+    """The newest Windows release in GitHub's release list.
+
+    Only published releases (no drafts, no pre-releases) whose tag is exactly vX.Y.Z count;
+    Android tags (android-v…) and anything else are ignored.
+    """
+    best = None
+    for item in releases if isinstance(releases, list) else []:
+        if not isinstance(item, dict) or item.get("draft") or item.get("prerelease"):
+            continue
+        m = WINDOWS_TAG.fullmatch(str(item.get("tag_name", "")))
+        if m is None:
+            continue
+        version = tuple(int(x) for x in m.groups())
+        if best is None or version > best[0]:
+            best = (version, item)
+    return parse_release(best[1], cfg) if best else None
+
+
 def fetch_latest(cfg: Config | None = None) -> Release | None:
-    """Ask GitHub for the newest published release (one HTTPS request)."""
+    """Ask GitHub for the release list and pick the newest Windows release (one HTTPS request)."""
     cfg = cfg or config()
     with _open(cfg.api_url, cfg, "application/vnd.github+json") as resp:
         try:
-            data = json.loads(resp.read(1024 * 1024).decode("utf-8"))
+            data = json.loads(resp.read(4 * 1024 * 1024).decode("utf-8"))
         except ValueError:
             raise UpdateError("Unexpected answer from GitHub") from None
-    return parse_release(data, cfg)
+    if not isinstance(data, list):
+        raise UpdateError("Unexpected answer from GitHub")
+    return select_release(data, cfg)
 
 
 # --------------------------------------------------------------------------- installation
