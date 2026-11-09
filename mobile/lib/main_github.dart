@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 
 import 'app.dart';
 import 'i18n.dart';
+import 'update/test_hook.dart';
+import 'update/test_hook_client.dart';
 import 'update/update_controller.dart';
 import 'update/update_texts.dart';
 import 'update/update_ui.dart';
@@ -12,5 +14,5 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await loadI18n();
   addTexts(updateTexts);
-  runApp(GlassbedApp(extras: UpdateExtras(UpdateController())));
+  runApp(GlassbedApp(extras: UpdateExtras(UpdateController(newClient: testHook ? testClient : null))));
 }

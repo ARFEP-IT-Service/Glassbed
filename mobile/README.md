@@ -38,7 +38,11 @@ flutter build apk --release --split-per-abi --flavor play -t lib/main.dart
 ```
 
 - **github** – the APKs on GitHub releases, with the optional update notice (asks once; at most one
-  request a day to api.github.com, only after consent).
+  request a day to api.github.com, only after consent). *Update* downloads the APK for the device
+  and its `.sha256` from the same release (HTTPS, only github.com and GitHub's download hosts,
+  at most 200 MB), checks the SHA-256 and hands the file to Android's package installer, which
+  asks the user. A file that does not match is deleted. Only this flavor has
+  `REQUEST_INSTALL_PACKAGES` and the FileProvider (`android/app/src/github/`).
 - **play** – for an app store later: no update check at all and no connection to GitHub; the
   workflow checks that its code contains nothing of the update feature.
 

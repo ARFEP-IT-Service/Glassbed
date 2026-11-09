@@ -18,11 +18,6 @@ const sharedUpdateTexts = <String, Map<String, String>>{
     'de': 'Glassbed {version} ist verfügbar',
     'tr': 'Glassbed {version} kullanıma sunuldu',
   },
-  'Glassbed {version} is downloading in your browser': {
-    'en': 'Glassbed {version} is downloading in your browser',
-    'de': 'Glassbed {version} wird im Browser heruntergeladen',
-    'tr': 'Glassbed {version} tarayıcıda indiriliyor',
-  },
   'Check for updates?': {
     'en': 'Check for updates?',
     'de': 'Nach Updates suchen?',
@@ -71,6 +66,12 @@ const privacyNoteText =
     'update check. No accounts, no tracking.';
 
 const mobileUpdateTexts = <String, Map<String, String>>{
+  // Only when a release has no checksum file: the APK then opens in the browser.
+  'Glassbed {version} is downloading in your browser': {
+    'en': 'Glassbed {version} is downloading in your browser',
+    'de': 'Glassbed {version} wird im Browser heruntergeladen',
+    'tr': 'Glassbed {version} tarayıcıda indiriliyor',
+  },
   privacyNoteText: {
     'en': privacyNoteText,
     'de': 'Glassbed spricht mit deinem Drucker im lokalen Netzwerk – und mit GitHub nur, wenn du die '
@@ -88,7 +89,57 @@ const mobileUpdateTexts = <String, Map<String, String>>{
     'de': 'Android fragt dabei eventuell, ob dein Browser unbekannte Apps installieren darf.',
     'tr': 'Android, tarayıcınızın bilinmeyen uygulamaları yüklemesine izin vermenizi isteyebilir.',
   },
+  downloadingOfText: {
+    'en': downloadingOfText,
+    'de': 'Glassbed {version} wird heruntergeladen… {done} von {total} MB',
+    'tr': 'Glassbed {version} indiriliyor… {done} / {total} MB',
+  },
+  downloadingText: {
+    'en': downloadingText,
+    'de': 'Glassbed {version} wird heruntergeladen… {done} MB',
+    'tr': 'Glassbed {version} indiriliyor… {done} MB',
+  },
+  verifyingText: {
+    'en': verifyingText,
+    'de': 'Download wird geprüft…',
+    'tr': 'İndirilen dosya doğrulanıyor…',
+  },
+  checksumMismatchText: {
+    'en': checksumMismatchText,
+    'de': 'Der Download passt nicht zu seiner Prüfsumme und wurde gelöscht. Es wurde nichts '
+        'installiert.',
+    'tr': 'İndirilen dosya sağlama toplamıyla eşleşmedi ve silindi. Hiçbir şey yüklenmedi.',
+  },
+  allowInstallText: {
+    'en': allowInstallText,
+    'de': 'Erlaube Glassbed, Updates zu installieren, und tippe dann noch einmal auf '
+        '„Aktualisieren“.',
+    'tr': "Glassbed'in güncellemeleri yüklemesine izin verin, ardından tekrar \"Güncelle\" "
+        'düğmesine dokunun.',
+  },
+  installStartedText: {
+    'en': installStartedText,
+    'de': 'Android fragt dich jetzt, ob Glassbed {version} installiert werden soll. Deine '
+        'Einstellungen bleiben erhalten.',
+    'tr': 'Android şimdi Glassbed {version} sürümünün yüklenip yüklenmeyeceğini soruyor. '
+        'Ayarlarınız korunur.',
+  },
+  downloadFailedText: {
+    'en': downloadFailedText,
+    'de': 'Download fehlgeschlagen: {error}',
+    'tr': 'İndirme başarısız oldu: {error}',
+  },
 };
+
+const downloadingOfText = 'Downloading Glassbed {version}… {done} of {total} MB';
+const downloadingText = 'Downloading Glassbed {version}… {done} MB';
+const verifyingText = 'Checking the download…';
+const checksumMismatchText =
+    'The download does not match its checksum and was deleted. Nothing was installed.';
+const allowInstallText = 'Allow Glassbed to install updates, then tap Update again.';
+const installStartedText =
+    'Android now asks whether to install Glassbed {version}. Your settings are kept.';
+const downloadFailedText = 'Download failed: {error}';
 
 const consentText =
     'Glassbed can look for a new version on GitHub – at most once a day. GitHub sees your IP '

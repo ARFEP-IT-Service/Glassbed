@@ -47,16 +47,30 @@ jobs:
         run: |
           flutter build apk --release --split-per-abi --flavor github -t lib/main_github.dart
           flutter build apk --release --split-per-abi --flavor play -t lib/main.dart
-      - name: The play variant contains no update code
+      - name: The play variant contains no update code, no variant the test hook
         run: |
           status=0
+          aapt2=$(ls -d "$ANDROID_HOME"/build-tools/*/aapt2 | sort -V | tail -1)
           for apk in build/app/outputs/flutter-apk/app-*-play-release.apk; do
+            github=$(echo "$apk" | sed 's/-play-/-github-/')
             unzip -p "$apk" 'lib/*/libapp.so' > /tmp/libapp.so
             for s in "api.github.com" "ARFEP-IT-Service/Glassbed" "releases?per_page" "android-v"; do
               if grep -a -q -F "$s" /tmp/libapp.so; then echo "::error::$apk contains '$s'"; status=1; fi
             done
-            unzip -p "$(echo "$apk" | sed 's/-play-/-github-/')" 'lib/*/libapp.so' > /tmp/libapp-github.so
+            unzip -p "$github" 'lib/*/libapp.so' > /tmp/libapp-github.so
             grep -a -q -F "api.github.com" /tmp/libapp-github.so || { echo "::error::github variant without update check"; status=1; }
+            # the in-app update test hook (lib/update/test_hook.dart) is only in local test builds
+            for f in /tmp/libapp.so /tmp/libapp-github.so; do
+              if grep -a -q -F "glassbed-update-test-hook" "$f"; then echo "::error::test hook in $apk"; status=1; fi
+            done
+            # installing updates: permission and installer hand-over only in the github variant
+            for s in REQUEST_INSTALL_PACKAGES UpdateFileProvider; do
+              if "$aapt2" dump xmltree --file AndroidManifest.xml "$apk" | grep -q "$s"; then echo "::error::$apk contains $s"; status=1; fi
+              "$aapt2" dump xmltree --file AndroidManifest.xml "$github" | grep -q "$s" || { echo "::error::github variant without $s"; status=1; }
+            done
+            for s in "MANAGE_UNKNOWN_APP_SOURCES" "UpdateFileProvider"; do
+              if unzip -p "$apk" 'classes*.dex' | grep -a -q -F "$s"; then echo "::error::$apk code contains $s"; status=1; fi
+            done
           done
           exit $status
       - uses: actions/upload-artifact@v7
@@ -117,6 +131,11 @@ jobs:
             cp "build/app/outputs/flutter-apk/app-$abi-github-release.apk" "out/$name"
             "$apksigner" verify "out/$name"
             (cd out && sha256sum "$name" > "$name.sha256")
+          done
+          for apk in out/*.apk; do
+            if unzip -p "$apk" 'lib/*/libapp.so' | grep -a -q -F "glassbed-update-test-hook"; then
+              echo "::error::test hook in $apk"; exit 1
+            fi
           done
           "$apksigner" verify --print-certs "out/Glassbed-android-$version-arm64-v8a.apk" | tee out/certificate.txt
           cp THIRD_PARTY_NOTICES.md out/

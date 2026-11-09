@@ -92,9 +92,17 @@ class UpdateExtras implements AppExtras {
         const SizedBox(height: 20),
       ];
 
-  /// "Update": opens the APK (or the release page) in the browser – nothing is downloaded
-  /// or installed by the app itself.
+  /// "Update": downloads and verifies the APK and hands it to Android's installer, which asks
+  /// the user. Progress and the result appear in the banner. Without a verifiable APK in the
+  /// release, the APK (or the release page) opens in the browser as before.
   Future<void> update(BuildContext context) async {
+    final outcome = await controller.downloadAndInstall();
+    if (outcome != UpdateOutcome.browser || !context.mounted) return;
+    await openInBrowser(context);
+  }
+
+  /// Opens the APK (or the release page) in the browser and explains the install.
+  Future<void> openInBrowser(BuildContext context) async {
     final url = await controller.updateUrl();
     final ok = await openUrl(Uri.parse(url));
     if (!context.mounted) return;
@@ -118,7 +126,14 @@ class UpdateExtras implements AppExtras {
   }
 }
 
+/// Megabytes with one decimal, with a decimal comma in German and Turkish.
+String megabytes(int bytes) {
+  final text = (bytes / (1024 * 1024)).toStringAsFixed(1);
+  return currentLanguage == 'en' ? text : text.replaceAll('.', ',');
+}
+
 /// "Glassbed X is available" under the printer card; empty while there is nothing to offer.
+/// While an update downloads it shows the progress and "Cancel".
 class UpdateBanner extends StatelessWidget {
   const UpdateBanner({super.key, required this.extras});
 
@@ -131,7 +146,7 @@ class UpdateBanner extends StatelessWidget {
       listenable: c,
       builder: (context, _) {
         final release = c.release;
-        if (!c.showBanner || release == null) return const SizedBox.shrink();
+        if (!(c.showBanner || c.busy) || release == null) return const SizedBox.shrink();
         return Padding(
           padding: const EdgeInsets.only(top: 12),
           child: Card(
@@ -153,23 +168,35 @@ class UpdateBanner extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 4,
-                    crossAxisAlignment: WrapCrossAlignment.center,
-                    children: [
-                      FilledButton(
-                        onPressed: () => extras.update(context),
-                        child: Text(tr('Update')),
+                  if (c.busy) ..._progress(context, c, release.version) else ...[
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 4,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      children: [
+                        FilledButton(
+                          onPressed: () => extras.update(context),
+                          child: Text(tr('Update')),
+                        ),
+                        TextButton(
+                          onPressed: () => extras.openUrl(Uri.parse(c.pageUrl)),
+                          child: Text(tr("What's new")),
+                        ),
+                        TextButton(onPressed: c.later, child: Text(tr('Later'))),
+                        TextButton(onPressed: c.skip, child: Text(tr('Skip this version'))),
+                      ],
+                    ),
+                    if (_outcomeText(c, release.version) case final text?)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 6, bottom: 4),
+                        child: Text(
+                          text,
+                          style: _isError(c.outcome)
+                              ? TextStyle(color: Theme.of(context).colorScheme.error)
+                              : null,
+                        ),
                       ),
-                      TextButton(
-                        onPressed: () => extras.openUrl(Uri.parse(c.pageUrl)),
-                        child: Text(tr("What's new")),
-                      ),
-                      TextButton(onPressed: c.later, child: Text(tr('Later'))),
-                      TextButton(onPressed: c.skip, child: Text(tr('Skip this version'))),
-                    ],
-                  ),
+                  ],
                 ],
               ),
             ),
@@ -178,6 +205,46 @@ class UpdateBanner extends StatelessWidget {
       },
     );
   }
+
+  List<Widget> _progress(BuildContext context, UpdateController c, String version) {
+    final downloading = c.phase == DownloadPhase.downloading;
+    final total = c.total;
+    final String label;
+    if (!downloading) {
+      label = tr(verifyingText);
+    } else if (total != null && total > 0) {
+      label = tr(downloadingOfText,
+          {'version': version, 'done': megabytes(c.received), 'total': megabytes(total)});
+    } else {
+      label = tr(downloadingText, {'version': version, 'done': megabytes(c.received)});
+    }
+    return [
+      Text(label),
+      const SizedBox(height: 8),
+      LinearProgressIndicator(
+        value: downloading && total != null && total > 0 ? c.received / total : null,
+      ),
+      const SizedBox(height: 4),
+      Align(
+        alignment: AlignmentDirectional.centerStart,
+        child: TextButton(
+          onPressed: downloading ? c.cancelDownload : null,
+          child: Text(tr('Cancel')),
+        ),
+      ),
+    ];
+  }
+
+  static bool _isError(UpdateOutcome? o) =>
+      o == UpdateOutcome.checksumMismatch || o == UpdateOutcome.failed;
+
+  static String? _outcomeText(UpdateController c, String version) => switch (c.outcome) {
+        UpdateOutcome.installStarted => tr(installStartedText, {'version': version}),
+        UpdateOutcome.needsPermission => tr(allowInstallText),
+        UpdateOutcome.checksumMismatch => tr(checksumMismatchText),
+        UpdateOutcome.failed => tr(downloadFailedText, {'error': c.error ?? ''}),
+        _ => null,
+      };
 }
 
 /// Settings rows: the switch, "Check now" with its result, and "Learn more".

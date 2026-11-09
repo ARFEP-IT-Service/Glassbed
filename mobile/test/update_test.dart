@@ -67,9 +67,9 @@ void main() {
       final r = selectRelease([
         release('android-v0.9.0', draft: true),
         release('android-v0.8.0', prerelease: true),
-        release('android-v0.2.0'),
+        release('android-v0.9.0'),
       ]);
-      expect(r?.version, '0.2.0');
+      expect(r?.version, '0.9.0');
     });
 
     test('a missing draft/prerelease flag does not count as published', () {
@@ -80,13 +80,13 @@ void main() {
     test('tag must match android-vX.Y.Z exactly', () {
       for (final tag in [
         'android-v0.2',
-        'android-v0.2.0-rc1',
-        'Android-v0.2.0',
-        'android-0.2.0',
-        'android-v0.2.0 ',
-        ' android-v0.2.0',
-        'android-v0.2.0\n',
-        'xandroid-v0.2.0',
+        'android-v0.9.0-rc1',
+        'Android-v0.9.0',
+        'android-0.9.0',
+        'android-v0.9.0 ',
+        ' android-v0.9.0',
+        'android-v0.9.0\n',
+        'xandroid-v0.9.0',
         'android-v0.2.x',
       ]) {
         expect(selectRelease([release(tag)]), isNull, reason: tag);
@@ -113,26 +113,26 @@ void main() {
       expect(isNewer('0.10.0', '0.9.9'), isTrue);
       expect(isNewer('0.1.0', '0.1.0'), isFalse);
       expect(isNewer('0.0.9', '0.1.0'), isFalse);
-      expect(isNewer('v0.2.0', '0.1.0'), isFalse);
+      expect(isNewer('v0.9.0', '0.1.0'), isFalse);
     });
   });
 
   group('download link', () {
     test('exact asset URLs are accepted per ABI', () {
-      final r = selectRelease([release('android-v0.2.0')])!;
+      final r = selectRelease([release('android-v0.9.0')])!;
       expect(r.apkUrls.keys, unorderedEquals(supportedAbis));
-      expect(r.updateUrl('armeabi-v7a'), '$_dl/android-v0.2.0/Glassbed-android-0.2.0-armeabi-v7a.apk');
-      expect(r.updateUrl('x86_64'), '$_dl/android-v0.2.0/Glassbed-android-0.2.0-x86_64.apk');
-      expect(r.updateUrl('arm64-v8a'), '$_dl/android-v0.2.0/Glassbed-android-0.2.0-arm64-v8a.apk');
+      expect(r.updateUrl('armeabi-v7a'), '$_dl/android-v0.9.0/Glassbed-android-0.9.0-armeabi-v7a.apk');
+      expect(r.updateUrl('x86_64'), '$_dl/android-v0.9.0/Glassbed-android-0.9.0-x86_64.apk');
+      expect(r.updateUrl('arm64-v8a'), '$_dl/android-v0.9.0/Glassbed-android-0.9.0-arm64-v8a.apk');
     });
 
     test('unknown ABI falls back to arm64-v8a, then to the release page', () {
-      final r = selectRelease([release('android-v0.2.0')])!;
+      final r = selectRelease([release('android-v0.9.0')])!;
       expect(r.updateUrl('mips'), endsWith('arm64-v8a.apk'));
       expect(r.updateUrl(null), endsWith('arm64-v8a.apk'));
       final onlyV7 = selectRelease([
-        release('android-v0.2.0', assets: [
-          asset(apkName('0.2.0', 'armeabi-v7a'), '$_dl/android-v0.2.0/${apkName('0.2.0', 'armeabi-v7a')}'),
+        release('android-v0.9.0', assets: [
+          asset(apkName('0.9.0', 'armeabi-v7a'), '$_dl/android-v0.9.0/${apkName('0.9.0', 'armeabi-v7a')}'),
         ]),
       ])!;
       expect(onlyV7.updateUrl('x86_64'), onlyV7.pageUrl);
@@ -140,19 +140,19 @@ void main() {
     });
 
     test('tricks never give a direct link', () {
-      const name = 'Glassbed-android-0.2.0-arm64-v8a.apk';
+      const name = 'Glassbed-android-0.9.0-arm64-v8a.apk';
       for (final url in [
-        'https://github.com/someone/Glassbed/releases/download/android-v0.2.0/$name',
-        'https://evil.example/ARFEP-IT-Service/Glassbed/releases/download/android-v0.2.0/$name',
-        'http://github.com/ARFEP-IT-Service/Glassbed/releases/download/android-v0.2.0/$name',
-        'https://github.com.evil.example/ARFEP-IT-Service/Glassbed/releases/download/android-v0.2.0/$name',
+        'https://github.com/someone/Glassbed/releases/download/android-v0.9.0/$name',
+        'https://evil.example/ARFEP-IT-Service/Glassbed/releases/download/android-v0.9.0/$name',
+        'http://github.com/ARFEP-IT-Service/Glassbed/releases/download/android-v0.9.0/$name',
+        'https://github.com.evil.example/ARFEP-IT-Service/Glassbed/releases/download/android-v0.9.0/$name',
         '$_dl/android-v0.1.9/$name',                       // other release
-        '$_dl/android-v0.2.0/../android-v0.2.0/$name',     // path tricks
-        '$_dl/android-v0.2.0/$name?x=1',
-        '$_dl/android-v0.2.0/Glassbed-android-0.2.0-arm64-v8a.apk.exe',
+        '$_dl/android-v0.9.0/../android-v0.9.0/$name',     // path tricks
+        '$_dl/android-v0.9.0/$name?x=1',
+        '$_dl/android-v0.9.0/Glassbed-android-0.9.0-arm64-v8a.apk.exe',
       ]) {
         final r = selectRelease([
-          release('android-v0.2.0', assets: [asset(name, url)]),
+          release('android-v0.9.0', assets: [asset(name, url)]),
         ])!;
         expect(r.apkUrls, isEmpty, reason: url);
         expect(r.updateUrl('arm64-v8a'), r.pageUrl, reason: url);
@@ -161,9 +161,9 @@ void main() {
 
     test('wrong asset name is not used', () {
       final r = selectRelease([
-        release('android-v0.2.0', assets: [
-          asset('glassbed.apk', '$_dl/android-v0.2.0/glassbed.apk'),
-          asset('Glassbed-android-0.1.0-arm64-v8a.apk', '$_dl/android-v0.2.0/Glassbed-android-0.1.0-arm64-v8a.apk'),
+        release('android-v0.9.0', assets: [
+          asset('glassbed.apk', '$_dl/android-v0.9.0/glassbed.apk'),
+          asset('Glassbed-android-0.1.0-arm64-v8a.apk', '$_dl/android-v0.9.0/Glassbed-android-0.1.0-arm64-v8a.apk'),
         ]),
       ])!;
       expect(r.apkUrls, isEmpty);
@@ -171,15 +171,15 @@ void main() {
 
     test('release page must be in this repository', () {
       for (final html in [
-        'https://evil.example/ARFEP-IT-Service/Glassbed/releases/tag/android-v0.2.0',
+        'https://evil.example/ARFEP-IT-Service/Glassbed/releases/tag/android-v0.9.0',
         'https://github.com/ARFEP-IT-Service/Glassbed/releasesX',
-        'http://github.com/ARFEP-IT-Service/Glassbed/releases/tag/android-v0.2.0',
+        'http://github.com/ARFEP-IT-Service/Glassbed/releases/tag/android-v0.9.0',
       ]) {
-        final r = selectRelease([release('android-v0.2.0', htmlUrl: html)])!;
+        final r = selectRelease([release('android-v0.9.0', htmlUrl: html)])!;
         expect(r.pageUrl, releasesPage, reason: html);
       }
-      final ok = selectRelease([release('android-v0.2.0')])!;
-      expect(ok.pageUrl, '$releasesPage/tag/android-v0.2.0');
+      final ok = selectRelease([release('android-v0.9.0')])!;
+      expect(ok.pageUrl, '$releasesPage/tag/android-v0.9.0');
     });
   });
 
@@ -201,8 +201,8 @@ void main() {
   group('client', () {
     test('one GET to the API with the expected headers, no redirects', () async {
       final calls = <http.BaseRequest>[];
-      final r = await fetchLatest(recording(calls, [release('android-v0.2.0')]));
-      expect(r?.version, '0.2.0');
+      final r = await fetchLatest(recording(calls, [release('android-v0.9.0')]));
+      expect(r?.version, '0.9.0');
       expect(calls, hasLength(1));
       final req = calls.single;
       expect(req.method, 'GET');
@@ -266,7 +266,7 @@ void main() {
     setUp(() {
       calls = [];
       now = DateTime.utc(2026, 11, 9, 12);
-      body = [release('android-v0.2.0'), release('v0.3.1')];
+      body = [release('android-v0.9.0'), release('v0.3.1')];
     });
 
     test('nothing is requested while the check is off (default)', () async {
@@ -284,7 +284,7 @@ void main() {
       await c.checkIfDue();
       expect(calls, hasLength(1));
       expect(c.showBanner, isTrue);
-      expect(c.release?.version, '0.2.0');
+      expect(c.release?.version, '0.9.0');
 
       now = now.add(const Duration(hours: 5));
       final again = make();
@@ -328,14 +328,14 @@ void main() {
       await c.skip();
       expect(c.showBanner, isFalse);
       final prefs = await SharedPreferences.getInstance();
-      expect(prefs.getString(keySkipped), '0.2.0');
+      expect(prefs.getString(keySkipped), '0.9.0');
 
       final next = make();
       await next.check(silent: true);
       expect(next.showBanner, isFalse);
 
       // "Check now" still shows the skipped version.
-      expect((await next.check())?.version, '0.2.0');
+      expect((await next.check())?.version, '0.9.0');
       expect(next.showBanner, isTrue);
 
       body = [release('android-v0.2.1')];
@@ -359,11 +359,11 @@ void main() {
       SharedPreferences.setMockInitialValues({keyAsked: true, keyEnabled: true});
       final c = make(abi: 'x86_64');
       await c.check(silent: true);
-      expect(await c.updateUrl(), '$_dl/android-v0.2.0/Glassbed-android-0.2.0-x86_64.apk');
+      expect(await c.updateUrl(), '$_dl/android-v0.9.0/Glassbed-android-0.9.0-x86_64.apk');
       final noApk = make();
-      body = [release('android-v0.2.0', assets: [])];
+      body = [release('android-v0.9.0', assets: [])];
       await noApk.check(silent: true);
-      expect(await noApk.updateUrl(), '$releasesPage/tag/android-v0.2.0');
+      expect(await noApk.updateUrl(), '$releasesPage/tag/android-v0.9.0');
     });
 
     test('the question is stored as asked and off at once', () async {

@@ -42,11 +42,22 @@ def test_placeholders_match():
         assert len({tuple(v) for v in holes.values()}) == 1, key
 
 
+# the in-app update replaced the two "download in your browser" texts with its own
+UPDATE_REMOVED = {"Glassbed {version} is downloading in your browser",
+                  "Start the setup after the download – your settings are kept."}
+UPDATE_ADDED = {"Downloading Glassbed {version}…", "Update failed", "Save your scans first",
+                "Glassbed closes for the update. Save or remove the scanned pages first."}
+
+
 def test_texts_unchanged_since_0_3_0():
+    """Every text of 0.3.0 is still translated the same; only the update texts changed."""
     snap = json.loads((ROOT / "tests" / "fixtures" / "i18n-0.3.0.json").read_text(encoding="utf-8"))
     assert i18n.LANGUAGES == snap["languages"]
     for lang in LANGS:
-        assert i18n.TRANSLATIONS[lang] == snap["translations"][lang]
+        old, now = snap["translations"][lang], i18n.TRANSLATIONS[lang]
+        assert set(old) - set(now) == UPDATE_REMOVED
+        assert set(now) - set(old) == UPDATE_ADDED
+        assert {k: v for k, v in now.items() if k in old} == {k: v for k, v in old.items() if k in now}
 
 
 def test_english_falls_back_to_the_source_text():

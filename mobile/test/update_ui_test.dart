@@ -1,13 +1,17 @@
+import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:glassbed/update/installer.dart';
 import 'package:glassbed/update/update_controller.dart';
 import 'package:glassbed/update/update_ui.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'update_download_test.dart' show FakeInstaller, apk, apkBytes, apkHash, withSha;
 import 'update_test.dart' show release;
 
 void main() {
@@ -22,7 +26,7 @@ void main() {
       UpdateController(
         newClient: () => MockClient((request) async {
           calls.add(request);
-          return http.Response(jsonEncode([release('android-v0.2.0')]), 200);
+          return http.Response(jsonEncode([release('android-v0.9.0')]), 200);
         }),
         deviceAbi: () async => 'arm64-v8a',
       ),
@@ -105,7 +109,7 @@ void main() {
     await tester.pumpAndSettle();
     expect((await prefs()).getBool(keyEnabled), isTrue);
     expect(calls, hasLength(1));
-    expect(find.text('Glassbed 0.2.0 is available'), findsOneWidget);
+    expect(find.text('Glassbed 0.9.0 is available'), findsOneWidget);
   });
 
   testWidgets('never asked twice', (tester) async {
@@ -120,23 +124,23 @@ void main() {
     SharedPreferences.setMockInitialValues({keyAsked: true, keyEnabled: true});
     await pumpHome(tester);
     expect(calls, hasLength(1));
-    expect(find.text('Glassbed 0.2.0 is available'), findsOneWidget);
+    expect(find.text('Glassbed 0.9.0 is available'), findsOneWidget);
 
     await tester.tap(find.text('Update'));
     await tester.pumpAndSettle();
     expect(opened.single.toString(),
-        'https://github.com/ARFEP-IT-Service/Glassbed/releases/download/android-v0.2.0/Glassbed-android-0.2.0-arm64-v8a.apk');
+        'https://github.com/ARFEP-IT-Service/Glassbed/releases/download/android-v0.9.0/Glassbed-android-0.9.0-arm64-v8a.apk');
     expect(find.textContaining('Install the downloaded APK'), findsOneWidget);
     await tester.tap(find.text('Done'));
     await tester.pumpAndSettle();
 
     await tester.tap(find.text("What's new"));
     expect(opened.last.toString(),
-        'https://github.com/ARFEP-IT-Service/Glassbed/releases/tag/android-v0.2.0');
+        'https://github.com/ARFEP-IT-Service/Glassbed/releases/tag/android-v0.9.0');
 
     await tester.tap(find.text('Later'));
     await tester.pumpAndSettle();
-    expect(find.text('Glassbed 0.2.0 is available'), findsNothing);
+    expect(find.text('Glassbed 0.9.0 is available'), findsNothing);
   });
 
   testWidgets('settings: Check now only when switched on', (tester) async {
@@ -160,6 +164,58 @@ void main() {
     await tester.tap(find.text('Check now'));
     await tester.pumpAndSettle();
     expect(calls, hasLength(1));
-    expect(find.text('Glassbed 0.2.0 is available'), findsOneWidget);
+    expect(find.text('Glassbed 0.9.0 is available'), findsOneWidget);
+  });
+
+  testWidgets('banner: in-app update shows progress and Cancel, then the allow-install hint',
+      (tester) async {
+    SharedPreferences.setMockInitialValues({keyAsked: true, keyEnabled: true});
+    final dir = (await tester.runAsync(() => Directory.systemTemp.createTemp('glassbed_ui')))!;
+    addTearDown(() => dir.deleteSync(recursive: true));
+    final body = StreamController<List<int>>();
+    final installer = FakeInstaller(dir, results: [InstallResult.needsPermission]);
+    final c = UpdateController(
+      newClient: () => MockClient.streaming((request, _) async =>
+          request.url.toString().endsWith('.sha256')
+              ? http.StreamedResponse(Stream.value(utf8.encode('$apkHash  $apk')), 200)
+              : http.StreamedResponse(body.stream, 200, contentLength: apkBytes.length)),
+      deviceAbi: () async => 'arm64-v8a',
+      installer: installer,
+    )..release = withSha('0.9.0');
+    final ui = UpdateExtras(c, openUrl: (url) async {
+      opened.add(url);
+      return true;
+    });
+    await tester.pumpWidget(MaterialApp(
+      home: Builder(builder: (context) => Scaffold(body: ListView(children: [ui.homeBanner(context)]))),
+    ));
+    expect(find.text('Glassbed 0.9.0 is available'), findsOneWidget);
+
+    // The download does real file I/O, so it runs outside the test's fake clock; the button
+    // calls exactly this (UpdateExtras.update → downloadAndInstall).
+    late Future<UpdateOutcome> running;
+    await tester.runAsync(() async {
+      running = c.downloadAndInstall();
+      body.add(apkBytes.sublist(0, 100 * 1024));
+      while (c.received == 0) {
+        await Future<void>.delayed(const Duration(milliseconds: 5));
+      }
+    });
+    await tester.pump();
+    expect(find.text('Downloading Glassbed 0.9.0… 0.1 of 0.3 MB'), findsOneWidget);
+    expect(find.byType(LinearProgressIndicator), findsOneWidget);
+    expect(find.text('Cancel'), findsOneWidget);
+    expect(find.text('Later'), findsNothing);
+
+    await tester.runAsync(() async {
+      body.add(apkBytes.sublist(100 * 1024));
+      await body.close();
+      expect(await running, UpdateOutcome.needsPermission);
+    });
+    await tester.pump();
+    expect(installer.installed, hasLength(1));
+    expect(find.text('Allow Glassbed to install updates, then tap Update again.'), findsOneWidget);
+    expect(find.text('Update'), findsOneWidget);
+    expect(opened, isEmpty);
   });
 }

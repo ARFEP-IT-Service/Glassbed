@@ -263,6 +263,11 @@ class MainWindow(QMainWindow):
             return
         self._close_now()
 
+    def quit_for_update(self) -> None:
+        """The verified setup is open (visible) and waits for Glassbed to exit."""
+        self._close_now()
+        QApplication.quit()
+
     def _repair_autostart(self) -> None:
         if not getattr(sys, "frozen", False):
             return

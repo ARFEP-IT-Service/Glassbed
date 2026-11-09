@@ -61,7 +61,7 @@ geliştirildi – ve eSCL ile IPP'yi destekleyen birçok ağ yazıcısıyla çal
 - İsteğe bağlı, varsayılan olarak kapalı: **Hızlı tarama** içeren bildirim alanı simgesi, toner uyarısı
   (%15'in altında, renk başına günde en fazla bir kez) ve *Windows ile başlat*
 - İsteğe bağlı, varsayılan olarak kapalı: GitHub üzerinden güncelleme denetimi – yeni sürümleri
-  bildirir ve indirmeyi tarayıcınızda açar
+  bildirir ve isterseniz kendini günceller (indirme SHA-256 ile doğrulanır, ardından normal kurulum)
 - Betikler için komut satırı arayüzü
 
 <table>
@@ -98,14 +98,17 @@ Windows SmartScreen uyarı gösterebilir. Birlikte gelen bileşenlerin lisanslar
 sürüm çıktığında Glassbed pencerede bir bildirim şeridi gösterir: *Güncelle · Yenilikler · Sonra ·
 Bu sürümü atla*; bildirim alanı simgesi etkinse ayrıca bir Windows bildirimi.
 
-Glassbed hiçbir zaman kendisi program indirmez veya başlatmaz – *Güncelle* tarayıcınızı açar:
+*Güncelle*'ye tıklamadığınız sürece hiçbir şey olmaz:
 
-- **Kurulum programıyla kurulduysa (Windows):** tarayıcı yeni `Glassbed-<version>-setup.exe`
-  dosyasını doğrudan GitHub'dan indirir ve Glassbed *"İndirme bittikten sonra kurulumu başlatın –
-  ayarlarınız korunur."* ipucunu gösterir. Kurulumu eski sürümün üzerine yapın: ayarlar,
-  kısayollar ve *Windows ile başlat* korunur; Glassbed hâlâ çalışıyorsa kurulum programı onu
-  kapatmanızı ister. İndirilen dosyayı önce doğrulamak için bkz.
-  [indirilen dosyaları doğrulama](VERIFYING.md).
+- **Kurulum programıyla kurulduysa (Windows):** Glassbed yeni `Glassbed-<version>-setup.exe`
+  dosyasını ve `.sha256` dosyasını doğrudan bu deponun GitHub sürümünden indirir (ilerleme
+  bildirim şeridinde görünür, *İptal* indirmeyi durdurur). Dosya yayımlanan SHA-256 ile
+  eşleşirse Glassbed kurulumu başlatır ve kendini kapatır; eşleşmezse dosya silinir ve hiçbir şey
+  kurulmaz. Tarayıcıyla indirilen dosyalarda olduğu gibi kurulum dosyası internetten gelmiş
+  olarak işaretlenir; Windows SmartScreen onu denetler (kurulum henüz imzalı olmadığı için
+  uyarı gösterebilir). Kurulum normal ve görünür şekilde çalışır – her zamanki gibi adımları siz onaylarsınız;
+  ayarlar, kısayollar ve *Windows ile başlat* korunur. Glassbed yalnızca kurulumun son sayfasında
+  işaretlerseniz yeniden başlar. Kaydedilmemiş taramalar varsa Glassbed önce kaydetmenizi ister.
 - **Taşınabilir ZIP, kaynak koddan çalıştırma, macOS ve Linux:** sürüm sayfası açılır.
 - **0.2.0'dan geçiş:** 0.2.0'da güncelleme denetimi yoktur – yeni kurulum dosyasını bir kez elle
   indirip eski sürümün üzerine kurun (ayarlarınız korunur). 0.3.0'dan itibaren, izin verirseniz
@@ -152,9 +155,11 @@ konuşur; analiz, çökme raporu veya Google hizmetleri yoktur. Kaynak kodu: [`m
    uygulamaları yükleme* izni verin; ardından tekrar kapatabilirsiniz.
 
 Uygulama, GitHub'da yeni sürüm arayıp arayamayacağını bir kez sorar (*Hayır* önceden seçilidir).
-Kabul ederseniz en fazla günde bir kez denetler ve yeni APK'nın indirmesini tarayıcınızda açar –
-kendisi hiçbir şey yüklemez. Denetim sırasında GitHub IP adresinizi görür
-([gizlilik bildirimi](https://arfep.de/datenschutz-glassbed#update-pruefung)).
+Kabul ederseniz en fazla günde bir kez denetler. *Güncelle*, telefonunuza uygun APK'yı ve SHA-256
+sağlama toplamını aynı sürümden HTTPS ile indirir, doğrular ve Android'in yükleyicisine verir – bir
+şey yüklenmeden önce Android size sorar (ilk seferde Glassbed'e *bilinmeyen uygulamaları yükleme*
+izni verin). Sağlama toplamıyla eşleşmeyen bir indirme silinir. Denetim ve indirme sırasında GitHub
+IP adresinizi görür ([gizlilik bildirimi](https://arfep.de/datenschutz-glassbed#update-pruefung)).
 
 ## Başlarken
 
@@ -206,8 +211,10 @@ Glassbed gizlilik bildirimi: [arfep.de/datenschutz-glassbed](https://arfep.de/da
   *Ayarlar*'dan değiştirebilirsiniz. Açıksa Glassbed, başlangıçta en fazla 24 saatte bir veya
   *Şimdi denetle*'ye tıkladığınızda, en son yayımlanan sürümü GitHub'a (`api.github.com`) sorar.
   GitHub IP adresinizi görür; istek kendini yalnızca `Glassbed/<version>` olarak tanıtır.
-  Glassbed kendisi hiçbir şey indirmez ve kurmaz – *Güncelle* yalnızca indirmeyi veya sürüm
-  sayfasını tarayıcınızda açar.
+  Glassbed, kurulu sürümde yalnızca *Güncelle*'ye tıkladığınızda kurulum dosyasını indirir –
+  HTTPS ile, yalnızca `github.com` ve GitHub'ın dosya sunucularından
+  (`release-assets.githubusercontent.com`, `objects.githubusercontent.com`) –, SHA-256'sını
+  doğrular ve normal, görünür kurulumu başlatır. Hiçbir şey sessizce kurulmaz.
 - **Karartmalar kalıcıdır.** Örtülen pikseller, sayfa döndürülmeden, kırpılmadan veya
   kaydedilmeden önce değiştirilir – altında açığa çıkarılabilecek gizli bir katman yoktur. IBAN gibi
   numaralar için *Siyah* kullanın; *Bulanık* yüzler ve fotoğraflar içindir.

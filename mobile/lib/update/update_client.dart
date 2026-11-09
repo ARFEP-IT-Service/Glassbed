@@ -5,9 +5,12 @@ import 'package:http/http.dart' as http;
 
 import '../version.dart';
 import 'release.dart';
+import 'test_hook.dart';
 
 /// The one request of the update check: GitHub's release list of this repository.
-final apiUrl = Uri.parse('https://api.github.com/repos/$repo/releases?per_page=50');
+final apiUrl = testHook
+    ? Uri.parse('${testBase}releases')
+    : Uri.parse('https://api.github.com/repos/$repo/releases?per_page=50');
 
 /// The update check talks to the GitHub API only.
 const allowedHosts = {'api.github.com'};
@@ -27,6 +30,7 @@ class UpdateError implements Exception {
 
 /// Refuses everything but HTTPS to an allowed host.
 void checkUrl(Uri url) {
+  if (isTestUrl(url)) return;
   if (url.scheme != 'https' || !allowedHosts.contains(url.host.toLowerCase())) {
     throw UpdateError('Refusing to connect to ${url.scheme}://${url.host}');
   }

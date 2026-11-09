@@ -4,9 +4,12 @@
 /// android-vX.Y.Z. Only the latter count here.
 library;
 
+import 'test_hook.dart';
+
 const repo = 'ARFEP-IT-Service/Glassbed';
 const releasesPage = 'https://github.com/$repo/releases';
-const downloadPrefix = 'https://github.com/$repo/releases/download/';
+const downloadPrefix =
+    testHook ? '${testBase}download/' : 'https://github.com/$repo/releases/download/';
 
 /// APKs a release offers, one per ABI. The first one is the fallback.
 const supportedAbis = ['arm64-v8a', 'armeabi-v7a', 'x86_64'];
@@ -48,7 +51,12 @@ bool checkDue(String? lastCheck, DateTime now) {
 
 /// A published Android release.
 class AndroidRelease {
-  const AndroidRelease({required this.version, required this.pageUrl, this.apkUrls = const {}});
+  const AndroidRelease({
+    required this.version,
+    required this.pageUrl,
+    this.apkUrls = const {},
+    this.shaUrls = const {},
+  });
 
   final String version;
 
@@ -58,8 +66,23 @@ class AndroidRelease {
   /// Verified direct download links by ABI.
   final Map<String, String> apkUrls;
 
+  /// Verified links to the checksum files (`<apk name>.sha256`) by ABI; only for ABIs that
+  /// also have an APK.
+  final Map<String, String> shaUrls;
+
+  /// The ABI whose APK this device gets: [abi] if the release has it, else arm64-v8a, else null.
+  String? abiFor(String? abi) => apkUrls.containsKey(abi)
+      ? abi
+      : (apkUrls.containsKey(supportedAbis.first) ? supportedAbis.first : null);
+
   /// The APK for [abi], else the arm64-v8a one, else null (then the release page is used).
-  String? apkFor(String? abi) => apkUrls[abi] ?? apkUrls[supportedAbis.first];
+  String? apkFor(String? abi) => apkUrls[abiFor(abi)];
+
+  /// Whether the app can download and verify the APK for [abi] itself (APK and checksum).
+  bool canInstallFor(String? abi) {
+    final a = abiFor(abi);
+    return a != null && shaUrls.containsKey(a);
+  }
 
   /// What "Update" opens: the matching APK, or the release page.
   String updateUrl(String? abi) => apkFor(abi) ?? pageUrl;
@@ -101,11 +124,20 @@ AndroidRelease _parseRelease(Map data, String version) {
     if (name is String && url is String) urls[name] = url;
   }
   // Only exactly the APK of this release in this repository – anything else: release page.
-  final apks = <String, String>{};
+  final apks = <String, String>{}, shas = <String, String>{};
   for (final abi in supportedAbis) {
-    final name = 'Glassbed-android-$version-$abi.apk';
-    final expected = '${downloadPrefix}android-v$version/$name';
-    if (urls[name] == expected) apks[abi] = expected;
+    final name = apkName(version, abi);
+    final expected = apkAssetUrl(version, abi);
+    if (urls[name] != expected) continue;
+    apks[abi] = expected;
+    if (urls['$name.sha256'] == '$expected.sha256') shas[abi] = '$expected.sha256';
   }
-  return AndroidRelease(version: version, pageUrl: page, apkUrls: apks);
+  return AndroidRelease(version: version, pageUrl: page, apkUrls: apks, shaUrls: shas);
 }
+
+/// File name of the APK for [abi] in release [version].
+String apkName(String version, String abi) => 'Glassbed-android-$version-$abi.apk';
+
+/// The only accepted download link of that APK.
+String apkAssetUrl(String version, String abi) =>
+    '${downloadPrefix}android-v$version/${apkName(version, abi)}';

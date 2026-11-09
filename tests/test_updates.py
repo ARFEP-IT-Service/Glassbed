@@ -1,9 +1,11 @@
-"""Update check: versions, the daily rule, release parsing, allowed hosts, the Update button and the question.
+"""Update: versions, the daily rule, release parsing, allowed hosts, download + SHA-256, the
+Update button and the question.
 
-No test touches the network, the browser or the real registry profile: sockets are guarded, the
-opener, the registry and QDesktopServices.openUrl are fakes and settings live in an ini file under
-tmp_path.
+No test touches the network, the browser, a real setup or the real registry profile: sockets are
+guarded, the opener, the registry, QDesktopServices.openUrl and the setup start are fakes and
+settings live in an ini file under tmp_path.
 """
+import hashlib
 import io
 import json
 import os
@@ -28,6 +30,8 @@ from glassbed.gui.update_ui import UpdateController  # noqa: E402
 
 PREFIX = "https://github.com/ARFEP-IT-Service/Glassbed/releases/download/"
 SETUP = "Glassbed-0.3.1-setup.exe"
+SETUP_URL = PREFIX + "v0.3.1/" + SETUP
+SHA_URL = SETUP_URL + ".sha256"
 PAGE = "https://github.com/ARFEP-IT-Service/Glassbed/releases/tag/v0.3.1"
 
 
@@ -51,7 +55,7 @@ def no_network(monkeypatch):
 
 @pytest.fixture(autouse=True)
 def no_test_env(monkeypatch):
-    for name in ("API", "PREFIX", "HOSTS", "CA"):
+    for name in ("API", "PREFIX", "HOSTS", "CA", "KIND"):
         monkeypatch.delenv(f"GLASSBED_UPDATE_TEST_{name}", raising=False)
 
 
@@ -127,19 +131,30 @@ def api_answer(prefix=PREFIX + "v0.3.1/", **extra):
     data = {"tag_name": "v0.3.1", "draft": False, "prerelease": False, "html_url": PAGE,
             "assets": [{"name": SETUP, "browser_download_url": prefix + SETUP},
                        {"name": "Glassbed-0.3.1-portable.zip",
-                        "browser_download_url": prefix + "Glassbed-0.3.1-portable.zip"}]}
+                        "browser_download_url": prefix + "Glassbed-0.3.1-portable.zip"},
+                       {"name": SETUP + ".sha256", "browser_download_url": prefix + SETUP + ".sha256"}]}
     data.update(extra)
     return data
 
 
 def test_release_shape():
-    assert [f.name for f in fields(updates.Release)] == ["version", "page_url", "setup_url"]
-    assert updates.Release("0.3.1", updates.RELEASES_URL).setup_url is None
+    assert [f.name for f in fields(updates.Release)] == ["version", "page_url", "setup_url", "sha256_url"]
+    rel = updates.Release("0.3.1", updates.RELEASES_URL)
+    assert rel.setup_url is None and rel.sha256_url is None and rel.setup_name == SETUP
 
 
 def test_parse_release_with_installer():
     rel = updates.parse_release(api_answer(), updates.Config())
-    assert rel == updates.Release("0.3.1", PAGE, PREFIX + "v0.3.1/" + SETUP)
+    assert rel == updates.Release("0.3.1", PAGE, SETUP_URL, SHA_URL)
+
+
+def test_parse_release_without_checksum_has_no_download():
+    data = api_answer()
+    data["assets"].pop()                                            # no .sha256
+    assert updates.parse_release(data, updates.Config()) == updates.Release("0.3.1", PAGE, SETUP_URL, None)
+    data = api_answer()
+    data["assets"][2]["browser_download_url"] = PREFIX + "v0.3.0/" + SETUP + ".sha256"
+    assert updates.parse_release(data, updates.Config()).sha256_url is None
 
 
 def test_parse_release_ignores_drafts_and_prereleases():
@@ -159,7 +174,7 @@ def test_parse_release_foreign_assets_only_page():
         rel = updates.parse_release(api_answer(prefix), cfg)
         assert rel is not None and rel.version == "0.3.1"
         assert rel.page_url == PAGE
-        assert rel.setup_url is None
+        assert rel.setup_url is None and rel.sha256_url is None
 
 
 def test_parse_release_setup_must_belong_to_the_tag():
@@ -201,23 +216,30 @@ def test_parse_release_uses_config_prefix():
     assert updates.parse_release(api_answer(), cfg).setup_url is None
 
 
-# -- nothing is downloaded or started --------------------------------------------------
-@pytest.mark.parametrize("name", ["download", "start_installer", "cleanup_temp", "parse_sha256",
-                                  "Cancelled", "temp_root", "new_temp_dir", "MAX_DOWNLOAD"])
-def test_no_download_functionality(name):
-    assert not hasattr(updates, name)
-
-
 # -- allowed hosts -----------------------------------------------------------------
 def test_allowed_hosts_is_only_the_api():
     assert updates.ALLOWED_HOSTS == frozenset({"api.github.com"})
     assert updates.Config().allowed_hosts == updates.ALLOWED_HOSTS
 
 
+def test_download_hosts_are_github_only():
+    assert updates.DOWNLOAD_HOSTS == frozenset({"github.com", "release-assets.githubusercontent.com",
+                                                "objects.githubusercontent.com"})
+    assert updates.Config().download_hosts == updates.DOWNLOAD_HOSTS
+    for url in (SETUP_URL, "https://release-assets.githubusercontent.com/github-production/x",
+                "https://objects.githubusercontent.com/github-production/x"):
+        updates.check_url(url, updates.DOWNLOAD_HOSTS)
+    for url in ("http://github.com/x", "https://evil.example.com/x", "https://github.com.evil.example.com/x",
+                "https://github.com@evil.example.com/x", "https://api.github.com/x",
+                "https://raw.githubusercontent.com/x"):
+        with pytest.raises(updates.UpdateError):
+            updates.check_url(url, updates.DOWNLOAD_HOSTS)
+
+
 def test_check_url():
-    cfg = updates.Config()
-    updates.check_url(updates.API_URL, cfg)
-    updates.check_url("https://API.GitHub.com/repos/x", cfg)
+    hosts = updates.Config().allowed_hosts
+    updates.check_url(updates.API_URL, hosts)
+    updates.check_url("https://API.GitHub.com/repos/x", hosts)
     for url in ("http://api.github.com/x", "https://evil.example.com/x",
                 "https://api.github.com.evil.example.com/x", "https://api.github.com@evil.example.com/x",
                 "ftp://api.github.com/x",
@@ -225,11 +247,11 @@ def test_check_url():
                 "https://release-assets.githubusercontent.com/github-production/x",
                 "https://objects.githubusercontent.com/github-production/x"):
         with pytest.raises(updates.UpdateError):
-            updates.check_url(url, cfg)
+            updates.check_url(url, hosts)
 
 
 def test_redirect_only_to_the_api():
-    handler = updates._CheckedRedirects(updates.Config())
+    handler = updates._CheckedRedirects(updates.ALLOWED_HOSTS)
     req = urllib.request.Request(updates.API_URL)
     for target in ("https://evil.example.com/x", "http://api.github.com/x",
                    "https://github.com/ARFEP-IT-Service/Glassbed/releases",
@@ -253,16 +275,16 @@ def test_open_refuses_foreign_host(monkeypatch, no_network):
 def test_fetch_latest_asks_the_api_only(monkeypatch):
     calls = []
 
-    def fake_open(url, cfg, accept="*/*"):
+    def fake_open(url, cfg, accept="*/*", hosts=None):
         calls.append((url, accept))
-        updates.check_url(url, cfg)
+        updates.check_url(url, cfg.allowed_hosts if hosts is None else hosts)
         return io.BytesIO(json.dumps([api_answer()]).encode())
 
     monkeypatch.setattr(updates, "_open", fake_open)
     rel = updates.fetch_latest(updates.Config())
     assert calls == [(updates.API_URL, "application/vnd.github+json")]
     assert updates.API_URL.startswith("https://api.github.com/repos/ARFEP-IT-Service/Glassbed/releases?")
-    assert rel == updates.Release("0.3.1", PAGE, PREFIX + "v0.3.1/" + SETUP)
+    assert rel == updates.Release("0.3.1", PAGE, SETUP_URL, SHA_URL)
 
 
 # -- Windows and Android share the repository: only vX.Y.Z tags count ----------------------
@@ -320,20 +342,20 @@ def test_only_exact_v_tags_count():
 
 def test_fetch_latest_with_android_first(monkeypatch):
     answer = [android_release(), windows_release("0.3.1")]
-    monkeypatch.setattr(updates, "_open", lambda url, cfg, accept="*/*": io.BytesIO(json.dumps(answer).encode()))
+    monkeypatch.setattr(updates, "_open", lambda url, cfg, accept="*/*", hosts=None: io.BytesIO(json.dumps(answer).encode()))
     assert updates.fetch_latest(updates.Config()).version == "0.3.1"
 
 
 def test_fetch_latest_refuses_a_single_object(monkeypatch):
     """The list endpoint answers with a list; anything else is an unexpected answer."""
     monkeypatch.setattr(updates, "_open",
-                        lambda url, cfg, accept="*/*": io.BytesIO(json.dumps(api_answer()).encode()))
+                        lambda url, cfg, accept="*/*", hosts=None: io.BytesIO(json.dumps(api_answer()).encode()))
     with pytest.raises(updates.UpdateError):
         updates.fetch_latest(updates.Config())
 
 
 def test_fetch_latest_bad_answer(monkeypatch):
-    monkeypatch.setattr(updates, "_open", lambda url, cfg, accept="*/*": io.BytesIO(b"<html>"))
+    monkeypatch.setattr(updates, "_open", lambda url, cfg, accept="*/*", hosts=None: io.BytesIO(b"<html>"))
     with pytest.raises(updates.UpdateError):
         updates.fetch_latest(updates.Config())
 
@@ -381,6 +403,134 @@ def test_install_kind(monkeypatch, tmp_path):
     assert updates.install_kind(str(exe), no_registry) == "portable"
 
 
+# -- download and SHA-256 ------------------------------------------------------------
+PAYLOAD = b"MZ" + bytes(range(256)) * 4000
+PAYLOAD_SHA = hashlib.sha256(PAYLOAD).hexdigest()
+REL = updates.Release("0.3.1", PAGE, SETUP_URL, SHA_URL)
+
+
+class FakeResponse(io.BytesIO):
+    def __init__(self, data, length=True):
+        super().__init__(data)
+        self.headers = {"Content-Length": str(len(data))} if length else {}
+
+
+@pytest.fixture
+def served(monkeypatch):
+    """Fake _open: serves the setup and its checksum file and records what was asked for."""
+    files = {SETUP_URL: PAYLOAD, SHA_URL: f"{PAYLOAD_SHA}  {SETUP}\n".encode()}
+    calls = []
+
+    def fake_open(url, cfg, accept="*/*", hosts=None):
+        calls.append((url, hosts))
+        updates.check_url(url, cfg.allowed_hosts if hosts is None else hosts)
+        return FakeResponse(files[url])
+
+    monkeypatch.setattr(updates, "_open", fake_open)
+    return files, calls
+
+
+def test_parse_sha256():
+    h = "a" * 64
+    assert updates.parse_sha256(f"{h}  {SETUP}\n", SETUP) == h
+    assert updates.parse_sha256(f"{h.upper()} *{SETUP}", SETUP) == h
+    assert updates.parse_sha256(h, SETUP) == h
+    for text in ("", "nothing", f"{h}  other.exe", "abc  " + SETUP):
+        with pytest.raises(updates.UpdateError):
+            updates.parse_sha256(text, SETUP)
+
+
+def test_download_verifies_sha256(served, tmp_path):
+    _files, calls = served
+    progress = []
+    setup = updates.download(REL, tmp_path, lambda d, t: progress.append((d, t)), cfg=updates.Config())
+    assert setup == tmp_path / SETUP and setup.read_bytes() == PAYLOAD
+    assert [c[0] for c in calls] == [SHA_URL, SETUP_URL]
+    assert all(c[1] == updates.DOWNLOAD_HOSTS for c in calls)
+    assert progress[-1] == (len(PAYLOAD), len(PAYLOAD))
+
+
+def test_download_wrong_checksum_deletes_the_file(served, tmp_path):
+    files, _calls = served
+    files[SHA_URL] = f"{'0' * 64}  {SETUP}".encode()
+    with pytest.raises(updates.UpdateError, match="SHA-256"):
+        updates.download(REL, tmp_path, cfg=updates.Config())
+    assert list(tmp_path.iterdir()) == []
+
+
+def test_download_cancel_deletes_the_file(served, tmp_path):
+    with pytest.raises(updates.Cancelled):
+        updates.download(REL, tmp_path, cancelled=lambda: True, cfg=updates.Config())
+    assert list(tmp_path.iterdir()) == []
+
+
+def test_download_too_large(served, tmp_path, monkeypatch):
+    monkeypatch.setattr(updates, "MAX_DOWNLOAD", 1000)
+    with pytest.raises(updates.UpdateError, match="large"):
+        updates.download(REL, tmp_path, cfg=updates.Config())
+    assert list(tmp_path.iterdir()) == []
+
+
+@pytest.mark.parametrize("release", [
+    updates.Release("0.3.1", PAGE),
+    updates.Release("0.3.1", PAGE, SETUP_URL),
+    updates.Release("0.3.1", PAGE, "https://evil.example.com/" + SETUP, SHA_URL),
+    updates.Release("0.3.1", PAGE, PREFIX + "v0.3.0/" + SETUP, SHA_URL),
+    updates.Release("0.3.2", PAGE, SETUP_URL, SHA_URL),
+])
+def test_download_only_the_exact_release_links(served, tmp_path, release):
+    _files, calls = served
+    with pytest.raises(updates.UpdateError):
+        updates.download(release, tmp_path, cfg=updates.Config())
+    assert calls == [] and list(tmp_path.iterdir()) == []
+
+
+def test_download_refuses_redirect_to_a_foreign_host():
+    handler = updates._CheckedRedirects(updates.DOWNLOAD_HOSTS)
+    req = urllib.request.Request(SETUP_URL)
+    for target in ("https://evil.example.com/x", "http://objects.githubusercontent.com/x",
+                   "https://api.github.com/x"):
+        with pytest.raises(updates.UpdateError):
+            handler.redirect_request(req, None, 302, "Found", {}, target)
+    new = handler.redirect_request(req, None, 302, "Found", {},
+                                   "https://release-assets.githubusercontent.com/github-production/x")
+    assert new is not None
+
+
+def test_start_installer_opens_the_setup_through_the_shell(monkeypatch, tmp_path):
+    started = []
+    monkeypatch.setattr(updates.os, "startfile", lambda *args: started.append(args), raising=False)
+    updates.start_installer(tmp_path / SETUP)
+    # like a double-click (SmartScreen sees the mark), never /S: the user sees the setup
+    assert started == [(str(tmp_path / SETUP), "open", "/FROMAPP", str(tmp_path))]
+
+
+@pytest.mark.skipif(sys.platform != "win32", reason="NTFS alternate data streams")
+def test_download_is_marked_as_from_the_internet(served, tmp_path):
+    setup = updates.download(REL, tmp_path, cfg=updates.Config())
+    mark = open(f"{setup}:Zone.Identifier", encoding="ascii", newline="").read()
+    assert mark == f"[ZoneTransfer]\r\nZoneId=3\r\nReferrerUrl={PAGE}\r\nHostUrl={SETUP_URL}\r\n"
+    assert setup.read_bytes() == PAYLOAD                            # the file itself is unchanged
+
+
+def test_download_unusable_without_the_mark(served, tmp_path, monkeypatch):
+    def fail(*a):
+        raise updates.UpdateError("Could not mark the download as coming from the internet")
+    monkeypatch.setattr(updates, "mark_from_internet", fail)
+    with pytest.raises(updates.UpdateError, match="internet"):
+        updates.download(REL, tmp_path, cfg=updates.Config())
+    assert list(tmp_path.iterdir()) == []
+
+
+def test_temp_folder(monkeypatch, tmp_path):
+    monkeypatch.setattr(updates.tempfile, "gettempdir", lambda: str(tmp_path))
+    folder = updates.new_temp_dir()
+    assert folder.parent == tmp_path / updates.TEMP_PARENT and folder.is_dir()
+    (folder / SETUP).write_bytes(b"x")
+    updates.cleanup_temp()
+    assert not (tmp_path / updates.TEMP_PARENT).exists()
+
+
 # -- test hook ----------------------------------------------------------------------
 def test_update_testing_config(monkeypatch):
     assert _update_testing.config(updates.Config) is None
@@ -392,8 +542,16 @@ def test_update_testing_config(monkeypatch):
     cfg = _update_testing.config(updates.Config)
     assert cfg == updates.Config(api_url="https://localhost:8443/latest",
                                  download_prefix="https://localhost:8443/download/",
-                                 allowed_hosts=frozenset({"localhost", "127.0.0.1"}), cafile="C:/certs/ca.pem")
+                                 allowed_hosts=frozenset({"localhost", "127.0.0.1"}),
+                                 download_hosts=frozenset({"localhost", "127.0.0.1"}), cafile="C:/certs/ca.pem")
     assert updates.config() == cfg
+
+
+def test_update_testing_install_kind(monkeypatch):
+    assert _update_testing.install_kind() is None
+    monkeypatch.setenv("GLASSBED_UPDATE_TEST_KIND", "installer")
+    if sys.platform == "win32":
+        assert updates.install_kind() == "installer"
 
 
 # -- the window: question and consent ---------------------------------------------------
@@ -414,6 +572,9 @@ class FakeWindow(QMainWindow):
 
     def show_alert(self, kind, title, text):
         self.alerts.append((kind, title, text))
+
+    def quit_for_update(self):
+        self.quit_called = True
 
 
 @pytest.fixture
@@ -521,9 +682,10 @@ def test_check_once_when_due(window, settings, fetches, no_delay):
     assert window.alerts == []
 
 
-# -- the Update button opens the browser; nothing is downloaded or started -----------------
-REL_SETUP = updates.Release("0.3.1", PAGE, PREFIX + "v0.3.1/" + SETUP)
+# -- the Update button: installed version downloads, everything else opens the page --------
+REL_SETUP = updates.Release("0.3.1", PAGE, SETUP_URL, SHA_URL)
 REL_PAGE = updates.Release("0.3.1", PAGE)
+REL_NO_SHA = updates.Release("0.3.1", PAGE, SETUP_URL)
 
 
 @pytest.fixture
@@ -539,6 +701,25 @@ def opened(monkeypatch):
     return urls
 
 
+@pytest.fixture
+def flow(monkeypatch, tmp_path):
+    """Fake download and setup start; records what happened."""
+    rec = {"downloads": [], "started": [], "result": tmp_path / SETUP, "error": None}
+    monkeypatch.setattr(updates.tempfile, "gettempdir", lambda: str(tmp_path))
+
+    def fake_download(release, folder, progress=None, cancelled=lambda: False, cfg=None):
+        rec["downloads"].append(release)
+        if progress:
+            progress(50, 100)
+        if rec["error"]:
+            raise rec["error"]
+        return rec["result"]
+
+    monkeypatch.setattr(updates, "download", fake_download)
+    monkeypatch.setattr(updates, "start_installer", lambda setup: rec["started"].append(setup))
+    return rec
+
+
 def controller(window, kind, release):
     ctl = UpdateController(window)
     ctl.kind = kind
@@ -546,39 +727,73 @@ def controller(window, kind, release):
     return ctl
 
 
-def test_update_installer_opens_setup_link(window, opened):
+def with_banner(window, ctl):
+    banner = update_ui.UpdateBanner(window.centralWidget())
+    ctl.attach(banner)
+    return banner
+
+
+def test_update_installer_downloads_and_starts_setup(window, opened, flow):
     ctl = controller(window, "installer", REL_SETUP)
-    assert ctl.update_url() == REL_SETUP.setup_url
+    with_banner(window, ctl)
+    assert ctl.can_install()
     ctl.update_now()
-    assert opened == [REL_SETUP.setup_url]
-    assert len(window.alerts) == 1
-    kind, title, _text = window.alerts[0]
-    assert kind == "info" and "0.3.1" in title
+    wait(3000, until=lambda: getattr(window, "quit_called", False))
+    assert flow["downloads"] == [REL_SETUP]
+    assert flow["started"] == [flow["result"]]
+    assert window.quit_called is True
+    assert opened == [] and window.alerts == []
 
 
 @pytest.mark.parametrize("kind", ["portable", "source", "unsupported"])
-def test_update_other_kinds_open_release_page(window, opened, kind):
+def test_update_other_kinds_open_release_page(window, opened, flow, kind):
     ctl = controller(window, kind, REL_SETUP)
-    assert ctl.update_url() == PAGE
     ctl.update_now()
     assert opened == [PAGE]
-    assert window.alerts == []
+    assert flow["downloads"] == [] and window.alerts == []
 
 
-def test_update_installer_without_setup_opens_page(window, opened):
-    ctl = controller(window, "installer", REL_PAGE)
-    assert ctl.update_url() == PAGE
+@pytest.mark.parametrize("release", [REL_PAGE, REL_NO_SHA])
+def test_update_installer_without_verified_setup_opens_page(window, opened, flow, release):
+    ctl = controller(window, "installer", release)
     ctl.update_now()
     assert opened == [PAGE]
-    assert window.alerts == []
+    assert flow["downloads"] == [] and window.alerts == []
 
 
-def test_update_without_release_opens_releases(window, opened):
+def test_update_without_release_does_nothing(window, opened, flow):
+    controller(window, "installer", None).update_now()
+    assert opened == [] and flow["downloads"] == []
+
+
+def test_update_waits_for_unsaved_scans(window, opened, flow, monkeypatch):
+    monkeypatch.setattr(FakeScanTab, "has_unsaved", lambda self: True)
+    ctl = controller(window, "installer", REL_SETUP)
+    ctl.update_now()
+    assert flow["downloads"] == [] and opened == []
+    assert [a[0] for a in window.alerts] == ["info"]
+
+
+def test_update_failure_shows_error_and_offer_again(window, flow):
+    flow["error"] = updates.UpdateError("The downloaded file does not match its published SHA-256 checksum.")
     ctl = controller(window, "installer", None)
-    assert ctl.update_url() == updates.RELEASES_URL
+    banner = with_banner(window, ctl)
+    ctl.release = REL_SETUP
     ctl.update_now()
-    assert opened == [updates.RELEASES_URL]
-    assert window.alerts == []
+    wait(3000, until=lambda: window.alerts)
+    assert flow["started"] == [] and not getattr(window, "quit_called", False)
+    assert window.alerts[0][0] == "error" and "SHA-256" in window.alerts[0][2]
+    assert banner.update_btn.isVisibleTo(window) and not banner.cancel_btn.isVisibleTo(window)
+    assert ctl._cancel is None
+
+
+def test_update_cancel_is_quiet(window, flow):
+    flow["error"] = updates.Cancelled("Cancelled")
+    ctl = controller(window, "installer", REL_SETUP)
+    with_banner(window, ctl)
+    ctl.update_now()
+    wait(3000, until=lambda: ctl._cancel is None)
+    assert window.alerts == [] and flow["started"] == []
 
 
 def test_whats_new_opens_page(window, opened):
@@ -587,22 +802,13 @@ def test_whats_new_opens_page(window, opened):
     assert window.alerts == []
 
 
-@pytest.mark.parametrize("kind, release, expected, alerts", [
-    ("installer", REL_SETUP, REL_SETUP.setup_url, 1),
-    ("portable", REL_SETUP, PAGE, 0),
-    ("installer", REL_PAGE, PAGE, 0),
-])
-def test_banner_update_button(window, opened, kind, release, expected, alerts):
-    ctl = controller(window, kind, None)
-    banner = update_ui.UpdateBanner(window.centralWidget())
-    ctl.attach(banner)
-    ctl.release = release
-    banner.update_btn.click()
-    assert opened == [expected]
-    assert len(window.alerts) == alerts
-
-
-def test_banner_has_no_progress_or_cancel(window):
+def test_banner_offer_and_progress(window):
     banner = update_ui.UpdateBanner(window.centralWidget())
     texts = sorted(b.text() for b in banner.findChildren(QPushButton))
-    assert texts == sorted(["Update", "What's new", "Later", "Skip this version"])
+    assert texts == sorted(["Update", "What's new", "Later", "Skip this version", "Cancel"])
+    banner.show_offer("0.3.1")
+    assert not banner.cancel_btn.isVisibleTo(window) and banner.update_btn.isVisibleTo(window)
+    banner.show_progress("0.3.1")
+    assert banner.cancel_btn.isVisibleTo(window) and not banner.update_btn.isVisibleTo(window)
+    banner.set_progress(5_000_000, 10_000_000)
+    assert banner.progress.value() == 500 and banner.amount.text() == "5.0 / 10.0 MB"

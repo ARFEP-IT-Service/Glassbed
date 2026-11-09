@@ -33,6 +33,7 @@ import kotlin.math.sqrt
  * multicast lock for mDNS, the Android 17 local network permission, saving and opening files
  * through the system file picker (Storage Access Framework, so no storage permission is needed),
  * rendering PDF pages with the platform's PdfRenderer and files shared to Glassbed by other apps.
+ * Update installs are delegated to UpdateInstaller (src/github; the play twin does nothing).
  */
 class MainActivity : FlutterActivity() {
 
@@ -49,12 +50,15 @@ class MainActivity : FlutterActivity() {
     // PdfRenderer is not thread-safe: all rendering runs on this one background thread.
     private val pdf = Executors.newSingleThreadExecutor()
     private val main = Handler(Looper.getMainLooper())
+    private val updates by lazy { UpdateInstaller(this) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         // A recreated activity or a launch from "recents" carries the old share intent again.
         val fromHistory = intent.flags and Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY != 0
         if (savedInstanceState == null && !fromHistory) takeShare(intent)
+        // A fresh start: downloads of an earlier run are no longer needed.
+        if (savedInstanceState == null) io.execute { updates.cleanup() }
     }
 
     override fun onNewIntent(intent: Intent) {
@@ -88,6 +92,12 @@ class MainActivity : FlutterActivity() {
             "renderPdfPage" -> renderPdfPage(call, result)
             // first entry = the ABI the device prefers (picks the matching APK of a release)
             "deviceAbi" -> result.success(Build.SUPPORTED_ABIS.firstOrNull())
+            "updatesDir" -> result.success(updates.dir()?.path)
+            "installUpdate" -> try {
+                result.success(updates.install(call.argument<String>("path")))
+            } catch (e: Exception) {
+                result.error("install_failed", e.message, null)
+            }
             else -> result.notImplemented()
         }
     }
