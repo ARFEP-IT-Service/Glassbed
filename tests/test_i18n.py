@@ -42,11 +42,20 @@ def test_placeholders_match():
         assert len({tuple(v) for v in holes.values()}) == 1, key
 
 
+# texts added after 0.3.0 (devices that only print)
+# and the device check
+ADDED = {"This device cannot scan – printing only.", "Printer only", "Scanner + printer",
+         "Check device", "Device check", "Checking the device…", "Copy report", "Share report", "Copied.", "Send this report to the developer if the device does not work with Glassbed. It contains the device's address, model and supported protocols – nothing else."}
+
+
 def test_texts_unchanged_since_0_3_0():
+    """Every text of 0.3.0 is still there and translated the same; only ADDED is new."""
     snap = json.loads((ROOT / "tests" / "fixtures" / "i18n-0.3.0.json").read_text(encoding="utf-8"))
     assert i18n.LANGUAGES == snap["languages"]
     for lang in LANGS:
-        assert i18n.TRANSLATIONS[lang] == snap["translations"][lang]
+        old, now = snap["translations"][lang], i18n.TRANSLATIONS[lang]
+        assert set(now) - set(old) == ADDED
+        assert {k: now[k] for k in old} == old
 
 
 def test_english_falls_back_to_the_source_text():

@@ -54,7 +54,11 @@ and should work with many network printers that support eSCL and IPP.
 - Copy: scan and print at actual size
 
 **App**
-- Finds printers automatically (Bonjour/mDNS), or type the IP address
+- Finds printers automatically (Bonjour/mDNS), or type the IP address – several printers are listed
+  with *Scanner + printer* or *Printer only*
+- Devices that only print are recognised: scanning is locked, printing works as usual
+- **Check device** (ⓘ): a short report of what a printer offers (ports, Bonjour, IPP, eSCL, WSD) –
+  send it when a device does not work
 - Printer status and toner levels in the header
 - English, German and Turkish · light, dark or system theme
 - One window: editor, settings and messages stay inside it; starting Glassbed again reuses it
@@ -188,6 +192,7 @@ it checks or downloads ([privacy policy](https://arfep.de/datenschutz-glassbed#u
 ```bash
 glassbed-cli list                                   # find devices
 glassbed-cli --host 192.168.1.20 status             # state and toner
+glassbed-cli --host 192.168.1.20 check              # what the device offers (report)
 glassbed-cli --host 192.168.1.20 scan letter.pdf --adf --mode gray --quality compact
 glassbed-cli --host 192.168.1.20 scan pages.pdf --adf --split 1     # one PDF per page
 glassbed-cli --host 192.168.1.20 print report.pdf --copies 2 --mono --pages 1-3
@@ -219,6 +224,7 @@ Full privacy policy for Glassbed: [arfep.de/datenschutz-glassbed](https://arfep.
 | Device | Scan | Print | Notes |
 |---|---|---|---|
 | HP Color Laser MFP 179fnw (firmware V3.82) | ✅ glass, gray/color/B&W | ✅ printer accepts jobs | B&W via grayscale (device rejects 1-bit JPEG), max 300 dpi, no automatic duplex |
+| Epson ET-2710 (firmware 01.39, latest) | ❌ | ❌ | no AirPrint/IPP and no eSCL in this firmware (only WSD Scan, LPR, port 9100) – not supported |
 
 Any device that supports **AirScan/eSCL** (scanning) and **AirPrint/IPP** with Apple raster
 (`image/urf`) or JPEG (printing) should work. Please report your model – see
@@ -228,7 +234,7 @@ Any device that supports **AirScan/eSCL** (scanning) and **AirPrint/IPP** with A
 
 | Function | Protocol | Code |
 |---|---|---|
-| Discovery | mDNS `_uscan._tcp`, `_ipp._tcp` | [`discovery.py`](glassbed/discovery.py) |
+| Discovery | mDNS `_uscan._tcp`, `_ipp._tcp`, `_ipps._tcp` | [`discovery.py`](glassbed/discovery.py) |
 | Scanning | eSCL over HTTP (`/eSCL/ScanJobs`) | [`escl.py`](glassbed/escl.py) |
 | Printing | IPP/2.0 `Print-Job` with Apple raster | [`ipp.py`](glassbed/ipp.py), [`urf.py`](glassbed/urf.py) |
 | Rendering | PDFium for PDFs, Pillow for images | [`render.py`](glassbed/render.py) |
@@ -244,6 +250,8 @@ rasterizes every page itself and sends it as Apple raster.
   report. Some routers and VPNs block mDNS.
 - **"Offline":** check that `http://<printer-ip>/` opens in a browser and that AirPrint/eSCL is
   enabled in the printer's web interface.
+- **A device does not work:** run *Check device* (ⓘ next to the device field; on Android ⋮ →
+  *Check device*) and send the report – it shows which protocols the device offers.
 - **"The scanner is busy":** another computer or the printer's own panel is scanning – try
   again in a moment.
 - **Try something without touching your settings:** set `GLASSBED_PROFILE=Glassbed-dev`

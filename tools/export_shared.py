@@ -37,6 +37,15 @@ ANDROID_KEYS = [
     "Search", "Searching for devices…", "No devices found. Enter the IP address manually.",
     "Found {n} device(s).", "IP address or host name", "Ready", "Busy", "Stopped", "Offline",
     "Connecting…", "No printer selected.", "Toner low", "{name}: {level} % left",
+    "This device cannot scan – printing only.", "Printer only", "Scanner + printer",
+    # device check
+    "Check device",
+    "Device check",
+    "Checking the device…",
+    "Copy report",
+    "Share report",
+    "Copied.",
+    "Send this report to the developer if the device does not work with Glassbed. It contains the device's address, model and supported protocols – nothing else.",
     # scan
     "Scan", "Source", "Glass", "Feeder", "Mode", "Color", "Gray", "B/W", "Resolution",
     "Scanning…", "{n} page(s) scanned.", "Scan cancelled.", "{n} page(s)",

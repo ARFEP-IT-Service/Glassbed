@@ -19,6 +19,7 @@ from . import theme
 from .print_tab import PrintTab
 from .scan_tab import ScanTab
 from .settings_page import SettingsPage
+from .device_check_page import DeviceCheckPage
 from .overlay import ConfirmOverlay
 from .toast import Toast
 from .toast import style as toast_style
@@ -42,6 +43,7 @@ class MainWindow(QMainWindow):
         self._status = (tr("Connecting…"), theme.T["muted"])
         self._markers: list = []
         self._caps = None
+        self._scanner = True                    # False once a reachable device turned out to only print
         self.updates = UpdateController(self)
 
         self._build_ui(int(self.settings.value("ui/tab", 0)))
@@ -111,6 +113,11 @@ class MainWindow(QMainWindow):
         self.web_btn.setObjectName("icon")
         self.web_btn.setToolTip(tr("Open the printer's built-in web page"))
         self.web_btn.clicked.connect(self._open_web)
+        self.check_btn = QToolButton()
+        self.check_btn.setText("ⓘ")
+        self.check_btn.setObjectName("icon")
+        self.check_btn.setToolTip(tr("Check device"))
+        self.check_btn.clicked.connect(self.check_device)
         self.toner = TonerBar()
         self.settings_btn = QToolButton()
         self.settings_btn.setText("⚙︎")
@@ -134,6 +141,7 @@ class MainWindow(QMainWindow):
         head.addWidget(self.device_box)
         head.addWidget(self.search_btn)
         head.addWidget(self.web_btn)
+        head.addWidget(self.check_btn)
         head.addSpacing(18)
         head.addWidget(self.toner)
         head.addSpacing(12)
@@ -183,6 +191,7 @@ class MainWindow(QMainWindow):
         self._set_status(*self._status)
         self.toner.set_markers(self._markers)
         self.scan_tab.apply_capabilities(self._caps)
+        self.scan_tab.set_scanner(self._scanner)
         self.updates.attach(self.update_banner)
 
     # -- in-window views ----------------------------------------------------
@@ -251,6 +260,10 @@ class MainWindow(QMainWindow):
         """Tray: scan with the last used settings; the pages land in the scan tab."""
         self.bring_to_front()
         self.close_page()
+        if not self.scan_tab.can_scan:
+            self.tabs.setCurrentWidget(self.print_tab)
+            self.statusBar().showMessage(tr("This device cannot scan – printing only."), 8000)
+            return
         self.tabs.setCurrentWidget(self.scan_tab)
         if self.scan_tab._cancel is None:      # not while a scan is already running
             self.scan_tab.start_scan()
@@ -425,6 +438,8 @@ class MainWindow(QMainWindow):
         self.device_box.clear()
         for d in self._devices.values():
             label = d.host if d.name == d.host else f"{d.name}  ·  {d.host}"
+            if d.scanner is False:
+                label += f"  ·  {tr('Printer only')}"
             self.device_box.addItem(label, d.host)
         i = self.device_box.findData(current)
         if i >= 0:
@@ -482,8 +497,10 @@ class MainWindow(QMainWindow):
                 self.settings.setValue("device/name", dev.name)
                 self._fill_box()
             if load_caps:
+                # the printer answered: no scanner capabilities means a device that only prints
                 self._caps = caps
                 self.scan_tab.apply_capabilities(caps)
+                self._set_scanner(dev, caps is not None)
 
         def failed(_e):
             self._set_status(tr("Offline"), theme.T["danger"])
@@ -492,10 +509,34 @@ class MainWindow(QMainWindow):
 
         run_task(job, device, on_done=done, on_error=failed)
 
+    def _set_scanner(self, device: Device, available: bool) -> None:
+        self._scanner = available
+        self.scan_tab.set_scanner(available)
+        listed = self._devices.get(device.host)
+        if any(d is not None and d.scanner is not available for d in (device, listed)):
+            for d in (device, listed):
+                if d is not None:
+                    d.scanner = available
+            self._fill_box()
+        if not available and self.tabs.currentWidget() is self.scan_tab and not self.scan_tab.has_pages():
+            self.tabs.setCurrentWidget(self.print_tab)
+
     def _set_status(self, text: str, color: str) -> None:
         self._status = (text, color)
         self.status_lbl.setText(text)
         self.status_dot.setStyleSheet(f"color: {color}; font-size: 11px;")
+
+    def check_device(self) -> None:
+        """What the device offers (ports, Bonjour, IPP, eSCL, WSD) – also when connecting failed."""
+        text = self.device_box.currentText()
+        i = self.device_box.findText(text)
+        host = self.device_box.itemData(i) if i >= 0 else text.split("·")[0].strip()
+        if not host and self._device:
+            host = self._device.host
+        if not host:
+            self.statusBar().showMessage(tr("No printer selected."), 5000)
+            return
+        self.show_page(DeviceCheckPage(host))
 
     def _open_web(self) -> None:
         if self._device:

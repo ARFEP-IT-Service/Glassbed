@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:shared_preferences/shared_preferences.dart';
 
+
 /// Languages the app ships. The key is the language code, the value its own name.
 const Map<String, String> supportedLanguages = {
   'de': 'Deutsch',
@@ -19,8 +20,8 @@ final Map<String, Map<String, String>> _texts = {};
 /// The language chosen in the settings; null follows the system.
 final ValueNotifier<String?> languageSetting = ValueNotifier<String?>(null);
 
-/// Loads the shared texts (generated from the Windows app) and the mobile-only texts,
-/// plus the stored language choice.
+/// Loads the shared texts (generated from the Windows app), the mobile-only texts and the
+/// device texts that ship in code, plus the stored language choice.
 Future<void> loadI18n() async {
   for (final asset in const ['assets/i18n/shared.json', 'assets/i18n/mobile.json']) {
     try {
@@ -71,8 +72,8 @@ String tr(String key, [Map<String, Object?> args = const {}]) {
   return text;
 }
 
-/// Adds texts that ship in code instead of the asset files (used by optional features of
-/// one build only). Texts from the asset files win, so a shared translation is never replaced.
+/// Adds texts that ship in code instead of the asset files (the device texts, and optional
+/// features of one build only). Texts from the asset files win, so a shared translation is never replaced.
 void addTexts(Map<String, Map<String, String>> texts) {
   texts.forEach((key, value) => _texts.putIfAbsent(key, () => value));
 }

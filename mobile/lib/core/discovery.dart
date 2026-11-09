@@ -6,29 +6,63 @@ import 'package:multicast_dns/multicast_dns.dart';
 import 'device.dart';
 import 'lan.dart';
 
-const _services = ['_uscan._tcp.local', '_ipp._tcp.local'];
+const _services = ['_uscan._tcp.local', '_ipp._tcp.local', '_ipps._tcp.local'];
 
-/// Browse _uscan._tcp and _ipp._tcp for [timeout]; one Device per IPv4 host, sorted by name.
+/// Browse _uscan._tcp, _ipp._tcp and _ipps._tcp for [timeout]; one Device per IPv4 host,
+/// sorted by name.
 /// The caller holds the Android multicast lock while this runs.
 Future<List<Device>> discover({Duration timeout = const Duration(seconds: 4)}) async {
+  final found = <String, DiscoveredEntry>{};
+  for (final s in await browseServices(_services, timeout: timeout)) {
+    addService(found,
+        serviceType: s.type, instance: s.instance, host: s.host, port: s.port, txt: s.txt);
+  }
+  return devicesFrom(found);
+}
+
+/// One resolved mDNS service instance (IPv4 only).
+class MdnsService {
+  const MdnsService({
+    required this.type,
+    required this.instance,
+    required this.host,
+    required this.port,
+    required this.txt,
+  });
+
+  /// e.g. "_ipp._tcp.local"
+  final String type;
+  final String instance;
+  final String host;
+  final int port;
+
+  /// TXT record, keys lower case.
+  final Map<String, String> txt;
+}
+
+/// Browses [services] (e.g. "_ipp._tcp.local") for [timeout] and resolves every instance.
+/// Empty if the mDNS socket cannot be opened.
+/// The caller holds the Android multicast lock while this runs.
+Future<List<MdnsService>> browseServices(List<String> services,
+    {Duration timeout = const Duration(seconds: 4)}) async {
   // Android does not allow SO_REUSEPORT on the mDNS socket.
   final client = MDnsClient(
     rawDatagramSocketFactory: (dynamic host, int port,
             {bool reuseAddress = true, bool reusePort = false, int ttl = 255}) =>
         RawDatagramSocket.bind(host, port, reuseAddress: true, reusePort: false, ttl: ttl),
   );
-  final found = <String, DiscoveredEntry>{};
+  final found = <MdnsService>[];
   try {
     await client.start(listenAddress: InternetAddress.anyIPv4);
     await Future.wait([
-      for (final service in _services) _browse(client, service, timeout, found),
+      for (final service in services) _browse(client, service, timeout, found),
     ]).timeout(timeout + const Duration(seconds: 1), onTimeout: () => const []);
   } on SocketException {
     return const [];
   } finally {
     client.stop();
   }
-  return devicesFrom(found);
+  return List.of(found);
 }
 
 /// What was learned about one host while browsing.
@@ -38,7 +72,7 @@ class DiscoveredEntry {
   String name;
   bool nameFromScanner = false;
   Uri? escl;
-  Uri? ipp;
+  Uri? ipp; // from _ipp; from _ipps only until a plain _ipp answer arrives
 }
 
 /// Parses an mDNS TXT record ("key=value" lines) into a map (keys lower case).
@@ -72,6 +106,13 @@ void addService(
         ..name = model
         ..nameFromScanner = true;
     }
+  } else if (serviceType.startsWith('_ipps')) {
+    // IPP over TLS. The app talks plain IPP, which these printers also accept on port 631.
+    if (entry.ipp == null) {
+      final rp = _trimSlashes(txt['rp'] ?? 'ipp/print');
+      entry.ipp = Uri(scheme: 'ipp', host: host, port: 631, path: '/$rp');
+    }
+    if (model.isNotEmpty && !entry.nameFromScanner) entry.name = model;
   } else {
     final rp = _trimSlashes(txt['rp'] ?? 'ipp/print');
     entry.ipp = Uri(scheme: 'ipp', host: host, port: port, path: '/$rp');
@@ -89,6 +130,7 @@ List<Device> devicesFrom(Map<String, DiscoveredEntry> found) {
           host: d.host,
           esclBase: e.escl ?? d.esclBase,
           ippUri: e.ipp ?? d.ippUri,
+          scanner: e.escl != null,
         );
       }(),
   ]..sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
@@ -110,7 +152,7 @@ Future<void> _browse(
   MDnsClient client,
   String service,
   Duration timeout,
-  Map<String, DiscoveredEntry> found,
+  List<MdnsService> found,
 ) async {
   final pending = <Future<void>>[];
   await for (final ptr in client.lookup<PtrResourceRecord>(
@@ -126,7 +168,7 @@ Future<void> _resolve(
   MDnsClient client,
   String service,
   String instanceName,
-  Map<String, DiscoveredEntry> found,
+  List<MdnsService> found,
 ) async {
   const t = Duration(seconds: 2);
   final srv = await client
@@ -141,14 +183,13 @@ Future<void> _resolve(
       .firstOrNullWithin(t);
   if (addr == null || addr.address.type != InternetAddressType.IPv4) return;
   final dot = instanceName.indexOf('._');
-  addService(
-    found,
-    serviceType: service,
+  found.add(MdnsService(
+    type: service,
     instance: dot > 0 ? instanceName.substring(0, dot) : instanceName,
     host: addr.address.address,
     port: srv.port,
     txt: parseTxt(txt?.text ?? ''),
-  );
+  ));
 }
 
 extension<T> on Stream<T> {

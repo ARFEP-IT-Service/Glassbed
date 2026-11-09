@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/device.dart';
 import '../../core/ipp.dart';
+import '../../device_texts.dart';
 import '../../i18n.dart';
 import '../print/print_runner.dart' show problemText;
 import '../theme.dart';
@@ -22,9 +23,11 @@ class PrinterCard extends StatelessWidget {
     required this.selected,
     required this.link,
     required this.info,
+    this.scanner,
     required this.onConnect,
     required this.onSearch,
     required this.onPick,
+    this.onCheck,
   });
 
   final TextEditingController hostController;
@@ -33,9 +36,15 @@ class PrinterCard extends StatelessWidget {
   final Device? selected;
   final Link link;
   final PrinterInfo? info;
+
+  /// Whether the selected device scans, from its capabilities (null: not known yet).
+  final bool? scanner;
   final VoidCallback onConnect;
   final VoidCallback onSearch;
   final ValueChanged<Device> onPick;
+
+  /// "Check device" for the entered or selected host (no menu if null).
+  final VoidCallback? onCheck;
 
   @override
   Widget build(BuildContext context) {
@@ -80,6 +89,22 @@ class PrinterCard extends StatelessWidget {
                     label: Text(tr('Search')),
                   ),
                 ),
+                if (onCheck != null)
+                  PopupMenuButton<VoidCallback>(
+                    key: const ValueKey('printer-menu'),
+                    icon: const Icon(Icons.more_vert),
+                    onSelected: (action) => action(),
+                    itemBuilder: (context) => [
+                      PopupMenuItem(
+                        value: onCheck,
+                        child: ListTile(
+                          contentPadding: EdgeInsets.zero,
+                          leading: const Icon(Icons.troubleshoot),
+                          title: Text(tr('Check device')),
+                        ),
+                      ),
+                    ],
+                  ),
               ],
             ),
             if (searching) ...[
@@ -102,12 +127,32 @@ class PrinterCard extends StatelessWidget {
                     color: d.host == selected?.host ? theme.colorScheme.primary : null,
                   ),
                   title: Text(d.name),
-                  subtitle: Text(d.host),
+                  subtitle: Wrap(
+                    spacing: 12,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    children: [
+                      Text(d.host),
+                      // the connected device: what it really can, else what it announced
+                      ?_kindLabel(
+                          context, d.host == selected?.host ? scanner ?? d.scanner : d.scanner),
+                    ],
+                  ),
                   onTap: () => onPick(d),
                 ),
             ],
             const SizedBox(height: 12),
             _StatusLine(link: link, info: info, device: selected),
+            if (link == Link.online && scanner == false)
+              Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: Row(
+                  children: [
+                    Icon(Icons.info_outline, size: 18, color: Palette.of(context).muted),
+                    const SizedBox(width: 8),
+                    Expanded(child: Text(tr(noScannerHint), style: theme.textTheme.bodyMedium)),
+                  ],
+                ),
+              ),
             if (link == Link.online && info != null)
               for (final m in info!.markers.where((m) => m.level >= 0)) _TonerBar(marker: m),
           ],
@@ -115,6 +160,26 @@ class PrinterCard extends StatelessWidget {
       ),
     );
   }
+}
+
+/// "Scanner + printer" or "Printer only" with an icon; nothing if not known.
+Widget? _kindLabel(BuildContext context, bool? scanner) {
+  if (scanner == null) return null;
+  final muted = Palette.of(context).muted;
+  return Row(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      Icon(scanner ? Icons.document_scanner_outlined : Icons.print_outlined, size: 14, color: muted),
+      const SizedBox(width: 4),
+      Flexible(
+        child: Text(
+          tr(scanner ? 'Scanner + printer' : 'Printer only'),
+          overflow: TextOverflow.ellipsis,
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(color: muted),
+        ),
+      ),
+    ],
+  );
 }
 
 class _StatusLine extends StatelessWidget {

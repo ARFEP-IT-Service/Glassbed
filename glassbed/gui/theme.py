@@ -98,6 +98,7 @@ QWidget#divider {{ background: {line}; }}
 QLabel#wordmark {{ font-family: "{display}"; font-size: 15pt; font-weight: 600; letter-spacing: 0.5px; }}
 QLabel#eyebrow {{ font-family: "{display}"; font-size: 8.5pt; padding-top: 2px; color: {muted}; letter-spacing: 1.6px; }}
 QLabel#hint {{ color: {muted}; font-size: 9pt; }}
+QLabel#warning {{ color: {danger}; font-size: 9pt; font-weight: 600; }}
 QLabel#data, QLabel#count {{ font-family: "{mono}"; font-size: 9pt; color: {muted}; }}
 QLabel#status {{ font-family: "{mono}"; font-size: 9pt; }}
 

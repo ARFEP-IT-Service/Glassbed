@@ -45,6 +45,7 @@ class ScanCard extends StatelessWidget {
     required this.onCopy,
     required this.copyStatus,
     required this.onCancelCopy,
+    this.available = true,
   });
 
   final ScannerCaps? caps;
@@ -71,7 +72,13 @@ class ScanCard extends StatelessWidget {
   /// Cancels the copy; null while it cannot be cancelled any more (pages are being sent).
   final VoidCallback? onCancelCopy;
 
+  /// False for a device without a scanner: options, scan and copy are shown but locked.
+  final bool available;
+
   bool get _busy => scanning || copyStatus != null;
+
+  /// Options and buttons are locked while busy or without a scanner.
+  bool get _locked => _busy || !available;
 
   @override
   Widget build(BuildContext context) {
@@ -97,7 +104,7 @@ class ScanCard extends StatelessWidget {
               ],
               selected: {source},
               showSelectedIcon: false,
-              onSelectionChanged: _busy ? null : (v) => onSource(v.first),
+              onSelectionChanged: _locked ? null : (v) => onSource(v.first),
             ),
             const SizedBox(height: 14),
             _Label(tr('Mode')),
@@ -115,7 +122,7 @@ class ScanCard extends StatelessWidget {
               ],
               selected: {mode},
               showSelectedIcon: false,
-              onSelectionChanged: _busy ? null : (v) => onMode(v.first),
+              onSelectionChanged: _locked ? null : (v) => onMode(v.first),
             ),
             const SizedBox(height: 14),
             _Label(tr('Resolution')),
@@ -125,7 +132,7 @@ class ScanCard extends StatelessWidget {
               ],
               selected: {dpi},
               showSelectedIcon: false,
-              onSelectionChanged: _busy ? null : (v) => onDpi(v.first),
+              onSelectionChanged: _locked ? null : (v) => onDpi(v.first),
             ),
             const SizedBox(height: 18),
             if (scanning)
@@ -140,12 +147,12 @@ class ScanCard extends StatelessWidget {
               SizedBox(
                 height: 64,
                 child: FilledButton.icon(
-                  onPressed: onScan,
+                  onPressed: available ? onScan : null,
                   icon: const Icon(Icons.document_scanner_outlined, size: 28),
                   label: Text(tr('Scan'), style: const TextStyle(fontSize: 20)),
                 ),
               ),
-            if (hasPages && !_busy) ...[
+            if (hasPages && !_locked) ...[
               const SizedBox(height: 8),
               Text(
                 tr('Next scan is added to the current pages.'),
@@ -162,14 +169,14 @@ class ScanCard extends StatelessWidget {
                   child: SizedBox(
                     height: 52,
                     child: OutlinedButton.icon(
-                      onPressed: _busy ? null : onCopy,
+                      onPressed: _locked ? null : onCopy,
                       icon: const Icon(Icons.content_copy_outlined),
                       label: Text(tr('Print copy')),
                     ),
                   ),
                 ),
                 const SizedBox(width: 8),
-                CopiesStepper(value: copyCopies, onChanged: _busy ? null : onCopyCopies),
+                CopiesStepper(value: copyCopies, onChanged: _locked ? null : onCopyCopies),
               ],
             ),
             const SizedBox(height: 6),

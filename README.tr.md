@@ -54,7 +54,11 @@ geliştirildi – ve eSCL ile IPP'yi destekleyen birçok ağ yazıcısıyla çal
 - Kopyalama: tarayın ve gerçek boyutta yazdırın
 
 **Uygulama**
-- Yazıcıları otomatik bulur (Bonjour/mDNS) veya IP adresini yazın
+- Yazıcıları otomatik bulur (Bonjour/mDNS) veya IP adresini yazın – birden fazla yazıcı
+  *Tarayıcı + yazıcı* veya *Yalnızca yazıcı* olarak listelenir
+- Yalnızca yazdırabilen cihazlar tanınır: tarama kilitlenir, yazdırma her zamanki gibi çalışır
+- **Cihazı kontrol et** (ⓘ): bir yazıcının neler sunduğuna dair kısa rapor (portlar, Bonjour, IPP,
+  eSCL, WSD) – bir cihaz çalışmadığında gönderin
 - Üst çubukta yazıcı durumu ve toner seviyeleri
 - Türkçe, Almanca ve İngilizce · açık, koyu veya sistem teması
 - Tek pencere: düzenleyici, ayarlar ve mesajlar pencerenin içinde kalır; Glassbed'i yeniden başlatmak mevcut pencereyi kullanır
@@ -189,6 +193,7 @@ IP adresinizi görür ([gizlilik bildirimi](https://arfep.de/datenschutz-glassbe
 ```bash
 glassbed-cli list                                   # cihazları bul
 glassbed-cli --host 192.168.1.20 status             # durum ve toner
+glassbed-cli --host 192.168.1.20 check              # cihazın sundukları (rapor)
 glassbed-cli --host 192.168.1.20 scan mektup.pdf --adf --mode gray --quality compact
 glassbed-cli --host 192.168.1.20 scan sayfalar.pdf --adf --split 1   # sayfa başına bir PDF
 glassbed-cli --host 192.168.1.20 print rapor.pdf --copies 2 --mono --pages 1-3
@@ -221,6 +226,7 @@ Glassbed gizlilik bildirimi: [arfep.de/datenschutz-glassbed](https://arfep.de/da
 | Cihaz | Tarama | Yazdırma | Notlar |
 |---|---|---|---|
 | HP Color Laser MFP 179fnw (yazılım V3.82) | ✅ cam, gri/renkli/S-B | ✅ yazıcı işleri kabul ediyor | S/B gri tonlama üzerinden (cihaz 1 bit JPEG'i reddeder), en fazla 300 dpi, otomatik dupleks yok |
+| Epson ET-2710 (yazılım 01.39, en güncel) | ❌ | ❌ | bu yazılımda AirPrint/IPP ve eSCL yok (yalnızca WSD tarama, LPR, port 9100) – desteklenmiyor |
 
 **AirScan/eSCL** (tarama) ve Apple raster (`image/urf`) veya JPEG ile **AirPrint/IPP** (yazdırma)
 destekleyen her cihaz çalışmalıdır. Lütfen modelinizi bildirin – bkz. [Katkıda bulunma](#katkıda-bulunma).
@@ -229,7 +235,7 @@ destekleyen her cihaz çalışmalıdır. Lütfen modelinizi bildirin – bkz. [K
 
 | İşlev | Protokol | Kod |
 |---|---|---|
-| Cihaz bulma | mDNS `_uscan._tcp`, `_ipp._tcp` | [`discovery.py`](glassbed/discovery.py) |
+| Cihaz bulma | mDNS `_uscan._tcp`, `_ipp._tcp`, `_ipps._tcp` | [`discovery.py`](glassbed/discovery.py) |
 | Tarama | HTTP üzerinden eSCL (`/eSCL/ScanJobs`) | [`escl.py`](glassbed/escl.py) |
 | Yazdırma | Apple raster ile IPP/2.0 `Print-Job` | [`ipp.py`](glassbed/ipp.py), [`urf.py`](glassbed/urf.py) |
 | İşleme | PDF'ler için PDFium, resimler için Pillow | [`render.py`](glassbed/render.py) |
@@ -245,6 +251,8 @@ kendisi raster görüntüye dönüştürür ve Apple raster olarak gönderir.
   Bazı modemler ve VPN'ler mDNS'i engeller.
 - **"Erişilemiyor":** `http://<yazıcı-ip>/` adresinin tarayıcıda açıldığını ve yazıcının web
   arayüzünde AirPrint/eSCL'nin etkin olduğunu kontrol edin.
+- **Bir cihaz çalışmıyor:** *Cihazı kontrol et*'i çalıştırın (cihaz alanının yanındaki ⓘ; Android'de
+  ⋮ → *Cihazı kontrol et*) ve raporu gönderin – cihazın hangi protokolleri sunduğunu gösterir.
 - **"Tarayıcı meşgul":** başka bir bilgisayar veya yazıcının kendi paneli tarama yapıyor –
   birazdan tekrar deneyin.
 - **Kendi ayarlarınıza dokunmadan bir şey denemek için:** `GLASSBED_PROFILE=Glassbed-dev`

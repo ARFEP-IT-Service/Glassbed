@@ -8,11 +8,13 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../app_extras.dart';
 import '../../core/device.dart';
 import '../../core/discovery.dart';
+import '../../core/lan.dart';
 import '../../core/edit.dart' show Edits;
 import '../../core/escl.dart';
 import '../../core/export.dart';
 import '../../core/ipp.dart';
 import '../../core/printing.dart' show copySources, loaderFor;
+import '../../core/probe.dart';
 import '../../i18n.dart';
 import '../../platform.dart';
 import '../dialogs.dart';
@@ -23,6 +25,7 @@ import '../print/print_model.dart';
 import '../print/print_runner.dart';
 import '../print/print_section.dart';
 import '../settings_screen.dart';
+import 'device_check_screen.dart';
 import 'pages_grid.dart';
 import 'printer_card.dart';
 import 'save_sheet.dart';
@@ -34,9 +37,20 @@ const _prefMode = 'scan_mode';
 const _prefDpi = 'scan_dpi';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key, this.extras});
+  const HomeScreen({
+    super.key,
+    this.extras,
+    this.probe = probeDevice,
+    this.deviceCheck = runDeviceCheck,
+  });
 
   final AppExtras? extras;
+
+  /// Reads scanner and printer of a device when it is connected (replaced in tests).
+  final Future<Probe> Function(Device device, EsclClient escl) probe;
+
+  /// The "Check device" report (replaced in tests).
+  final DeviceChecker deviceCheck;
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -52,6 +66,7 @@ class _HomeScreenState extends State<HomeScreen> {
   EsclClient? _escl;
   ScannerCaps? _caps;
   PrinterInfo? _info;
+  bool? _scanner;        // false: the printer answers, the scanner does not (print only)
   Timer? _statusTimer;   // keeps status, toner and printer problems current
   Link _link = Link.none;
   int _connectGeneration = 0;
@@ -82,6 +97,12 @@ class _HomeScreenState extends State<HomeScreen> {
 
   bool get _scanning => _cancel != null;
   bool get _copying => _copyStatus != null;
+
+  /// A device that only prints locks scanning and copying.
+  bool get _canScan => _scanner != false;
+
+  /// Without a scanner the Scan tab is greyed out, unless it still holds scanned pages.
+  bool get _scanTabEnabled => _canScan || _pages.isNotEmpty;
 
   @override
   void initState() {
@@ -190,33 +211,52 @@ class _HomeScreenState extends State<HomeScreen> {
       _escl = EsclClient(device.esclBase);
       _caps = null;
       _info = null;
+      _scanner = null;
       _link = Link.connecting;
     });
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_prefHost, device.host);
 
-    Object? error;
-    final capsFuture = _escl!.capabilities().then<ScannerCaps?>((c) => c, onError: (Object e) {
-      error = e;
-      return null;
-    });
-    final infoFuture = getPrinterInfo(device.ippUri, timeout: const Duration(seconds: 6))
-        .then<PrinterInfo?>((i) => i, onError: (Object _) => null);
+    final probeFuture = widget.probe(device, _escl!);
     final printCapsFuture = loadPrinterMedia(device);
-    final caps = await capsFuture;
-    final info = await infoFuture;
+    final probe = await probeFuture;
     final media = await printCapsFuture;
     if (!mounted || generation != _connectGeneration) return;
     if (media != null) _print.setPrinterMedia(media.supported, media.defaultMedia);
     setState(() {
-      _caps = caps;
-      _info = info;
-      _link = (caps != null || info != null) ? Link.online : Link.offline;
+      _caps = probe.caps;
+      _info = probe.info;
+      _scanner = probe.scanner;
+      _link = probe.online ? Link.online : Link.offline;
       _fitOptionsToCaps();
+      // A device that only prints starts on Print (scanned pages keep the Scan tab open).
+      if (!_scanTabEnabled) _section = 1;
     });
-    if (caps == null && error != null) {
-      showSnack(context, errorText(error!, fallback: 'Could not connect to the printer.'), error: true);
+    // Only an unreachable device is an error; a printer without a scanner is shown in the card.
+    if (!probe.online && probe.scanError != null) {
+      showSnack(context, errorText(probe.scanError!, fallback: 'Could not connect to the printer.'),
+          error: true);
     }
+  }
+
+  /// "Check device" for the host in the field (or the selected one), also when connecting failed.
+  Future<void> _checkDevice() async {
+    FocusScope.of(context).unfocus();
+    final text = _host.text.trim().isNotEmpty ? _host.text.trim() : (_device?.host ?? '');
+    if (text.isEmpty) {
+      showSnack(context, tr('No printer selected.'));
+      return;
+    }
+    final host = Device.fromHost(text).host;
+    if (!isLocalHost(host)) {
+      showSnack(context, errorText(NotLocalNetwork(host)), error: true);
+      return;
+    }
+    if (!await ensureLocalNetwork(context) || !mounted) return;
+    await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => DeviceCheckScreen(host: host, check: widget.deviceCheck)),
+    );
   }
 
   /// Re-reads state, reasons and toner of the connected printer (a jam or an open door shows up
@@ -251,6 +291,7 @@ class _HomeScreenState extends State<HomeScreen> {
     } else if (!await ensureLocalNetwork(context)) {
       return;
     }
+    if (!_canScan) return;
     final client = _escl ??= EsclClient(_device!.esclBase);
     final cancel = CancelToken();
     setState(() {
@@ -414,6 +455,7 @@ class _HomeScreenState extends State<HomeScreen> {
     } else if (!await ensureLocalNetwork(context)) {
       return;
     }
+    if (!_canScan) return;
     final device = _device!;
     final client = _escl ??= EsclClient(device.esclBase);
     final cancel = CancelToken();
@@ -540,8 +582,8 @@ class _HomeScreenState extends State<HomeScreen> {
   // ---------------------------------------------------------------- UI
 
   void _onPop() {
-    // Back in the Print section returns to Scan first.
-    if (_section != 0) {
+    // Back in the Print section returns to Scan first (if the device scans or pages wait there).
+    if (_section != 0 && _scanTabEnabled) {
       setState(() => _section = 0);
     } else {
       _onPopBlocked();
@@ -552,7 +594,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return PopScope(
-      canPop: _section == 0 && (!_unsaved || _pages.isEmpty),
+      canPop: (_section == 0 || !_scanTabEnabled) && (!_unsaved || _pages.isEmpty),
       onPopInvokedWithResult: (didPop, _) {
         if (!didPop) _onPop();
       },
@@ -588,9 +630,11 @@ class _HomeScreenState extends State<HomeScreen> {
                 selected: _device,
                 link: _link,
                 info: _info,
+                scanner: _scanner,
                 onConnect: _connectFromField,
                 onSearch: _search,
                 onPick: _pick,
+                onCheck: _checkDevice,
               ),
               ?widget.extras?.homeBanner(context),
               const SizedBox(height: 12),
@@ -613,8 +657,11 @@ class _HomeScreenState extends State<HomeScreen> {
                 },
                 destinations: [
                   NavigationDestination(
-                    icon: const Icon(Icons.document_scanner_outlined),
-                    selectedIcon: const Icon(Icons.document_scanner),
+                    enabled: _scanTabEnabled,
+                    icon: Icon(Icons.document_scanner_outlined,
+                        color: _canScan ? null : Theme.of(context).disabledColor),
+                    selectedIcon: Icon(Icons.document_scanner,
+                        color: _canScan ? null : Theme.of(context).disabledColor),
                     label: tr('Scan'),
                   ),
                   NavigationDestination(
@@ -640,6 +687,7 @@ class _HomeScreenState extends State<HomeScreen> {
           scanning: _scanning,
           pagesThisRun: _pagesThisRun,
           hasPages: _pages.isNotEmpty,
+          available: _canScan,
           onSource: (v) => setState(() {
             _source = v;
             _fitOptionsToCaps();
@@ -653,11 +701,11 @@ class _HomeScreenState extends State<HomeScreen> {
             _dpi = v;
             _storeOptions();
           }),
-          onScan: _busyExport || _copying ? null : _scan,
+          onScan: _busyExport || _copying || !_canScan ? null : _scan,
           onCancel: () => _cancel?.cancel(),
           copyCopies: _copyCopies,
           onCopyCopies: (v) => setState(() => _copyCopies = v),
-          onCopy: _busyExport || _scanning || _printBusy ? null : _copy,
+          onCopy: _busyExport || _scanning || _printBusy || !_canScan ? null : _copy,
           copyStatus: _copyStatus?.text,
           onCancelCopy: _copyCancel == null ? null : () => _copyCancel?.cancel(),
         ),

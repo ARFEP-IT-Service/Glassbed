@@ -88,6 +88,7 @@ class ScanTab(QWidget):
         self._ids = count(1)
         self._cancel: threading.Event | None = None
         self._caps: ScannerCaps | None = None
+        self._scanner = True                 # False: the device only prints (set_scanner)
         self._scanned = 0
         self._size_cache: dict[tuple, int] = {}
         self._dirty = False                  # pages/output changed since the last save
@@ -121,6 +122,11 @@ class ScanTab(QWidget):
         hint = QLabel(tr("Next scan is added to the current pages."))
         hint.setObjectName("hint")
         hint.setWordWrap(True)
+        self.scan_hint = hint
+        self.no_scanner = QLabel(tr("This device cannot scan – printing only."))
+        self.no_scanner.setObjectName("warning")
+        self.no_scanner.setWordWrap(True)
+        self.no_scanner.hide()
 
         left = QVBoxLayout()
         left.setContentsMargins(20, 22, 20, 20)
@@ -133,6 +139,7 @@ class ScanTab(QWidget):
             left.addSpacing(10)
         left.addStretch()
         left.addWidget(hint)
+        left.addWidget(self.no_scanner)
         left.addSpacing(6)
         left.addWidget(self.cancel_btn)
         left.addWidget(self.scan_btn)
@@ -331,11 +338,26 @@ class ScanTab(QWidget):
                 self.resolution.addItem(f"{dpi} dpi", dpi)
             _select(self.resolution, current if current in src.resolutions else max(src.resolutions))
 
+    def set_scanner(self, available: bool) -> None:
+        """A device without a scanner: the scan options are locked; pages, saving and copies stay."""
+        self._scanner = available
+        self.no_scanner.setVisible(not available)
+        self.scan_hint.setVisible(available)
+        if self._cancel is None:
+            self._set_scanning(False)
+
+    @property
+    def can_scan(self) -> bool:
+        return self._scanner
+
     # -- scanning -----------------------------------------------------------
     def start_scan(self) -> None:
         device = self._device()
         if not device:
             self.message.emit(tr("No printer selected."))
+            return
+        if not self._scanner:
+            self.message.emit(tr("This device cannot scan – printing only."))
             return
         settings = ScanSettings(
             source=self.source.currentData(),
@@ -362,11 +384,12 @@ class ScanTab(QWidget):
             self._cancel.set()
 
     def _set_scanning(self, busy: bool) -> None:
-        self.scan_btn.setEnabled(not busy)
+        usable = not busy and self._scanner
+        self.scan_btn.setEnabled(usable)
         self.scan_btn.setText(tr("Scanning…") if busy else tr("Scan"))
         self.cancel_btn.setVisible(busy)
         for w in (self.source, self.mode, self.resolution, self.paper, self.intent):
-            w.setEnabled(not busy)
+            w.setEnabled(usable)
 
     def _scan_finished(self, error: BaseException | None) -> None:
         self._set_scanning(False)
@@ -497,6 +520,9 @@ class ScanTab(QWidget):
         self.estimate_lbl.setText("≈ " + human_size(total))
 
     # -- output -------------------------------------------------------------
+    def has_pages(self) -> bool:
+        return self.grid.count() > 0
+
     def has_unsaved(self) -> bool:
         """Pages that would be lost on exit (or a scan still running)."""
         if self._cancel is not None:

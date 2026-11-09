@@ -551,6 +551,21 @@
       "de": "Kein Drucker ausgewählt.",
       "tr": "Yazıcı seçilmedi."
     },
+    "This device cannot scan – printing only.": {
+      "en": "This device cannot scan – printing only.",
+      "de": "Dieses Gerät kann nicht scannen – nur Drucken.",
+      "tr": "Bu cihaz tarama yapamaz – yalnızca yazdırma."
+    },
+    "Printer only": {
+      "en": "Printer only",
+      "de": "Nur Drucker",
+      "tr": "Yalnızca yazıcı"
+    },
+    "Scanner + printer": {
+      "en": "Scanner + printer",
+      "de": "Scanner + Drucker",
+      "tr": "Tarayıcı + yazıcı"
+    },
     "Scan": {
       "en": "Scan",
       "de": "Scannen",
@@ -850,6 +865,41 @@
       "en": "Loading pages…",
       "de": "Lade Seiten…",
       "tr": "Sayfalar yükleniyor…"
+    },
+    "Check device": {
+      "en": "Check device",
+      "de": "Gerät prüfen",
+      "tr": "Cihazı kontrol et"
+    },
+    "Device check": {
+      "en": "Device check",
+      "de": "Geräteprüfung",
+      "tr": "Cihaz kontrolü"
+    },
+    "Checking the device…": {
+      "en": "Checking the device…",
+      "de": "Gerät wird geprüft…",
+      "tr": "Cihaz kontrol ediliyor…"
+    },
+    "Copy report": {
+      "en": "Copy report",
+      "de": "Bericht kopieren",
+      "tr": "Raporu kopyala"
+    },
+    "Share report": {
+      "en": "Share report",
+      "de": "Bericht teilen",
+      "tr": "Raporu paylaş"
+    },
+    "Copied.": {
+      "en": "Copied.",
+      "de": "Kopiert.",
+      "tr": "Kopyalandı."
+    },
+    "Send this report to the developer if the device does not work with Glassbed. It contains the device's address, model and supported protocols – nothing else.": {
+      "en": "Send this report to the developer if the device does not work with Glassbed. It contains the device's address, model and supported protocols – nothing else.",
+      "de": "Schick diesen Bericht an den Entwickler, wenn das Gerät nicht mit Glassbed funktioniert. Er enthält Adresse, Modell und unterstützte Protokolle des Geräts – sonst nichts.",
+      "tr": "Cihaz Glassbed ile çalışmıyorsa bu raporu geliştiriciye gönderin. Yalnızca cihazın adresini, modelini ve desteklenen protokolleri içerir."
     }
   }
 }

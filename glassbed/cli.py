@@ -63,6 +63,13 @@ def cmd_print(args) -> None:
     print("sent")
 
 
+def cmd_check(args) -> None:
+    from .device_check import build_report, run_check
+    if not args.host:
+        sys.exit("Pass --host <ip> for the device to check")
+    print(build_report(run_check(args.host)))
+
+
 def main(argv: list[str] | None = None) -> None:
     ap = argparse.ArgumentParser(prog="glassbed", description="Scan and print over the network (eSCL/IPP).")
     ap.add_argument("--host", help="printer IP or host name (default: auto-discover)")
@@ -70,6 +77,8 @@ def main(argv: list[str] | None = None) -> None:
 
     sub.add_parser("list", help="find devices on the network").set_defaults(fn=cmd_list)
     sub.add_parser("status", help="show printer state and toner").set_defaults(fn=cmd_status)
+    sub.add_parser("check", help="report what a device offers (ports, Bonjour, IPP, eSCL, WSD)"
+                   ).set_defaults(fn=cmd_check)
 
     s = sub.add_parser("scan", help="scan to a PDF/JPG/PNG file")
     s.add_argument("output")

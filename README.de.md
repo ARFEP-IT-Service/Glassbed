@@ -54,7 +54,11 @@ entstanden – und sollte mit vielen Netzwerkdruckern funktionieren, die eSCL un
 - Kopieren: scannen und in Originalgröße drucken
 
 **App**
-- Findet Drucker automatisch (Bonjour/mDNS), oder IP-Adresse eintippen
+- Findet Drucker automatisch (Bonjour/mDNS), oder IP-Adresse eintippen – mehrere Drucker werden mit
+  *Scanner + Drucker* oder *Nur Drucker* aufgelistet
+- Geräte, die nur drucken, werden erkannt: Scannen ist gesperrt, Drucken geht wie gewohnt
+- **Gerät prüfen** (ⓘ): kurzer Bericht, was ein Drucker anbietet (Ports, Bonjour, IPP, eSCL, WSD) –
+  zum Einschicken, wenn ein Gerät nicht funktioniert
 - Druckerstatus und Tonerstand in der Kopfzeile
 - Deutsch, Englisch und Türkisch · helles, dunkles oder System-Design
 - Ein Fenster: Editor, Einstellungen und Meldungen bleiben darin; ein zweiter Start nutzt das vorhandene Fenster
@@ -191,6 +195,7 @@ gelöscht. GitHub sieht dabei deine IP-Adresse
 ```bash
 glassbed-cli list                                   # Geräte suchen
 glassbed-cli --host 192.168.1.20 status             # Status und Toner
+glassbed-cli --host 192.168.1.20 check              # was das Gerät anbietet (Bericht)
 glassbed-cli --host 192.168.1.20 scan brief.pdf --adf --mode gray --quality compact
 glassbed-cli --host 192.168.1.20 scan seiten.pdf --adf --split 1    # ein PDF pro Seite
 glassbed-cli --host 192.168.1.20 print bericht.pdf --copies 2 --mono --pages 1-3
@@ -223,6 +228,7 @@ Datenschutzerklärung für Glassbed: [arfep.de/datenschutz-glassbed](https://arf
 | Gerät | Scannen | Drucken | Hinweise |
 |---|---|---|---|
 | HP Color Laser MFP 179fnw (Firmware V3.82) | ✅ Glas, Grau/Farbe/S/W | ✅ Drucker nimmt Aufträge an | S/W über Graustufen (Gerät lehnt 1-Bit-JPEG ab), max. 300 dpi, kein automatischer Duplex |
+| Epson ET-2710 (Firmware 01.39, neueste) | ❌ | ❌ | kein AirPrint/IPP und kein eSCL in dieser Firmware (nur WSD-Scan, LPR, Port 9100) – nicht unterstützt |
 
 Jedes Gerät mit **AirScan/eSCL** (Scannen) und **AirPrint/IPP** mit Apple-Raster (`image/urf`)
 oder JPEG (Drucken) sollte funktionieren. Bitte melde dein Modell – siehe [Mitwirken](#mitwirken).
@@ -231,7 +237,7 @@ oder JPEG (Drucken) sollte funktionieren. Bitte melde dein Modell – siehe [Mit
 
 | Funktion | Protokoll | Code |
 |---|---|---|
-| Gerätesuche | mDNS `_uscan._tcp`, `_ipp._tcp` | [`discovery.py`](glassbed/discovery.py) |
+| Gerätesuche | mDNS `_uscan._tcp`, `_ipp._tcp`, `_ipps._tcp` | [`discovery.py`](glassbed/discovery.py) |
 | Scannen | eSCL über HTTP (`/eSCL/ScanJobs`) | [`escl.py`](glassbed/escl.py) |
 | Drucken | IPP/2.0 `Print-Job` mit Apple-Raster | [`ipp.py`](glassbed/ipp.py), [`urf.py`](glassbed/urf.py) |
 | Rendern | PDFium für PDFs, Pillow für Bilder | [`render.py`](glassbed/render.py) |
@@ -247,6 +253,8 @@ deshalb jede Seite selbst in ein Rasterbild um und sendet sie als Apple-Raster.
   Netzwerkbericht anzeigt. Manche Router und VPNs blockieren mDNS.
 - **„Nicht erreichbar“:** prüfen, ob sich `http://<drucker-ip>/` im Browser öffnet und ob
   AirPrint/eSCL in der Weboberfläche des Druckers aktiviert ist.
+- **Ein Gerät funktioniert nicht:** *Gerät prüfen* ausführen (ⓘ neben dem Gerätefeld; unter Android
+  ⋮ → *Gerät prüfen*) und den Bericht schicken – er zeigt, welche Protokolle das Gerät anbietet.
 - **„Der Scanner ist beschäftigt“:** ein anderer Computer oder das Bedienfeld des Druckers scannt
   gerade – gleich noch einmal versuchen.
 - **Etwas ausprobieren, ohne die eigenen Einstellungen zu ändern:** `GLASSBED_PROFILE=Glassbed-dev`

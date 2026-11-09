@@ -5,6 +5,7 @@ class Device {
     required this.host,
     required this.esclBase,
     required this.ippUri,
+    this.scanner,
   });
 
   /// Default endpoints for a host entered by hand: http://host/eSCL/ and
@@ -25,6 +26,11 @@ class Device {
   final Uri esclBase;
   final Uri ippUri;
 
+  /// What the network search saw: true = announced a scanner (_uscan), false = printer
+  /// only, null = not known (entered by hand). Only a hint for the list: whether the
+  /// device really scans is decided by its ScannerCapabilities when it is connected.
+  final bool? scanner;
+
   /// The device's own web page (http://host/).
   Uri get webPage => Uri.parse('http://${host.contains(':') ? '[$host]' : host}/');
 
@@ -37,10 +43,11 @@ class Device {
       other.name == name &&
       other.host == host &&
       other.esclBase == esclBase &&
-      other.ippUri == ippUri;
+      other.ippUri == ippUri &&
+      other.scanner == scanner;
 
   @override
-  int get hashCode => Object.hash(name, host, esclBase, ippUri);
+  int get hashCode => Object.hash(name, host, esclBase, ippUri, scanner);
 
   @override
   String toString() => 'Device($name, $host)';
