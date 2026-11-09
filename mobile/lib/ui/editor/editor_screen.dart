@@ -151,6 +151,12 @@ class _EditorScreenState extends State<EditorScreen> with SingleTickerProviderSt
 
   // ---------------------------------------------------------------- UI
 
+  /// A tab whose label shrinks to fit (long German/Turkish words, large system fonts).
+  static Widget _fitTab(IconData icon, String label) => Tab(
+        icon: Icon(icon),
+        child: FittedBox(fit: BoxFit.scaleDown, child: Text(label, maxLines: 1)),
+      );
+
   @override
   Widget build(BuildContext context) {
     return PopScope<ed.Edits>(
@@ -160,7 +166,8 @@ class _EditorScreenState extends State<EditorScreen> with SingleTickerProviderSt
       },
       child: Scaffold(
         appBar: AppBar(
-          title: Text(tr('Edit page')),
+          // large system fonts: shrink instead of cutting the text off
+          title: FittedBox(fit: BoxFit.scaleDown, child: Text(tr('Edit page'))),
           actions: [
             IconButton(
               tooltip: tr('Reset page'),
@@ -183,11 +190,12 @@ class _EditorScreenState extends State<EditorScreen> with SingleTickerProviderSt
           ],
           bottom: TabBar(
             controller: _tabs,
+            labelPadding: const EdgeInsets.symmetric(horizontal: 4),
             tabs: [
-              Tab(icon: const Icon(Icons.crop), text: tr('Crop')),
-              Tab(icon: const Icon(Icons.rotate_right), text: tr('Rotate')),
-              Tab(icon: const Icon(Icons.tune), text: tr('Tone')),
-              Tab(icon: const Icon(Icons.format_color_fill), text: tr('Redact')),
+              _fitTab(Icons.crop, tr('Crop')),
+              _fitTab(Icons.rotate_right, tr('Rotate')),
+              _fitTab(Icons.tune, tr('Tone')),
+              _fitTab(Icons.format_color_fill, tr('Redact')),
             ],
           ),
         ),
