@@ -56,6 +56,8 @@ VIAddVersionKey /LANG=0 "LegalCopyright" "Halil Ayberk Bulut (ARFEP IT-Service),
 !define MUI_LANGDLL_REGISTRY_VALUENAME "InstallerLanguage"
 !define MUI_COMPONENTSPAGE_NODESC
 !define MUI_FINISHPAGE_RUN "$INSTDIR\${APPEXE}"
+; offered on the last page, but only started when the user ticks it
+!define MUI_FINISHPAGE_RUN_NOTCHECKED
 
 !insertmacro MUI_PAGE_LICENSE "..\LICENSE"
 !insertmacro MUI_PAGE_COMPONENTS
