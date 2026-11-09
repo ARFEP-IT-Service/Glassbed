@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "glassbed"
-version = "0.3.2"
+version = "0.4.0"
 description = "Driverless scan & print app for network multifunction printers (eSCL/AirScan + IPP/AirPrint)"
 readme = "README.md"
 license = "MIT"
