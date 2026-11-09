@@ -198,20 +198,35 @@ class _TonerBar extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 4),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(4),
-            child: LinearProgressIndicator(
-              value: level / 100,
-              minHeight: 8,
-              color: _markerColor(marker.color, p.accent),
-              backgroundColor: p.line,
-            ),
-          ),
+          Builder(builder: (context) {
+            final color = _markerColor(marker.color, p.accent);
+            final outline = tonerOutline(color, Theme.of(context).brightness, p.muted);
+            return Container(
+              // a dark toner (black) on the dark theme gets a light outline so the bar stays visible
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(5),
+                border: outline == null ? null : Border.all(color: outline, width: 1),
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(4),
+                child: LinearProgressIndicator(
+                  value: level / 100,
+                  minHeight: 8,
+                  color: color,
+                  backgroundColor: p.line,
+                ),
+              ),
+            );
+          }),
         ],
       ),
     );
   }
 }
+
+/// Outline for a toner bar: only when the toner colour is too dark for the dark theme.
+Color? tonerOutline(Color toner, Brightness brightness, Color light) =>
+    brightness == Brightness.dark && toner.computeLuminance() < 0.1 ? light : null;
 
 /// IPP marker colours look like "#00FFFF" (several joined for mixed markers: take the first).
 Color _markerColor(String value, Color fallback) {
