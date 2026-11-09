@@ -36,6 +36,14 @@ android {
         versionName = flutter.versionName
     }
 
+    // github: APKs on GitHub releases, with the optional update notice (entry lib/main_github.dart)
+    // play:   for an app store later, without any update check (entry lib/main.dart)
+    flavorDimensions += "store"
+    productFlavors {
+        create("github") { dimension = "store" }
+        create("play") { dimension = "store" }
+    }
+
     signingConfigs {
         if (hasReleaseKey) {
             create("release") {

@@ -1,7 +1,7 @@
 AndroidX, Kotlin and other Java libraries 88 libraries
 License: Apache-2.0
 Website: https://developer.android.com/jetpack/androidx
-Note: Java/Kotlin libraries in the APK (Gradle releaseRuntimeClasspath).
+Note: Java/Kotlin libraries in the APK (Gradle release runtime classpath).
 
 ==============================================================================
 Libraries

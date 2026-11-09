@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../app_extras.dart';
 import '../i18n.dart';
+import '../version.dart';
 import 'dialogs.dart';
 import 'theme.dart';
 
-const appVersion = '0.1.0';
 const _company = 'ARFEP IT-Service';
 final _legalNotice = Uri.parse('https://arfep.de/impressum');
 final _privacy = Uri.parse('https://arfep.de/datenschutz-glassbed');
@@ -13,7 +14,9 @@ final _website = Uri.parse('https://arfep.de/');
 
 /// Language and information about the app.
 class SettingsScreen extends StatelessWidget {
-  const SettingsScreen({super.key});
+  const SettingsScreen({super.key, this.extras});
+
+  final AppExtras? extras;
 
   @override
   Widget build(BuildContext context) {
@@ -42,6 +45,7 @@ class SettingsScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 20),
+              ...?extras?.settingsSection(context),
               _Header(tr('About')),
               Card(
                 child: Padding(
@@ -72,7 +76,8 @@ class SettingsScreen extends StatelessWidget {
                           {'company': _company})),
                       const SizedBox(height: 6),
                       Text(
-                        tr('Glassbed only talks to your printer on the local network. No accounts, no tracking.'),
+                        extras?.privacyNote ??
+                            tr('Glassbed only talks to your printer on the local network. No accounts, no tracking.'),
                         style: TextStyle(color: p.muted),
                       ),
                     ],

@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../app_extras.dart';
 import '../../core/device.dart';
 import '../../core/discovery.dart';
 import '../../core/edit.dart' show Edits;
@@ -33,7 +34,9 @@ const _prefMode = 'scan_mode';
 const _prefDpi = 'scan_dpi';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+  const HomeScreen({super.key, this.extras});
+
+  final AppExtras? extras;
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -92,6 +95,12 @@ class _HomeScreenState extends State<HomeScreen> {
     // Files shared to Glassbed: at start (initial intent) and while running (onNewIntent).
     Native.listenForShares(_takeShared);
     _takeShared();
+    final extras = widget.extras;
+    if (extras != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) extras.onHomeReady(context);
+      });
+    }
   }
 
   @override
@@ -562,7 +571,7 @@ class _HomeScreenState extends State<HomeScreen> {
               icon: const Icon(Icons.settings_outlined),
               onPressed: () => Navigator.push(
                 context,
-                MaterialPageRoute(builder: (_) => const SettingsScreen()),
+                MaterialPageRoute(builder: (_) => SettingsScreen(extras: widget.extras)),
               ),
             ),
           ],
@@ -583,6 +592,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 onSearch: _search,
                 onPick: _pick,
               ),
+              ?widget.extras?.homeBanner(context),
               const SizedBox(height: 12),
               if (_section == 0) ..._scanSection(theme) else _printSection(),
             ],

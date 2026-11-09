@@ -86,6 +86,8 @@ class MainActivity : FlutterActivity() {
             "takeSharedFiles" -> takeSharedFiles(result)
             "pdfPageCount" -> pdfPageCount(call, result)
             "renderPdfPage" -> renderPdfPage(call, result)
+            // first entry = the ABI the device prefers (picks the matching APK of a release)
+            "deviceAbi" -> result.success(Build.SUPPORTED_ABIS.firstOrNull())
             else -> result.notImplemented()
         }
     }

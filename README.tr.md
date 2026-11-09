@@ -138,11 +138,23 @@ Tam olarak `.python-version` dosyasındaki Python sürümü gerekir. `build.ps1`
 ./build.ps1          # → dist/Glassbed-<version>-setup.exe ve dist/Glassbed-<version>-windows-portable.zip
 ```
 
-### Android – geliştiriliyor
+### Android
 
-Bir Android uygulaması (tarama, düzenleme ve karartma, PDF/JPG/PNG olarak kaydetme, paylaşma)
-[`mobile/`](mobile) klasöründe geliştiriliyor. Henüz indirme yok. Windows uygulaması gibi yalnızca
-yerel ağınızdaki yazıcınızla konuşur – analiz yok, çökme raporu yok, Google hizmetleri yok.
+Android için Glassbed (Android 8 ve üzeri) tarar, düzenler ve karartır, PDF/JPG/PNG olarak
+kaydeder, yazdırır ve kopyalar – Windows uygulaması gibi yalnızca yerel ağınızdaki yazıcınızla
+konuşur; analiz, çökme raporu veya Google hizmetleri yoktur. Kaynak kodu: [`mobile/`](mobile).
+
+1. [Sürümler sayfasında](https://github.com/ARFEP-IT-Service/Glassbed/releases)
+   **Glassbed for Android**'i açın ve telefonunuza uygun APK'yı indirin – neredeyse her zaman
+   `Glassbed-android-<version>-arm64-v8a.apk` (eski 32 bit telefonlar: `armeabi-v7a`).
+2. SHA-256 sağlama toplamını ve sertifikayı denetleyin ([VERIFYING.md](VERIFYING.md)).
+3. APK'yı açın ve Android sorduğunda tarayıcınıza veya dosya yöneticinize *bilinmeyen
+   uygulamaları yükleme* izni verin; ardından tekrar kapatabilirsiniz.
+
+Uygulama, GitHub'da yeni sürüm arayıp arayamayacağını bir kez sorar (*Hayır* önceden seçilidir).
+Kabul ederseniz en fazla günde bir kez denetler ve yeni APK'nın indirmesini tarayıcınızda açar –
+kendisi hiçbir şey yüklemez. Denetim sırasında GitHub IP adresinizi görür
+([gizlilik bildirimi](https://arfep.de/datenschutz-glassbed#update-pruefung)).
 
 ## Başlarken
 

@@ -3,14 +3,17 @@
 Sources (all from the real build, nothing hard-coded per package):
   * Dart packages compiled into libapp.so – Flutter's size analysis
     (flutter build apk --release --analyze-size --target-platform android-arm64)
-  * Java/Kotlin libraries – Gradle's releaseRuntimeClasspath
+  * Java/Kotlin libraries – Gradle's release runtime classpath of every variant (github, play)
   * native libraries – the lib/ folder of the APK
 
 Writes mobile/THIRD_PARTY_NOTICES.md and mobile/licenses/*.txt. Stops when a component has no
 license file, an unknown license, a GPL-family license, or comes from Google Play services /
 Firebase (the app must not contain them).
 
-    python tools/mobile_notices.py --size-json <apk-code-size-analysis.json> --apk <app-release.apk>
+    python tools/mobile_notices.py --size-json <analysis.json> --apk <app.apk> [--size-json … --apk …]
+
+Several variants (github, play): pass one --size-json/--apk pair per variant; the notices cover
+everything that is in any of them.
 """
 from __future__ import annotations
 
@@ -112,9 +115,19 @@ def package_versions() -> dict[str, tuple[str, str]]:
 
 
 # --------------------------------------------------------------------------- Java / native
+VARIANT_CLASSPATHS = ("githubReleaseRuntimeClasspath", "playReleaseRuntimeClasspath")
+
+
 def java_dependencies() -> set[str]:
+    deps = set()
+    for configuration in VARIANT_CLASSPATHS:
+        deps |= _java_dependencies(configuration)
+    return deps
+
+
+def _java_dependencies(configuration: str) -> set[str]:
     gradlew = MOBILE / "android" / ("gradlew.bat" if sys.platform == "win32" else "gradlew")
-    r = subprocess.run([str(gradlew), "-q", ":app:dependencies", "--configuration", "releaseRuntimeClasspath"],
+    r = subprocess.run([str(gradlew), "-q", ":app:dependencies", "--configuration", configuration],
                        cwd=gradlew.parent, capture_output=True, text=True)
     if r.returncode != 0:
         sys.exit("ERROR: gradle dependencies failed\n" + r.stderr[-2000:])
@@ -134,8 +147,8 @@ def native_libs(apk: Path) -> set[str]:
 # --------------------------------------------------------------------------- main
 def main() -> None:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--size-json", type=Path, required=True)
-    ap.add_argument("--apk", type=Path, required=True)
+    ap.add_argument("--size-json", type=Path, action="append", required=True)
+    ap.add_argument("--apk", type=Path, action="append", required=True)
     args = ap.parse_args()
 
     errors, components = [], []      # component: name, version, license, url, texts, note
@@ -152,7 +165,8 @@ def main() -> None:
         note="libflutter.so, the Flutter framework packages (flutter, flutter_localizations) and the Dart runtime."))
 
     sdk_packages = {"flutter", "flutter_localizations", "flutter_web_plugins", "sky_engine"}
-    used = sorted(dart_packages(args.size_json) - sdk_packages - {"glassbed"})   # glassbed = the app
+    in_apps = set().union(*(dart_packages(j) for j in args.size_json))
+    used = sorted(in_apps - sdk_packages - {"glassbed"})   # glassbed = the app
     for name in used:
         if name not in versions:
             errors.append(f"Dart package {name} is in the APK but not in pubspec.lock")
@@ -199,11 +213,11 @@ def main() -> None:
         components.append(dict(name="AndroidX, Kotlin and other Java libraries", version=f"{len(libs)} libraries",
                                license="Apache-2.0", url="https://developer.android.com/jetpack/androidx",
                                texts=[("Libraries", "\n".join(libs)), ("Apache License 2.0", APACHE)],
-                               note="Java/Kotlin libraries in the APK (Gradle releaseRuntimeClasspath)."))
+                               note="Java/Kotlin libraries in the APK (Gradle release runtime classpath)."))
 
     # native libraries
     dart_names = {c["name"] for c in components}
-    for so in sorted(native_libs(args.apk)):
+    for so in sorted(set().union(*(native_libs(a) for a in args.apk))):
         source = NATIVE_LIBS.get(so)
         if source is None:
             errors.append(f"native library {so} has no license entry")

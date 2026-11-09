@@ -70,3 +70,9 @@ String tr(String key, [Map<String, Object?> args = const {}]) {
   args.forEach((name, value) => text = text.replaceAll('{$name}', '$value'));
   return text;
 }
+
+/// Adds texts that ship in code instead of the asset files (used by optional features of
+/// one build only). Texts from the asset files win, so a shared translation is never replaced.
+void addTexts(Map<String, Map<String, String>> texts) {
+  texts.forEach((key, value) => _texts.putIfAbsent(key, () => value));
+}

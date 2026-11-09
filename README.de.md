@@ -139,11 +139,23 @@ Umgebung aus der gepinnten `build-requirements.txt` an und lädt die festgelegte
 ./build.ps1          # → dist/Glassbed-<version>-setup.exe und dist/Glassbed-<version>-windows-portable.zip
 ```
 
-### Android – in Entwicklung
+### Android
 
-Eine Android-App (Scannen, Bearbeiten und Schwärzen, Speichern als PDF/JPG/PNG, Teilen) entsteht
-in [`mobile/`](mobile). Einen Download gibt es noch nicht. Wie die Windows-App spricht sie nur mit
-deinem Drucker im lokalen Netzwerk – keine Analyse, kein Absturzbericht, keine Google-Dienste.
+Glassbed für Android (ab Android 8) scannt, bearbeitet und schwärzt, speichert als PDF/JPG/PNG,
+druckt und kopiert – wie die Windows-App spricht sie nur mit deinem Drucker im lokalen Netzwerk,
+ohne Analyse, Absturzberichte oder Google-Dienste. Quellcode: [`mobile/`](mobile).
+
+1. Öffne auf der [Release-Seite](https://github.com/ARFEP-IT-Service/Glassbed/releases)
+   **Glassbed for Android** und lade die APK für dein Handy – fast immer
+   `Glassbed-android-<version>-arm64-v8a.apk` (ältere 32-Bit-Handys: `armeabi-v7a`).
+2. Prüfe Prüfsumme (SHA-256) und Zertifikat ([VERIFYING.md](VERIFYING.md)).
+3. Öffne die APK und erlaube deinem Browser oder Dateimanager *Unbekannte Apps installieren*,
+   wenn Android fragt; danach kannst du es wieder ausschalten.
+
+Die App fragt einmal, ob sie auf GitHub nach neuen Versionen suchen darf (*Nein* ist
+vorausgewählt). Stimmst du zu, sucht sie höchstens einmal am Tag und öffnet den Download einer
+neuen APK im Browser – installieren tut sie selbst nichts. GitHub sieht dabei deine IP-Adresse
+([Datenschutzerklärung](https://arfep.de/datenschutz-glassbed#update-pruefung)).
 
 ## Erste Schritte
 

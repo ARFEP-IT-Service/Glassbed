@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
+import 'app_extras.dart';
 import 'i18n.dart';
 import 'ui/home/home_screen.dart';
 import 'ui/theme.dart';
 
 class GlassbedApp extends StatefulWidget {
-  const GlassbedApp({super.key});
+  const GlassbedApp({super.key, this.extras});
+
+  /// Additions of the entry point (null in the default build).
+  final AppExtras? extras;
 
   @override
   State<GlassbedApp> createState() => _GlassbedAppState();
@@ -51,7 +55,7 @@ class _GlassbedAppState extends State<GlassbedApp> {
       locale: code == null ? null : Locale(code),
       supportedLocales: [for (final c in supportedLanguages.keys) Locale(c)],
       localizationsDelegates: GlobalMaterialLocalizations.delegates,
-      home: const HomeScreen(),
+      home: HomeScreen(extras: widget.extras),
     );
   }
 }

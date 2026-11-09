@@ -43,6 +43,17 @@ class Native {
     }
   }
 
+  /// The device's preferred ABI (e.g. "arm64-v8a"); null if unknown.
+  static Future<String?> deviceAbi() async {
+    try {
+      return await _channel.invokeMethod<String>('deviceAbi');
+    } on MissingPluginException {
+      return null;
+    } on PlatformException {
+      return null;
+    }
+  }
+
   /// Lets the user pick a target with the system file picker and writes [files] there.
   /// One file: "save as" dialog; several: a folder. Returns how many were saved (0 = cancelled).
   static Future<int> saveFiles(List<ExportedFile> files) async {
