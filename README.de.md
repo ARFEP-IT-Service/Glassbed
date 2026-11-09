@@ -60,8 +60,8 @@ entstanden – und sollte mit vielen Netzwerkdruckern funktionieren, die eSCL un
 - Ein Fenster: Editor, Einstellungen und Meldungen bleiben darin; ein zweiter Start nutzt das vorhandene Fenster
 - Optional, standardmäßig aus: Symbol im Infobereich mit **Schnell-Scan**, Toner-Warnung
   (unter 15 %, je Farbe höchstens einmal am Tag) und *Mit Windows starten*
-- Optional, standardmäßig aus: Update-Prüfung über GitHub – meldet neue Versionen und
-  aktualisiert sich auf Wunsch selbst (Download per SHA-256 geprüft, dann das normale Setup)
+- Optional, standardmäßig aus: Update-Prüfung über GitHub – meldet neue Versionen und öffnet den
+  Download im Browser
 - Kommandozeile für Skripte
 
 <table>
@@ -99,18 +99,14 @@ Glassbed einen Hinweis im Fenster, sobald eine neue Version verfügbar ist: *Akt
 Was ist neu · Später · Diese Version überspringen*; mit aktivem Symbol im Infobereich zusätzlich
 eine Windows-Benachrichtigung.
 
-Nichts passiert, bevor du auf *Aktualisieren* klickst:
+Glassbed lädt und startet selbst nie Programme – *Aktualisieren* öffnet deinen Browser:
 
-- **Mit dem Setup installiert (Windows):** Glassbed lädt das neue `Glassbed-<version>-setup.exe`
-  und die zugehörige `.sha256`-Datei direkt aus dem GitHub-Release dieses Repositorys
-  (Fortschritt im Hinweisbalken, *Abbrechen* stoppt den Download). Nur wenn die Datei zur
-  veröffentlichten SHA-256 passt, startet Glassbed das Setup und beendet sich; sonst wird die Datei
-  gelöscht und nichts installiert. Wie bei einem Browser-Download ist das Setup als Datei aus
-  dem Internet markiert, Windows SmartScreen prüft es also (und kann warnen, weil das Setup
-  noch nicht signiert ist). Das Setup läuft ganz normal und sichtbar – du klickst es wie
-  gewohnt durch; Einstellungen, Verknüpfungen und *Mit Windows starten* bleiben erhalten. Glassbed
-  startet danach nur, wenn du das auf der letzten Setup-Seite ankreuzt. Ungespeicherte Scans:
-  Glassbed bittet dich, sie vorher zu speichern.
+- **Mit dem Setup installiert (Windows):** Der Browser lädt das neue
+  `Glassbed-<version>-setup.exe` direkt von GitHub, und Glassbed zeigt den Hinweis *„Nach dem
+  Download das Setup starten – deine Einstellungen bleiben erhalten.“* Installiere es über die alte
+  Version: Einstellungen, Verknüpfungen und *Mit Windows starten* bleiben erhalten; läuft Glassbed
+  noch, bittet dich das Setup, es zu schließen. Wie du den Download vorher prüfst, steht unter
+  [Downloads prüfen](VERIFYING.md).
 - **Portable ZIP, aus dem Quellcode, macOS und Linux:** Die Release-Seite öffnet sich.
 - **Von 0.2.0 kommend:** 0.2.0 hat keine Update-Prüfung – lade das neue Setup einmal von Hand
   herunter und installiere es über die alte Version (deine Einstellungen bleiben erhalten). Ab
@@ -214,11 +210,8 @@ Datenschutzerklärung für Glassbed: [arfep.de/datenschutz-glassbed](https://arf
   du es in den *Einstellungen*. Ist sie an, fragt Glassbed GitHub (`api.github.com`) höchstens
   einmal in 24 Stunden beim Start, oder wenn du auf *Jetzt suchen* klickst, nach dem neuesten
   veröffentlichten Release. GitHub sieht dabei deine IP-Adresse; die Anfrage gibt sich nur als
-  `Glassbed/<version>` zu erkennen. Nur wenn du in der installierten Version auf
-  *Aktualisieren* klickst, lädt Glassbed das Setup – per HTTPS, nur von `github.com` und den
-  Datei-Servern von GitHub (`release-assets.githubusercontent.com`,
-  `objects.githubusercontent.com`) –, prüft die SHA-256 und startet das normale, sichtbare Setup.
-  Nichts wird still installiert.
+  `Glassbed/<version>` zu erkennen. Glassbed selbst lädt und installiert nichts –
+  *Aktualisieren* öffnet nur den Download oder die Release-Seite in deinem Browser.
 - **Schwärzungen werden eingebrannt.** Die verdeckten Pixel werden ersetzt, bevor die Seite
   gedreht, zugeschnitten oder gespeichert wird – darunter liegt keine versteckte Ebene, die man
   freilegen könnte. Für Zahlen wie eine IBAN *Schwarz* verwenden; *Unscharf* ist für Gesichter und Fotos gedacht.

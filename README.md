@@ -60,8 +60,8 @@ and should work with many network printers that support eSCL and IPP.
 - One window: editor, settings and messages stay inside it; starting Glassbed again reuses it
 - Optional, off by default: icon in the notification area with **Quick scan**, a toner warning
   (below 15 %, at most once a day per colour) and *Start with Windows*
-- Optional, off by default: update check via GitHub – tells you about new versions and updates
-  itself on request (download checked against its SHA-256, then the normal setup)
+- Optional, off by default: update check via GitHub – tells you about new versions and opens the
+  download in your browser
 - Command line interface for scripts
 
 <table>
@@ -98,17 +98,13 @@ With *Check for updates* on (see [Privacy & security](#privacy--security)), Glas
 banner when a new version is available: *Update · What's new · Later · Skip this version*; with
 the notification area icon active, also a Windows notification.
 
-Nothing happens until you click *Update*:
+Glassbed never downloads or starts programs itself – *Update* opens your browser:
 
-- **Installed with the setup (Windows):** Glassbed downloads the new
-  `Glassbed-<version>-setup.exe` and its `.sha256` file directly from this repository's GitHub
-  release (progress in the banner, *Cancel* stops it). Only if the file matches the published
-  SHA-256 does Glassbed start the setup and close itself; otherwise the file is deleted and
-  nothing is installed. Like a browser download, the setup is marked as coming from the
-  internet, so Windows SmartScreen checks it (it may warn, as the setup is not code-signed
-  yet). The setup runs normally and visibly – you click through it as usual;
-  settings, shortcuts and *Start with Windows* are kept. Glassbed starts again only if you tick
-  that on the setup's last page. Unsaved scans: Glassbed asks you to save them first.
+- **Installed with the setup (Windows):** the browser downloads the new
+  `Glassbed-<version>-setup.exe` directly from GitHub, and Glassbed shows the hint *"Start the
+  setup after the download – your settings are kept."* Install it over the old version: settings,
+  shortcuts and *Start with Windows* are kept; if Glassbed is still running, the setup asks you to
+  close it. To check the download first, see [verifying downloads](VERIFYING.md).
 - **Portable ZIP, from source, macOS and Linux:** the release page opens.
 - **Coming from 0.2.0:** 0.2.0 has no update check – download the new setup once by hand and install
   it over the old version (your settings are kept). From 0.3.0 on, Glassbed tells you about new
@@ -210,11 +206,8 @@ Full privacy policy for Glassbed: [arfep.de/datenschutz-glassbed](https://arfep.
 - **Update check** – off by default; Glassbed asks once on the first start and you can change it
   in *Settings*. When on, it asks GitHub (`api.github.com`) at most once every 24 hours at
   start-up, or when you click *Check now*, for the latest published release. GitHub sees your IP
-  address; the request only identifies itself as `Glassbed/<version>`. Only when you click
-  *Update* in the installed version does Glassbed download the setup – over HTTPS, only from
-  `github.com` and GitHub's file hosts (`release-assets.githubusercontent.com`,
-  `objects.githubusercontent.com`) – check its SHA-256 and start the normal, visible setup. Nothing
-  is installed silently.
+  address; the request only identifies itself as `Glassbed/<version>`. Glassbed itself downloads
+  and installs nothing – *Update* only opens the download or the release page in your browser.
 - **Redactions are burned in.** The covered pixels are replaced before the page is rotated,
   cropped or saved – there is no hidden layer underneath that could be uncovered. For numbers
   such as an IBAN, use *Black*; *Blur* is meant for faces and photos.

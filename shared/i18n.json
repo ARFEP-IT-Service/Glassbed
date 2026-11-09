@@ -91,30 +91,15 @@
       "de": "Glassbed {version} ist verfügbar",
       "tr": "Glassbed {version} kullanıma sunuldu"
     },
-    "Downloading Glassbed {version}…": {
-      "en": "Downloading Glassbed {version}…",
-      "de": "Glassbed {version} wird heruntergeladen…",
-      "tr": "Glassbed {version} indiriliyor…"
+    "Glassbed {version} is downloading in your browser": {
+      "en": "Glassbed {version} is downloading in your browser",
+      "de": "Glassbed {version} wird im Browser heruntergeladen",
+      "tr": "Glassbed {version} tarayıcıda indiriliyor"
     },
-    "Starting the setup…": {
-      "en": "Starting the setup…",
-      "de": "Setup wird gestartet…",
-      "tr": "Kurulum başlatılıyor…"
-    },
-    "Update failed": {
-      "en": "Update failed",
-      "de": "Update fehlgeschlagen",
-      "tr": "Güncelleme başarısız"
-    },
-    "Save your scans first": {
-      "en": "Save your scans first",
-      "de": "Speichere zuerst deine Scans",
-      "tr": "Önce taramalarınızı kaydedin"
-    },
-    "Glassbed closes for the update. Save or remove the scanned pages first.": {
-      "en": "Glassbed closes for the update. Save or remove the scanned pages first.",
-      "de": "Glassbed wird für das Update beendet. Speichere oder entferne zuerst die gescannten Seiten.",
-      "tr": "Glassbed güncelleme için kapanır. Önce taranan sayfaları kaydedin veya kaldırın."
+    "Start the setup after the download – your settings are kept.": {
+      "en": "Start the setup after the download – your settings are kept.",
+      "de": "Nach dem Download das Setup starten – deine Einstellungen bleiben erhalten.",
+      "tr": "İndirme bittikten sonra kurulumu başlatın – ayarlarınız korunur."
     },
     "Check for updates?": {
       "en": "Check for updates?",

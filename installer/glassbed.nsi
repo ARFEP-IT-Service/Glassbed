@@ -2,7 +2,6 @@
 ; Per-user installation without administrator rights. Built by build.ps1:
 ;   makensis /DVERSION=<version> installer\glassbed.nsi
 ; Silent install: Glassbed-<version>-setup.exe /S [/DESKTOP] [/AUTOSTART]
-; /FROMAPP: started by Glassbed's "Update" – waits up to 30 s for Glassbed to close, then runs normally.
 ; Installing over an existing version keeps shortcuts, autostart and settings.
 ; /DNOCOMPRESS builds an uncompressed copy for content checks, /DOUTDIR=<folder> writes it elsewhere.
 
@@ -104,22 +103,6 @@ FunctionEnd
 !insertmacro CHECK_RUNNING ""
 !insertmacro CHECK_RUNNING "un."
 
-Function WaitForApp
-  ; Glassbed closes itself right after starting the setup – give it a moment
-  StrCpy $2 0
-  ${Do}
-    nsExec::ExecToStack 'cmd.exe /c tasklist /FI "IMAGENAME eq ${APPEXE}" /NH | find /I "${APPEXE}"'
-    Pop $0
-    Pop $1
-    ${If} $0 != 0
-    ${OrIf} $2 >= 60
-      ${Break}
-    ${EndIf}
-    Sleep 500
-    IntOp $2 $2 + 1
-  ${Loop}
-FunctionEnd
-
 ; ------------------------------------------------------------------ install
 Section "$(SecApp)" SecMain
   SectionIn RO
@@ -179,11 +162,6 @@ Function .onInit
   ${GetOptions} $R0 "/AUTOSTART" $R1
   ${IfNot} ${Errors}
     SectionSetFlags ${SecAutostart} ${SF_SELECTED}
-  ${EndIf}
-  ClearErrors
-  ${GetOptions} $R0 "/FROMAPP" $R1
-  ${IfNot} ${Errors}
-    Call WaitForApp
   ${EndIf}
   Call CheckRunning
 FunctionEnd
