@@ -24,12 +24,30 @@ PrinterInfo info(List<Marker> markers) => PrinterInfo(
       markers: markers,
     );
 
-/// Roboto from the Flutter SDK, so text widths are those of a phone and not of the test font
-/// (whose glyphs are all 1 em wide).
-Future<void> loadRoboto() async {
+/// Roboto from the Flutter SDK's material fonts (`flutter precache --universal`), so text widths
+/// are those of a phone and not of the test font (whose glyphs are all 1 em wide). Null when this
+/// SDK has no material fonts – the measuring tests are then skipped.
+final File? roboto = _findRoboto();
+
+File? _findRoboto() {
   final artifacts = File(Platform.resolvedExecutable).parent.parent.parent.path;
-  final file = File('$artifacts/material_fonts/roboto-regular.ttf');
-  expect(file.existsSync(), isTrue, reason: 'Roboto not found in the Flutter SDK: ${file.path}');
+  final dir = Directory('$artifacts/material_fonts');
+  if (!dir.existsSync()) return null;
+  for (final f in dir.listSync().whereType<File>()) {
+    if (f.uri.pathSegments.last.toLowerCase() == 'roboto-regular.ttf') return f;
+  }
+  return null;
+}
+
+final bool noRoboto = roboto == null;
+
+/// A widget test that measures text; skipped when the SDK has no Roboto (see [roboto]).
+void measuringTest(String description, WidgetTesterCallback body) =>
+    testWidgets(description, body, skip: noRoboto);
+
+Future<void> loadRoboto() async {
+  final file = roboto;
+  if (file == null) return;
   final bytes = file.readAsBytesSync();
   await (FontLoader('Roboto')..addFont(Future.value(ByteData.sublistView(bytes)))).load();
 }
@@ -83,7 +101,7 @@ void main() {
   }
 
   for (final width in [320.0, 360.0, 400.0]) {
-    testWidgets('$width dp: no overflow, the full IP fits, search and menu next to it',
+    measuringTest('$width dp: no overflow, the full IP fits, search and menu next to it',
         (tester) async {
       await pumpCard(tester, width);
       expect(tester.takeException(), isNull);
@@ -104,7 +122,7 @@ void main() {
   }
 
   for (final width in [320.0, 400.0]) {
-    testWidgets('$width dp: four markers in one compact row, the card stays short', (tester) async {
+    measuringTest('$width dp: four markers in one compact row, the card stays short', (tester) async {
       await pumpCard(tester, width);
       expect(tester.takeException(), isNull);
       final items = [
@@ -139,7 +157,7 @@ void main() {
     });
   }
 
-  testWidgets('screen readers get the full sentence for each marker', (tester) async {
+  measuringTest('screen readers get the full sentence for each marker', (tester) async {
     final semantics = tester.ensureSemantics();
     await pumpCard(tester, 400, brightness: Brightness.light);
     expect(find.bySemanticsLabel('Black: 60 % left'), findsOneWidget);
@@ -147,7 +165,7 @@ void main() {
     semantics.dispose();
   });
 
-  testWidgets('320 dp: six markers shrink to one row without overflow', (tester) async {
+  measuringTest('320 dp: six markers shrink to one row without overflow', (tester) async {
     await pumpCard(tester, 320, markers: const [
       ...fourMarkers,
       Marker(name: 'Light cyan', color: '#80FFFF', level: 5),
@@ -160,7 +178,7 @@ void main() {
     expect(tester.getRect(find.byTooltip('Light magenta: 100 % left')).right, lessThan(card.right));
   });
 
-  testWidgets('one marker and unknown levels', (tester) async {
+  measuringTest('one marker and unknown levels', (tester) async {
     await pumpCard(tester, 320, markers: const [
       Marker(name: 'Black', color: '#000000', level: 60),
       Marker(name: 'Waste', color: 'none', level: -1),
@@ -171,7 +189,7 @@ void main() {
     expect(find.text('Toner low'), findsNothing);
   });
 
-  testWidgets('while searching: a small progress indicator instead of the icon', (tester) async {
+  measuringTest('while searching: a small progress indicator instead of the icon', (tester) async {
     await pumpCard(tester, 360, searching: true);
     final search = find.byKey(const ValueKey('printer-search'));
     expect(find.descendant(of: search, matching: find.byType(CircularProgressIndicator)),
