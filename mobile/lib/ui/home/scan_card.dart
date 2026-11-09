@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/escl.dart';
 import '../../i18n.dart';
+import '../print/copies_stepper.dart';
 
 const allResolutions = [100, 150, 200, 300];
 
@@ -39,6 +40,11 @@ class ScanCard extends StatelessWidget {
     required this.onDpi,
     required this.onScan,
     required this.onCancel,
+    required this.copyCopies,
+    required this.onCopyCopies,
+    required this.onCopy,
+    required this.copyStatus,
+    required this.onCancelCopy,
   });
 
   final ScannerCaps? caps;
@@ -53,6 +59,19 @@ class ScanCard extends StatelessWidget {
   final ValueChanged<int> onDpi;
   final VoidCallback? onScan;
   final VoidCallback onCancel;
+
+  /// Copy: scan and print right away at 100 %, without adding pages.
+  final int copyCopies;
+  final ValueChanged<int> onCopyCopies;
+  final VoidCallback? onCopy;
+
+  /// Progress text while a copy runs; null when no copy runs.
+  final String? copyStatus;
+
+  /// Cancels the copy; null while it cannot be cancelled any more (pages are being sent).
+  final VoidCallback? onCancelCopy;
+
+  bool get _busy => scanning || copyStatus != null;
 
   @override
   Widget build(BuildContext context) {
@@ -78,7 +97,7 @@ class ScanCard extends StatelessWidget {
               ],
               selected: {source},
               showSelectedIcon: false,
-              onSelectionChanged: scanning ? null : (v) => onSource(v.first),
+              onSelectionChanged: _busy ? null : (v) => onSource(v.first),
             ),
             const SizedBox(height: 14),
             _Label(tr('Mode')),
@@ -96,7 +115,7 @@ class ScanCard extends StatelessWidget {
               ],
               selected: {mode},
               showSelectedIcon: false,
-              onSelectionChanged: scanning ? null : (v) => onMode(v.first),
+              onSelectionChanged: _busy ? null : (v) => onMode(v.first),
             ),
             const SizedBox(height: 14),
             _Label(tr('Resolution')),
@@ -106,11 +125,17 @@ class ScanCard extends StatelessWidget {
               ],
               selected: {dpi},
               showSelectedIcon: false,
-              onSelectionChanged: scanning ? null : (v) => onDpi(v.first),
+              onSelectionChanged: _busy ? null : (v) => onDpi(v.first),
             ),
             const SizedBox(height: 18),
             if (scanning)
-              _ScanProgress(pages: pagesThisRun, onCancel: onCancel)
+              _Progress(
+                title: tr('Scanning…'),
+                detail: tr('{n} page(s)', {'n': pagesThisRun}),
+                onCancel: onCancel,
+              )
+            else if (copyStatus != null)
+              _Progress(title: tr('Print copy'), detail: copyStatus!, onCancel: onCancelCopy)
             else
               SizedBox(
                 height: 64,
@@ -120,7 +145,7 @@ class ScanCard extends StatelessWidget {
                   label: Text(tr('Scan'), style: const TextStyle(fontSize: 20)),
                 ),
               ),
-            if (hasPages && !scanning) ...[
+            if (hasPages && !_busy) ...[
               const SizedBox(height: 8),
               Text(
                 tr('Next scan is added to the current pages.'),
@@ -128,6 +153,30 @@ class ScanCard extends StatelessWidget {
                 style: theme.textTheme.bodySmall,
               ),
             ],
+            const SizedBox(height: 16),
+            Divider(height: 1, color: theme.dividerColor),
+            const SizedBox(height: 14),
+            Row(
+              children: [
+                Expanded(
+                  child: SizedBox(
+                    height: 52,
+                    child: OutlinedButton.icon(
+                      onPressed: _busy ? null : onCopy,
+                      icon: const Icon(Icons.content_copy_outlined),
+                      label: Text(tr('Print copy')),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                CopiesStepper(value: copyCopies, onChanged: _busy ? null : onCopyCopies),
+              ],
+            ),
+            const SizedBox(height: 6),
+            Text(
+              tr('Scans the original and prints it at 100 %. The copy is not added to the pages.'),
+              style: theme.textTheme.bodySmall,
+            ),
           ],
         ),
       ),
@@ -147,11 +196,12 @@ class _Label extends StatelessWidget {
       );
 }
 
-class _ScanProgress extends StatelessWidget {
-  const _ScanProgress({required this.pages, required this.onCancel});
+class _Progress extends StatelessWidget {
+  const _Progress({required this.title, required this.detail, required this.onCancel});
 
-  final int pages;
-  final VoidCallback onCancel;
+  final String title;
+  final String detail;
+  final VoidCallback? onCancel;
 
   @override
   Widget build(BuildContext context) {
@@ -172,11 +222,12 @@ class _ScanProgress extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(tr('Scanning…'), style: theme.textTheme.titleMedium),
-                Text(tr('{n} page(s)', {'n': pages}), style: theme.textTheme.bodySmall),
+                Text(title, style: theme.textTheme.titleMedium, overflow: TextOverflow.ellipsis),
+                Text(detail, style: theme.textTheme.bodySmall, overflow: TextOverflow.ellipsis),
               ],
             ),
           ),
+          if (onCancel != null)
           SizedBox(
             height: 52,
             child: OutlinedButton.icon(

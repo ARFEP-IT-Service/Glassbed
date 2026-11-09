@@ -44,6 +44,16 @@ SHARED_KEYS = [
     "Reset page", "Redact", "Black", "White", "Blur", "Tool", "Fit", "Zoom in", "Zoom out",
     "Blur suits faces and photos. For numbers like an IBAN, black is safer.",
     "{n} redaction(s) on this page",
+    # print and copy
+    "Print", "Print copy", "Copy", "Copies", "Paper", "Pages", "All", "e.g. 1-3, 5", "Color mode",
+    "Manual duplex", "Print both sides by reinserting the stack", "Printing…",
+    "Preparing page {i} of {n}…", "Sent to printer.", "Print failed", "Invalid page range.",
+    "Nothing to print.", "Second side", "Print back sides", "Add files…", "Remove",
+    "Could not open file", "Loading pages…",
+    # the manual-duplex question (its English text is the key, see _DUPLEX_HINT in glassbed/i18n.py)
+    "The front sides are printing.\n\nWhen they are done, take the stack from the output tray "
+    "and put it back into the paper tray so the blank sides get printed (usually: do not flip it, "
+    "just move it).\n\nTip: try it once with 4 pages.\n\nContinue with the back sides?",
 ]
 
 

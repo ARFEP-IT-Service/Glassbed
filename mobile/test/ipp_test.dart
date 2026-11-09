@@ -46,6 +46,12 @@ class IppBuilder {
     }
   }
 
+  void bools(String name, List<bool> values) {
+    for (var i = 0; i < values.length; i++) {
+      _value(tagBoolean, i == 0 ? name : '', [values[i] ? 1 : 0]);
+    }
+  }
+
   Uint8List done() {
     _b.addByte(0x03);
     return _b.takeBytes();

@@ -11,12 +11,16 @@ import '../../core/edit.dart' show Edits;
 import '../../core/escl.dart';
 import '../../core/export.dart';
 import '../../core/ipp.dart';
+import '../../core/printing.dart' show copySources, loaderFor;
 import '../../i18n.dart';
 import '../../platform.dart';
 import '../dialogs.dart';
 import '../editor/editor_screen.dart';
 import '../image_work.dart';
 import '../page_item.dart';
+import '../print/print_model.dart';
+import '../print/print_runner.dart';
+import '../print/print_section.dart';
 import '../settings_screen.dart';
 import 'pages_grid.dart';
 import 'printer_card.dart';
@@ -62,17 +66,37 @@ class _HomeScreenState extends State<HomeScreen> {
   bool _unsaved = false;
   bool _busyExport = false;
 
+  // Copy (scan + print at 100 %)
+  int _copyCopies = 1;
+  PrintStatus? _copyStatus;
+  CancelToken? _copyCancel;
+
+  // Sections: 0 = Scan, 1 = Print
+  int _section = 0;
+  final _print = PrintModel();
+  bool _printBusy = false;
+
   bool get _scanning => _cancel != null;
+  bool get _copying => _copyStatus != null;
 
   @override
   void initState() {
     super.initState();
     _restore();
+    // The copy button is disabled while a print job runs (and the other way round).
+    _print.addListener(() {
+      if (mounted && _print.busy != _printBusy) setState(() => _printBusy = _print.busy);
+    });
+    // Files shared to Glassbed: at start (initial intent) and while running (onNewIntent).
+    Native.listenForShares(_takeShared);
+    _takeShared();
   }
 
   @override
   void dispose() {
     _cancel?.cancel();
+    _copyCancel?.cancel();
+    _print.dispose();
     _escl?.close();
     _host.dispose();
     for (final p in _pages) {
@@ -166,9 +190,12 @@ class _HomeScreenState extends State<HomeScreen> {
     });
     final infoFuture = getPrinterInfo(device.ippUri, timeout: const Duration(seconds: 6))
         .then<PrinterInfo?>((i) => i, onError: (Object _) => null);
+    final printCapsFuture = loadPrinterMedia(device);
     final caps = await capsFuture;
     final info = await infoFuture;
+    final media = await printCapsFuture;
     if (!mounted || generation != _connectGeneration) return;
+    if (media != null) _print.setPrinterMedia(media.supported, media.defaultMedia);
     setState(() {
       _caps = caps;
       _info = info;
@@ -353,6 +380,124 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  // ---------------------------------------------------------------- copy
+
+  /// Scans with the current options and prints the pages at 100 % (top-left, like a copier).
+  /// The scanned pages are not added to the page list.
+  Future<void> _copy() async {
+    if (_device == null) {
+      await _connectFromField();
+      if (_device == null || !mounted) return;
+    } else if (!await ensureLocalNetwork(context)) {
+      return;
+    }
+    final device = _device!;
+    final client = _escl ??= EsclClient(device.esclBase);
+    final cancel = CancelToken();
+    final color = _mode == ColorMode.color;
+    final copies = _copyCopies;
+    setState(() {
+      _copyCancel = cancel;
+      _copyStatus = const PrintStatus.scanning(0);
+    });
+    try {
+      final scanned = <ScannedPage>[];
+      final settings = ScanSettings(source: _source, mode: _mode, dpi: _dpi);
+      try {
+        await for (final page in client.scan(settings, cancel: cancel)) {
+          scanned.add(page);
+          if (mounted) setState(() => _copyStatus = PrintStatus.scanning(scanned.length));
+        }
+      } on FeederEmpty {
+        // An empty feeder after some pages simply means "done".
+        if (scanned.isEmpty) rethrow;
+      }
+      if (!mounted) return;
+      setState(() => _copyCancel = null); // pages are on their way, no way back
+      await runPrint(
+        device: device,
+        count: scanned.length,
+        source: loaderFor(copySources(scanned)),
+        media: _print.media,
+        color: color,
+        copies: copies,
+        jobName: tr('Copy'),
+        onStatus: (s) {
+          if (mounted) setState(() => _copyStatus = s);
+        },
+      );
+      if (mounted) showSnack(context, tr('Sent to printer.'));
+    } on ScanCancelled {
+      if (mounted) showSnack(context, tr('Scan cancelled.'));
+    } catch (e) {
+      if (mounted) showSnack(context, printErrorText(e), error: true);
+    } finally {
+      if (mounted) {
+        setState(() {
+          _copyStatus = null;
+          _copyCancel = null;
+        });
+      }
+    }
+  }
+
+  // ---------------------------------------------------------------- print
+
+  Future<void> _addFiles() async {
+    final List<OpenedFile> files;
+    try {
+      files = await Native.pickDocuments();
+    } on PlatformException {
+      if (mounted) showSnack(context, tr('Could not open file'), error: true);
+      return;
+    }
+    await _addToPrint(files);
+  }
+
+  Future<void> _takeShared() async {
+    final files = await Native.takeSharedFiles();
+    if (files.isEmpty || !mounted) return;
+    setState(() => _section = 1);
+    await _addToPrint(files);
+  }
+
+  Future<void> _addToPrint(List<OpenedFile> files) async {
+    if (files.isEmpty) return;
+    final problems = await _print.addFiles(files);
+    if (problems.isNotEmpty && mounted) {
+      showSnack(context, [for (final p in problems) messageText(p)].join('\n'), error: true);
+    }
+  }
+
+  Future<void> _printFiles() async {
+    FocusScope.of(context).unfocus();
+    if (_device == null) {
+      await _connectFromField();
+      if (_device == null || !mounted) return;
+    } else if (!await ensureLocalNetwork(context)) {
+      return;
+    }
+    try {
+      await _print.printSelected(_device!, askBackSides: _askBackSides);
+      if (mounted) showSnack(context, tr('Sent to printer.'));
+    } on PrintMessage catch (m) {
+      if (mounted) showSnack(context, messageText(m), error: true);
+    } catch (e) {
+      if (mounted) showSnack(context, printErrorText(e), error: true);
+    }
+  }
+
+  Future<bool> _askBackSides() async {
+    if (!mounted) return false;
+    return confirm(
+      context,
+      title: tr('Second side'),
+      message: tr(
+          'The front sides are printing.\n\nWhen they are done, take the stack from the output tray and put it back into the paper tray so the blank sides get printed (usually: do not flip it, just move it).\n\nTip: try it once with 4 pages.\n\nContinue with the back sides?'),
+      confirmLabel: tr('Print back sides'),
+    );
+  }
+
   // ---------------------------------------------------------------- leaving
 
   Future<void> _onPopBlocked() async {
@@ -371,13 +516,22 @@ class _HomeScreenState extends State<HomeScreen> {
 
   // ---------------------------------------------------------------- UI
 
+  void _onPop() {
+    // Back in the Print section returns to Scan first.
+    if (_section != 0) {
+      setState(() => _section = 0);
+    } else {
+      _onPopBlocked();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return PopScope(
-      canPop: !_unsaved || _pages.isEmpty,
+      canPop: _section == 0 && (!_unsaved || _pages.isEmpty),
       onPopInvokedWithResult: (didPop, _) {
-        if (!didPop) _onPopBlocked();
+        if (!didPop) _onPop();
       },
       child: Scaffold(
         appBar: AppBar(
@@ -400,6 +554,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
         body: SafeArea(
+          bottom: false,
           child: ListView(
             padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
             children: [
@@ -415,105 +570,164 @@ class _HomeScreenState extends State<HomeScreen> {
                 onPick: _pick,
               ),
               const SizedBox(height: 12),
-              ScanCard(
-                caps: _caps,
-                source: _source,
-                mode: _mode,
-                dpi: _dpi,
-                scanning: _scanning,
-                pagesThisRun: _pagesThisRun,
-                hasPages: _pages.isNotEmpty,
-                onSource: (v) => setState(() {
-                  _source = v;
-                  _fitOptionsToCaps();
-                  _storeOptions();
-                }),
-                onMode: (v) => setState(() {
-                  _mode = v;
-                  _storeOptions();
-                }),
-                onDpi: (v) => setState(() {
-                  _dpi = v;
-                  _storeOptions();
-                }),
-                onScan: _busyExport ? null : _scan,
-                onCancel: () => _cancel?.cancel(),
-              ),
-              if (_pages.isNotEmpty) ...[
-                const SizedBox(height: 20),
-                Row(
-                  children: [
-                    Text(tr('Pages'), style: theme.textTheme.titleMedium),
-                    const SizedBox(width: 8),
-                    Text(tr('{n} page(s)', {'n': _pages.length}),
-                        style: theme.textTheme.bodySmall),
-                    const Spacer(),
-                    TextButton.icon(
-                      onPressed: _scanning || _busyExport ? null : _clearAll,
-                      icon: const Icon(Icons.delete_sweep_outlined),
-                      label: Text(tr('Clear all')),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                PagesGrid(pages: _pages, onAction: _onPageAction, onMove: _move),
-              ],
+              if (_section == 0) ..._scanSection(theme) else _printSection(),
             ],
           ),
         ),
-        bottomNavigationBar: _pages.isEmpty ? null : _actionBar(),
+        bottomNavigationBar: ListenableBuilder(
+          listenable: _print,
+          builder: (context, _) => Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (_section == 0 && _pages.isNotEmpty) _actionBar(),
+              if (_section == 1 && _print.docs.isNotEmpty) _printBar(),
+              NavigationBar(
+                selectedIndex: _section,
+                onDestinationSelected: (i) {
+                  FocusScope.of(context).unfocus();
+                  setState(() => _section = i);
+                },
+                destinations: [
+                  NavigationDestination(
+                    icon: const Icon(Icons.document_scanner_outlined),
+                    selectedIcon: const Icon(Icons.document_scanner),
+                    label: tr('Scan'),
+                  ),
+                  NavigationDestination(
+                    icon: const Icon(Icons.print_outlined),
+                    selectedIcon: const Icon(Icons.print),
+                    label: tr('Print'),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
       ),
+    );
+  }
+
+  List<Widget> _scanSection(ThemeData theme) => [
+        ScanCard(
+          caps: _caps,
+          source: _source,
+          mode: _mode,
+          dpi: _dpi,
+          scanning: _scanning,
+          pagesThisRun: _pagesThisRun,
+          hasPages: _pages.isNotEmpty,
+          onSource: (v) => setState(() {
+            _source = v;
+            _fitOptionsToCaps();
+            _storeOptions();
+          }),
+          onMode: (v) => setState(() {
+            _mode = v;
+            _storeOptions();
+          }),
+          onDpi: (v) => setState(() {
+            _dpi = v;
+            _storeOptions();
+          }),
+          onScan: _busyExport || _copying ? null : _scan,
+          onCancel: () => _cancel?.cancel(),
+          copyCopies: _copyCopies,
+          onCopyCopies: (v) => setState(() => _copyCopies = v),
+          onCopy: _busyExport || _scanning || _printBusy ? null : _copy,
+          copyStatus: _copyStatus?.text,
+          onCancelCopy: _copyCancel == null ? null : () => _copyCancel?.cancel(),
+        ),
+        if (_pages.isNotEmpty) ...[
+          const SizedBox(height: 20),
+          Row(
+            children: [
+              Text(tr('Pages'), style: theme.textTheme.titleMedium),
+              const SizedBox(width: 8),
+              Text(tr('{n} page(s)', {'n': _pages.length}), style: theme.textTheme.bodySmall),
+              const Spacer(),
+              TextButton.icon(
+                onPressed: _scanning || _busyExport ? null : _clearAll,
+                icon: const Icon(Icons.delete_sweep_outlined),
+                label: Text(tr('Clear all')),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          PagesGrid(pages: _pages, onAction: _onPageAction, onMove: _move),
+        ],
+      ];
+
+  Widget _printSection() => PrintSection(model: _print, onAddFiles: _addFiles);
+
+  BoxDecoration _barDecoration() => BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        border: Border(top: BorderSide(color: Theme.of(context).dividerColor)),
+      );
+
+  Widget _barProgress(String text, {double? value}) => SizedBox(
+        height: 52,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            SizedBox.square(
+                dimension: 22, child: CircularProgressIndicator(strokeWidth: 2.5, value: value)),
+            const SizedBox(width: 14),
+            Flexible(child: Text(text, overflow: TextOverflow.ellipsis)),
+          ],
+        ),
+      );
+
+  Widget _printBar() {
+    final status = _print.status;
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 10, 16, 12),
+      decoration: _barDecoration(),
+      child: status != null
+          ? _barProgress(status.text, value: status.fraction)
+          : SizedBox(
+              height: 52,
+              width: double.infinity,
+              child: FilledButton.icon(
+                onPressed: _print.opening || _copying ? null : _printFiles,
+                icon: const Icon(Icons.print),
+                label: Text(tr('Print')),
+              ),
+            ),
     );
   }
 
   Widget _actionBar() {
     final disabled = _scanning || _busyExport;
-    return SafeArea(
-      child: Container(
-        padding: const EdgeInsets.fromLTRB(16, 10, 16, 12),
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surface,
-          border: Border(top: BorderSide(color: Theme.of(context).dividerColor)),
-        ),
-        child: _busyExport
-            ? SizedBox(
-                height: 52,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const SizedBox.square(
-                        dimension: 22, child: CircularProgressIndicator(strokeWidth: 2.5)),
-                    const SizedBox(width: 14),
-                    Text(tr('Saving…')),
-                  ],
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 10, 16, 12),
+      decoration: _barDecoration(),
+      child: _busyExport
+          ? _barProgress(tr('Saving…'))
+          : Row(
+              children: [
+                Expanded(
+                  child: SizedBox(
+                    height: 52,
+                    child: FilledButton.icon(
+                      onPressed: disabled ? null : _save,
+                      icon: const Icon(Icons.save_alt),
+                      label: Text(tr('Save')),
+                    ),
+                  ),
                 ),
-              )
-            : Row(
-                children: [
-                  Expanded(
-                    child: SizedBox(
-                      height: 52,
-                      child: FilledButton.icon(
-                        onPressed: disabled ? null : _save,
-                        icon: const Icon(Icons.save_alt),
-                        label: Text(tr('Save')),
-                      ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: SizedBox(
+                    height: 52,
+                    child: FilledButton.tonalIcon(
+                      onPressed: disabled ? null : _share,
+                      icon: const Icon(Icons.share),
+                      label: Text(tr('Share')),
                     ),
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: SizedBox(
-                      height: 52,
-                      child: FilledButton.tonalIcon(
-                        onPressed: disabled ? null : _share,
-                        icon: const Icon(Icons.share),
-                        label: Text(tr('Share')),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-      ),
+                ),
+              ],
+            ),
     );
   }
 }

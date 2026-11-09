@@ -130,6 +130,66 @@
       "en": "Glassbed only talks to your printer on the local network. No accounts, no tracking.",
       "de": "Glassbed spricht nur mit deinem Drucker im lokalen Netzwerk. Kein Konto, kein Tracking.",
       "tr": "Glassbed yalnızca yerel ağdaki yazıcınızla iletişim kurar. Hesap yok, izleme yok."
+    },
+    "The printer is out of paper. Load paper and try again.": {
+      "en": "The printer is out of paper. Load paper and try again.",
+      "de": "Der Drucker hat kein Papier mehr. Lege Papier ein und versuch es noch einmal.",
+      "tr": "Yazıcıda kâğıt kalmadı. Kâğıt yerleştirip tekrar deneyin."
+    },
+    "Paper jam. Remove the jammed paper and try again.": {
+      "en": "Paper jam. Remove the jammed paper and try again.",
+      "de": "Papierstau. Entferne das gestaute Papier und versuch es noch einmal.",
+      "tr": "Kâğıt sıkışması. Sıkışan kâğıdı çıkarıp tekrar deneyin."
+    },
+    "A cover or door of the printer is open. Close it and try again.": {
+      "en": "A cover or door of the printer is open. Close it and try again.",
+      "de": "Eine Klappe oder Tür des Druckers ist offen. Schließ sie und versuch es noch einmal.",
+      "tr": "Yazıcının bir kapağı veya kapısı açık. Kapatıp tekrar deneyin."
+    },
+    "The toner is empty. Replace the cartridge and try again.": {
+      "en": "The toner is empty. Replace the cartridge and try again.",
+      "de": "Der Toner ist leer. Tausch die Kartusche und versuch es noch einmal.",
+      "tr": "Toner bitti. Kartuşu değiştirip tekrar deneyin."
+    },
+    "The printer is paused. Resume it on the printer and try again.": {
+      "en": "The printer is paused. Resume it on the printer and try again.",
+      "de": "Der Drucker ist angehalten. Setz ihn am Gerät fort und versuch es noch einmal.",
+      "tr": "Yazıcı duraklatıldı. Yazıcıda devam ettirip tekrar deneyin."
+    },
+    "The printer is busy. Try again in a moment.": {
+      "en": "The printer is busy. Try again in a moment.",
+      "de": "Der Drucker ist beschäftigt. Versuch es gleich noch einmal.",
+      "tr": "Yazıcı meşgul. Biraz sonra tekrar deneyin."
+    },
+    "The printer reports a problem. Check the printer's display.": {
+      "en": "The printer reports a problem. Check the printer's display.",
+      "de": "Der Drucker meldet ein Problem. Sieh auf dem Display des Druckers nach.",
+      "tr": "Yazıcı bir sorun bildiriyor. Yazıcının ekranını kontrol edin."
+    },
+    "The printer cannot print this format.": {
+      "en": "The printer cannot print this format.",
+      "de": "Der Drucker kann dieses Format nicht drucken.",
+      "tr": "Yazıcı bu biçimi yazdıramıyor."
+    },
+    "The printer rejected the job.": {
+      "en": "The printer rejected the job.",
+      "de": "Der Drucker hat den Auftrag abgelehnt.",
+      "tr": "Yazıcı işi reddetti."
+    },
+    "Add PDFs or images to print. You can also share them to Glassbed from another app.": {
+      "en": "Add PDFs or images to print. You can also share them to Glassbed from another app.",
+      "de": "Füge PDFs oder Bilder zum Drucken hinzu. Du kannst sie auch aus einer anderen App an Glassbed teilen.",
+      "tr": "Yazdırmak için PDF veya resim ekleyin. Bunları başka bir uygulamadan Glassbed ile de paylaşabilirsiniz."
+    },
+    "Only PDF, JPEG and PNG files can be printed.": {
+      "en": "Only PDF, JPEG and PNG files can be printed.",
+      "de": "Es können nur PDF-, JPEG- und PNG-Dateien gedruckt werden.",
+      "tr": "Yalnızca PDF, JPEG ve PNG dosyaları yazdırılabilir."
+    },
+    "Scans the original and prints it at 100 %. The copy is not added to the pages.": {
+      "en": "Scans the original and prints it at 100 %. The copy is not added to the pages.",
+      "de": "Scannt die Vorlage und druckt sie in 100 %. Die Kopie wird nicht zu den Seiten hinzugefügt.",
+      "tr": "Belgeyi tarar ve %100 boyutunda yazdırır. Kopya sayfalara eklenmez."
     }
   }
 }

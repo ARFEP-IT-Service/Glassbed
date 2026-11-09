@@ -63,6 +63,9 @@ Pixels _toPixels(img.Image im) {
   return (rgba: out, width: im.width, height: im.height);
 }
 
+/// RGBA pixels of a core image (call inside an isolate for big images).
+Pixels pixelsOf(img.Image im) => _toPixels(im);
+
 /// Builds the preview and thumbnail copies of a freshly scanned page (off the UI thread).
 Future<({img.Image preview, img.Image thumb})> makeBases(img.Image original) {
   return Isolate.run(() {
@@ -84,6 +87,30 @@ Future<ui.Image> toUiImage(Pixels p) {
   final done = Completer<ui.Image>();
   ui.decodeImageFromPixels(p.rgba, p.width, p.height, ui.PixelFormat.rgba8888, done.complete);
   return done.future;
+}
+
+/// Decodes a JPEG/PNG file for printing, turned upright by its EXIF orientation like the
+/// photo viewer shows it. Throws [FormatException] for anything that is not an image.
+img.Image decodeImageFile(Uint8List bytes) {
+  final decoded = img.decodeImage(bytes);
+  if (decoded == null) throw const FormatException('Not an image');
+  return img.bakeOrientation(decoded);
+}
+
+/// Thumbnail pixels of an image file (background isolate).
+Future<Pixels> imageFileThumbnail(Uint8List bytes) =>
+    Isolate.run(() => _toPixels(downscale(decodeImageFile(bytes), thumbLongSide)));
+
+/// RGB image from the RGBA pixels of a rendered PDF page (already on white, alpha unused).
+img.Image rgbaToRgb(Uint8List rgba, int width, int height) {
+  final out = img.Image(width: width, height: height, numChannels: 3);
+  final d = out.toUint8List();
+  for (var s = 0, o = 0; o < d.length; s += 4, o += 3) {
+    d[o] = rgba[s];
+    d[o + 1] = rgba[s + 1];
+    d[o + 2] = rgba[s + 2];
+  }
+  return out;
 }
 
 /// A page to export: full-size original plus its edits.

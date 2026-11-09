@@ -425,6 +425,121 @@
       "en": "{n} redaction(s) on this page",
       "de": "{n} Schwärzung(en) auf dieser Seite",
       "tr": "Bu sayfada {n} karartma"
+    },
+    "Print": {
+      "en": "Print",
+      "de": "Drucken",
+      "tr": "Yazdır"
+    },
+    "Print copy": {
+      "en": "Print copy",
+      "de": "Als Kopie drucken",
+      "tr": "Kopya yazdır"
+    },
+    "Copy": {
+      "en": "Copy",
+      "de": "Kopie",
+      "tr": "Kopya"
+    },
+    "Copies": {
+      "en": "Copies",
+      "de": "Kopien",
+      "tr": "Kopya"
+    },
+    "Paper": {
+      "en": "Paper",
+      "de": "Papier",
+      "tr": "Kâğıt"
+    },
+    "All": {
+      "en": "All",
+      "de": "Alle",
+      "tr": "Tümü"
+    },
+    "e.g. 1-3, 5": {
+      "en": "e.g. 1-3, 5",
+      "de": "z. B. 1-3, 5",
+      "tr": "örn. 1-3, 5"
+    },
+    "Color mode": {
+      "en": "Color mode",
+      "de": "Farbmodus",
+      "tr": "Renk modu"
+    },
+    "Manual duplex": {
+      "en": "Manual duplex",
+      "de": "Manueller Duplex",
+      "tr": "Elle çift taraflı"
+    },
+    "Print both sides by reinserting the stack": {
+      "en": "Print both sides by reinserting the stack",
+      "de": "Beidseitig drucken durch Wiedereinlegen des Stapels",
+      "tr": "Kâğıt destesini yeniden yerleştirerek iki yüze yazdır"
+    },
+    "Printing…": {
+      "en": "Printing…",
+      "de": "Drucke…",
+      "tr": "Yazdırılıyor…"
+    },
+    "Preparing page {i} of {n}…": {
+      "en": "Preparing page {i} of {n}…",
+      "de": "Bereite Seite {i} von {n} vor…",
+      "tr": "Sayfa {i}/{n} hazırlanıyor…"
+    },
+    "Sent to printer.": {
+      "en": "Sent to printer.",
+      "de": "An den Drucker gesendet.",
+      "tr": "Yazıcıya gönderildi."
+    },
+    "Print failed": {
+      "en": "Print failed",
+      "de": "Drucken fehlgeschlagen",
+      "tr": "Yazdırma başarısız"
+    },
+    "Invalid page range.": {
+      "en": "Invalid page range.",
+      "de": "Ungültiger Seitenbereich.",
+      "tr": "Geçersiz sayfa aralığı."
+    },
+    "Nothing to print.": {
+      "en": "Nothing to print.",
+      "de": "Nichts zu drucken.",
+      "tr": "Yazdırılacak bir şey yok."
+    },
+    "Second side": {
+      "en": "Second side",
+      "de": "Rückseiten",
+      "tr": "Arka yüzler"
+    },
+    "Print back sides": {
+      "en": "Print back sides",
+      "de": "Rückseiten drucken",
+      "tr": "Arka yüzleri yazdır"
+    },
+    "Add files…": {
+      "en": "Add files…",
+      "de": "Dateien hinzufügen…",
+      "tr": "Dosya ekle…"
+    },
+    "Remove": {
+      "en": "Remove",
+      "de": "Entfernen",
+      "tr": "Kaldır"
+    },
+    "Could not open file": {
+      "en": "Could not open file",
+      "de": "Datei konnte nicht geöffnet werden",
+      "tr": "Dosya açılamadı"
+    },
+    "Loading pages…": {
+      "en": "Loading pages…",
+      "de": "Lade Seiten…",
+      "tr": "Sayfalar yükleniyor…"
+    },
+    "The front sides are printing.\n\nWhen they are done, take the stack from the output tray and put it back into the paper tray so the blank sides get printed (usually: do not flip it, just move it).\n\nTip: try it once with 4 pages.\n\nContinue with the back sides?": {
+      "en": "The front sides are printing.\n\nWhen they are done, take the stack from the output tray and put it back into the paper tray so the blank sides get printed (usually: do not flip it, just move it).\n\nTip: try it once with 4 pages.\n\nContinue with the back sides?",
+      "de": "Die Vorderseiten werden gedruckt.\n\nWenn sie fertig sind, nimm den Stapel aus dem Ausgabefach und lege ihn wieder ins Papierfach, sodass die leeren Seiten bedruckt werden (meist: nicht umdrehen, einfach umlegen).\n\nTipp: Probier es einmal mit 4 Seiten aus.\n\nMit den Rückseiten fortfahren?",
+      "tr": "Ön yüzler yazdırılıyor.\n\nBittiğinde desteyi çıkış tepsisinden alın ve boş yüzler yazdırılacak şekilde kâğıt tepsisine geri koyun (genellikle: çevirmeden, olduğu gibi taşıyın).\n\nİpucu: Bir kez 4 sayfayla deneyin.\n\nArka yüzlerle devam edilsin mi?"
     }
   }
 }
