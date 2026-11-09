@@ -13,6 +13,10 @@ enum Link { none, connecting, online, offline }
 /// Below this level (percent) a toner is shown as low, like in the Windows app.
 const tonerLowThreshold = 15;
 
+/// Compact buttons next to the address field (a full IPv4 address must stay readable on a
+/// 360 dp wide screen).
+const _fieldButton = BoxConstraints.tightFor(width: 40, height: 48);
+
 /// Printer address, search, found devices and status with toner levels.
 class PrinterCard extends StatelessWidget {
   const PrinterCard({
@@ -49,9 +53,12 @@ class PrinterCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final markers = link == Link.online && info != null
+        ? info!.markers.where((m) => m.level >= 0).toList()
+        : const <Marker>[];
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.fromLTRB(12, 12, 8, 12),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -59,6 +66,7 @@ class PrinterCard extends StatelessWidget {
               children: [
                 Expanded(
                   child: TextField(
+                    key: const ValueKey('printer-host'),
                     controller: hostController,
                     keyboardType: TextInputType.url,
                     autocorrect: false,
@@ -66,33 +74,44 @@ class PrinterCard extends StatelessWidget {
                     textInputAction: TextInputAction.go,
                     onSubmitted: (_) => onConnect(),
                     decoration: InputDecoration(
+                      isDense: true,
                       labelText: tr('IP address or host name'),
                       hintText: '192.168.1.20',
-                      prefixIcon: const Icon(Icons.print_outlined),
+                      suffixIconConstraints: _fieldButton,
                       suffixIcon: IconButton(
                         tooltip: tr('Connect'),
+                        constraints: _fieldButton,
+                        padding: EdgeInsets.zero,
                         icon: const Icon(Icons.arrow_forward),
                         onPressed: onConnect,
                       ),
                     ),
                   ),
                 ),
-                const SizedBox(width: 8),
-                SizedBox(
-                  height: 56,
-                  child: FilledButton.tonalIcon(
-                    onPressed: searching ? null : onSearch,
-                    icon: searching
-                        ? const SizedBox.square(
-                            dimension: 18, child: CircularProgressIndicator(strokeWidth: 2))
-                        : const Icon(Icons.wifi_find),
-                    label: Text(tr('Search')),
-                  ),
+                const SizedBox(width: 4),
+                IconButton(
+                  key: const ValueKey('printer-search'),
+                  tooltip: tr('Search'),
+                  constraints: _fieldButton,
+                  padding: EdgeInsets.zero,
+                  style: IconButton.styleFrom(tapTargetSize: MaterialTapTargetSize.shrinkWrap),
+                  onPressed: searching ? null : onSearch,
+                  // the tooltip is also the label for screen readers, while searching too
+                  icon: searching
+                      ? const SizedBox.square(
+                          dimension: 18, child: CircularProgressIndicator(strokeWidth: 2))
+                      : const Icon(Icons.wifi_find),
                 ),
                 if (onCheck != null)
                   PopupMenuButton<VoidCallback>(
                     key: const ValueKey('printer-menu'),
                     icon: const Icon(Icons.more_vert),
+                    padding: EdgeInsets.zero,
+                    style: IconButton.styleFrom(
+                      fixedSize: const Size(40, 48),
+                      minimumSize: const Size(40, 48),
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
                     onSelected: (action) => action(),
                     itemBuilder: (context) => [
                       PopupMenuItem(
@@ -108,10 +127,10 @@ class PrinterCard extends StatelessWidget {
               ],
             ),
             if (searching) ...[
-              const SizedBox(height: 12),
+              const SizedBox(height: 8),
               Text(tr('Searching for devices…'), style: theme.textTheme.bodySmall),
             ] else if (devices != null) ...[
-              const SizedBox(height: 12),
+              const SizedBox(height: 8),
               Text(
                 devices!.isEmpty
                     ? tr('No devices found. Enter the IP address manually.')
@@ -140,8 +159,11 @@ class PrinterCard extends StatelessWidget {
                   onTap: () => onPick(d),
                 ),
             ],
-            const SizedBox(height: 12),
-            _StatusLine(link: link, info: info, device: selected),
+            const SizedBox(height: 10),
+            Padding(
+              padding: const EdgeInsets.only(right: 4),
+              child: _StatusLine(link: link, info: info, device: selected),
+            ),
             if (link == Link.online && scanner == false)
               Padding(
                 padding: const EdgeInsets.only(top: 8),
@@ -153,8 +175,11 @@ class PrinterCard extends StatelessWidget {
                   ],
                 ),
               ),
-            if (link == Link.online && info != null)
-              for (final m in info!.markers.where((m) => m.level >= 0)) _TonerBar(marker: m),
+            if (markers.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(top: 10, right: 4),
+                child: TonerRow(markers: markers),
+              ),
           ],
         ),
       ),
@@ -219,12 +244,13 @@ class _StatusLine extends StatelessWidget {
             decoration: BoxDecoration(color: color, shape: BoxShape.circle),
           ),
         const SizedBox(width: 10),
-        Text(text, style: TextStyle(color: color, fontWeight: FontWeight.w600)),
+        Text(text, maxLines: 1, style: TextStyle(color: color, fontWeight: FontWeight.w600)),
         if (name.isNotEmpty) ...[
           const SizedBox(width: 8),
           Expanded(
             child: Text(
               name,
+              maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: TextStyle(color: p.muted),
             ),
@@ -244,8 +270,52 @@ class _StatusLine extends StatelessWidget {
   }
 }
 
-class _TonerBar extends StatelessWidget {
-  const _TonerBar({required this.marker});
+/// Toner/ink levels in one row: per marker a short bar in its colour with the percentage
+/// under it. The full sentence is the tooltip and what a screen reader says.
+class TonerRow extends StatelessWidget {
+  const TonerRow({super.key, required this.markers});
+
+  final List<Marker> markers;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = Palette.of(context);
+    final low = markers.any((m) => m.level < tonerLowThreshold);
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        for (final (i, m) in markers.indexed) ...[
+          if (i > 0) const SizedBox(width: 10),
+          // narrow screens and many markers: the items shrink instead of overflowing
+          Flexible(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 56),
+              child: _TonerItem(marker: m),
+            ),
+          ),
+        ],
+        if (low) ...[
+          const SizedBox(width: 12),
+          Flexible(
+            flex: 2,
+            child: Text(
+              tr('Toner low'),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(color: p.danger, fontSize: 12, fontWeight: FontWeight.w600),
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+/// "60 %" (Turkish: "%60", like the full sentence).
+String _percent(int level) => currentLanguage == 'tr' ? '%$level' : '$level %';
+
+class _TonerItem extends StatelessWidget {
+  const _TonerItem({required this.marker});
 
   final Marker marker;
 
@@ -254,48 +324,54 @@ class _TonerBar extends StatelessWidget {
     final p = Palette.of(context);
     final low = marker.level < tonerLowThreshold;
     final level = marker.level.clamp(0, 100);
-    return Padding(
-      padding: const EdgeInsets.only(top: 10),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  tr('{name}: {level} % left', {'name': marker.name, 'level': level}),
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
-              ),
-              if (low)
-                Text(
-                  tr('Toner low'),
-                  style: TextStyle(color: p.danger, fontSize: 12, fontWeight: FontWeight.w600),
-                ),
-            ],
-          ),
-          const SizedBox(height: 4),
-          Builder(builder: (context) {
-            final color = _markerColor(marker.color, p.accent);
-            final outline = tonerOutline(color, Theme.of(context).brightness, p.muted);
-            return Container(
+    final color = _markerColor(marker.color, p.accent);
+    final outline = tonerOutline(color, Theme.of(context).brightness, p.muted);
+    var label = tr('{name}: {level} % left', {'name': marker.name, 'level': level});
+    if (low) label = '$label – ${tr('Toner low')}';
+    return Tooltip(
+      message: label,
+      excludeFromSemantics: true,
+      child: Semantics(
+        container: true,
+        label: label,
+        excludeSemantics: true,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Container(
+              height: 6,
               // a dark toner (black) on the dark theme gets a light outline so the bar stays visible
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(5),
+                borderRadius: BorderRadius.circular(3),
                 border: outline == null ? null : Border.all(color: outline, width: 1),
               ),
               child: ClipRRect(
-                borderRadius: BorderRadius.circular(4),
+                borderRadius: BorderRadius.circular(3),
                 child: LinearProgressIndicator(
                   value: level / 100,
-                  minHeight: 8,
+                  minHeight: 6,
                   color: color,
                   backgroundColor: p.line,
                 ),
               ),
-            );
-          }),
-        ],
+            ),
+            const SizedBox(height: 3),
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: AlignmentDirectional.centerStart,
+              child: Text(
+                _percent(level),
+                maxLines: 1,
+                style: TextStyle(
+                  fontSize: 11,
+                  color: low ? p.danger : p.muted,
+                  fontWeight: low ? FontWeight.w700 : FontWeight.w500,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

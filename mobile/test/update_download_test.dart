@@ -74,8 +74,14 @@ class FakeInstaller implements ApkInstaller {
   final List<InstallResult> results;
   final installed = <String>[];
 
+  /// What Android's "install unknown apps" setting says now.
+  bool allowed = true;
+
   @override
   Future<Directory?> updatesDir() async => dir;
+
+  @override
+  Future<bool> canInstall() async => allowed;
 
   @override
   Future<InstallResult> install(File apk) async {
@@ -166,6 +172,15 @@ void main() {
         },
       ])!;
       expect(odd.canInstallFor('arm64-v8a'), isFalse);
+    });
+
+    test('a stored release reads back the same (APKs and checksum links)', () {
+      final r = withSha('0.9.0');
+      final back = selectRelease([jsonDecode(jsonEncode(r.toJson()))])!;
+      expect(back.version, r.version);
+      expect(back.pageUrl, r.pageUrl);
+      expect(back.apkUrls, r.apkUrls);
+      expect(back.shaUrls, r.shaUrls);
     });
   });
 

@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
@@ -16,6 +17,10 @@ const keyEnabled = 'update_enabled';
 const keyLastCheck = 'update_last_check';
 const keySkipped = 'update_skipped';
 
+/// The newer release the last check found, so the banner is still there after a restart
+/// (the next automatic check may be up to a day away).
+const keyOffered = 'update_offered';
+
 /// Where "Update" stands.
 enum DownloadPhase { idle, downloading, verifying, installing }
 
@@ -28,7 +33,8 @@ enum UpdateOutcome {
   /// Android's installer asks the user now.
   installStarted,
 
-  /// The user first has to allow Glassbed to install apps, then tap "Update" again.
+  /// The user first has to allow Glassbed to install apps; the update goes on by itself when
+  /// the user comes back with the permission (UpdateExtras.continueAfterPermission).
   needsPermission,
 
   cancelled,
@@ -103,7 +109,32 @@ class UpdateController extends ChangeNotifier {
     enabled = prefs.getBool(keyEnabled) ?? false;
     skipped = prefs.getString(keySkipped);
     lastCheck = prefs.getString(keyLastCheck);
+    release ??= enabled ? _restoreOffered(prefs) : null;
     _loaded = true;
+  }
+
+  /// The release stored by the last check, checked again like a fresh answer from GitHub.
+  AndroidRelease? _restoreOffered(SharedPreferences prefs) {
+    final text = prefs.getString(keyOffered);
+    if (text == null) return null;
+    AndroidRelease? stored;
+    try {
+      stored = selectRelease([jsonDecode(text)]);
+    } on FormatException {
+      stored = null;
+    }
+    if (stored != null && isNewer(stored.version, currentVersion)) return stored;
+    prefs.remove(keyOffered); // installed meanwhile, or unreadable
+    return null;
+  }
+
+  Future<void> _storeOffered(AndroidRelease? r) async {
+    final prefs = await _prefs;
+    if (r != null && isNewer(r.version, currentVersion)) {
+      await prefs.setString(keyOffered, jsonEncode(r.toJson()));
+    } else {
+      await prefs.remove(keyOffered);
+    }
   }
 
   bool get needsQuestion => !asked;
@@ -131,6 +162,7 @@ class UpdateController extends ChangeNotifier {
     if (!value) {
       release = null;
       _forced = false;
+      await _storeOffered(null);
     }
     notifyListeners();
   }
@@ -163,6 +195,13 @@ class UpdateController extends ChangeNotifier {
       release = found;
       _dismissed = false;
       _forced = !silent && found != null && isNewer(found.version, currentVersion);
+      // "Check now" also offers a skipped version – for good, so the banner is there on the
+      // home screen and after a restart too.
+      if (_forced && skipped == found!.version) {
+        skipped = null;
+        await (await _prefs).remove(keySkipped);
+      }
+      await _storeOffered(found);
       return showBanner ? found : null;
     } on UpdateError {
       if (silent) return null;
@@ -295,6 +334,9 @@ class UpdateController extends ChangeNotifier {
     _verifiedHash = apk.sha256;
     return apk.file;
   }
+
+  /// Whether Android lets Glassbed install apps now.
+  Future<bool> canInstall() => _installer.canInstall();
 
   /// Stops a running download; its partial file is deleted.
   void cancelDownload() {

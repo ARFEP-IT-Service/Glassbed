@@ -21,6 +21,9 @@ abstract class ApkInstaller {
 
   /// Opens Android's installer for [apk] (a file in [updatesDir]).
   Future<InstallResult> install(File apk);
+
+  /// Whether Glassbed may install apps now (after [InstallResult.needsPermission]).
+  Future<bool> canInstall();
 }
 
 /// The Android side lives in UpdateInstaller.kt (github build only; the play build has a
@@ -39,6 +42,17 @@ class PlatformApkInstaller implements ApkInstaller {
       return null;
     } on PlatformException {
       return null;
+    }
+  }
+
+  @override
+  Future<bool> canInstall() async {
+    try {
+      return await _channel.invokeMethod<bool>('canInstallUpdates') ?? false;
+    } on MissingPluginException {
+      return false;
+    } on PlatformException {
+      return false;
     }
   }
 

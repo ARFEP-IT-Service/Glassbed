@@ -101,6 +101,41 @@ class UpdateExtras implements AppExtras {
     await openInBrowser(context);
   }
 
+  /// "Update" in the settings: back to the home screen first, where the banner shows the
+  /// progress. The navigator's own context stays mounted for the browser fallback.
+  void updateFromSettings(BuildContext context) {
+    final navigator = Navigator.of(context);
+    navigator.popUntil((route) => route.isFirst);
+    update(navigator.context);
+  }
+
+  bool _continuing = false;
+
+  /// Back in the app: after "allow installing apps" the update goes on by itself (with the
+  /// file verified before); otherwise the daily check runs if it is due.
+  Future<void> onResumed(BuildContext context) async {
+    if (controller.outcome == UpdateOutcome.needsPermission) {
+      await continueAfterPermission(context);
+    } else if (!controller.busy) {
+      await controller.checkIfDue();
+    }
+  }
+
+  /// Runs "Update" again once the user has allowed Glassbed to install apps. Without the
+  /// permission nothing happens and the hint stays.
+  Future<void> continueAfterPermission(BuildContext context) async {
+    if (_continuing) return;
+    _continuing = true;
+    try {
+      if (controller.busy || controller.outcome != UpdateOutcome.needsPermission) return;
+      if (!await controller.canInstall()) return;
+      if (!context.mounted || controller.busy) return;
+      await update(context);
+    } finally {
+      _continuing = false;
+    }
+  }
+
   /// Opens the APK (or the release page) in the browser and explains the install.
   Future<void> openInBrowser(BuildContext context) async {
     final url = await controller.updateUrl();
@@ -133,11 +168,36 @@ String megabytes(int bytes) {
 }
 
 /// "Glassbed X is available" under the printer card; empty while there is nothing to offer.
-/// While an update downloads it shows the progress and "Cancel".
-class UpdateBanner extends StatelessWidget {
+/// While an update downloads it shows the progress and "Cancel". Coming back to the app
+/// continues an update that waited for the install permission.
+class UpdateBanner extends StatefulWidget {
   const UpdateBanner({super.key, required this.extras});
 
   final UpdateExtras extras;
+
+  @override
+  State<UpdateBanner> createState() => _UpdateBannerState();
+}
+
+class _UpdateBannerState extends State<UpdateBanner> with WidgetsBindingObserver {
+  UpdateExtras get extras => widget.extras;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) extras.onResumed(context);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -259,6 +319,7 @@ class UpdateSettings extends StatefulWidget {
 
 class _UpdateSettingsState extends State<UpdateSettings> {
   String? _result;
+  bool _resultOffers = false; // the result is "X is available" (the Update row says it then)
 
   UpdateController get _c => widget.extras.controller;
 
@@ -273,15 +334,22 @@ class _UpdateSettingsState extends State<UpdateSettings> {
   Future<void> _checkNow() async {
     setState(() => _result = null);
     String text;
+    var offers = false;
     try {
       final offered = await _c.check();
+      offers = offered != null;
       text = offered != null
           ? tr('Glassbed {version} is available', {'version': offered.version})
           : tr('Glassbed {version} is up to date.', {'version': _c.currentVersion});
     } on UpdateError catch (e) {
       text = tr('Could not check for updates: {error}', {'error': e.message});
     }
-    if (mounted) setState(() => _result = text);
+    if (mounted) {
+      setState(() {
+        _result = text;
+        _resultOffers = offers;
+      });
+    }
   }
 
   @override
@@ -289,43 +357,59 @@ class _UpdateSettingsState extends State<UpdateSettings> {
     final p = Palette.of(context);
     return ListenableBuilder(
       listenable: _c,
-      builder: (context, _) => Card(
-        clipBehavior: Clip.antiAlias,
-        child: Column(
-          children: [
-            SwitchListTile(
-              value: _c.enabled,
-              title: Text(tr('Check for updates')),
-              subtitle: Text(tr(settingsHint), style: TextStyle(color: p.muted)),
-              onChanged: (v) async {
-                await _c.markAskedIfNeeded();
-                await _c.setEnabled(v);
-                if (mounted) setState(() => _result = null);
-              },
-            ),
-            ListTile(
-              minTileHeight: 56,
-              enabled: _c.enabled && !_c.checking,
-              leading: _c.checking
-                  ? const SizedBox(
-                      width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2))
-                  : const Icon(Icons.refresh),
-              title: Text(tr('Check now')),
-              subtitle: _c.checking
-                  ? Text(tr('Checking…'))
-                  : (_result == null ? null : Text(_result!)),
-              onTap: _checkNow,
-            ),
-            ListTile(
-              minTileHeight: 56,
-              leading: const Icon(Icons.privacy_tip_outlined),
-              title: Text(tr('Learn more')),
-              trailing: const Icon(Icons.open_in_new, size: 20),
-              onTap: () => widget.extras.openUrl(learnMoreUrl),
-            ),
-          ],
-        ),
-      ),
+      builder: (context, _) {
+        // The same offer as the banner on the home screen (also from the daily check).
+        final offered = _c.showBanner || _c.busy ? _c.release : null;
+        final result = offered != null && _resultOffers ? null : _result;
+        return Card(
+          clipBehavior: Clip.antiAlias,
+          child: Column(
+            children: [
+              SwitchListTile(
+                value: _c.enabled,
+                title: Text(tr('Check for updates')),
+                subtitle: Text(tr(settingsHint), style: TextStyle(color: p.muted)),
+                onChanged: (v) async {
+                  await _c.markAskedIfNeeded();
+                  await _c.setEnabled(v);
+                  if (mounted) setState(() => _result = null);
+                },
+              ),
+              ListTile(
+                minTileHeight: 56,
+                enabled: _c.enabled && !_c.checking,
+                leading: _c.checking
+                    ? const SizedBox(
+                        width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2))
+                    : const Icon(Icons.refresh),
+                title: Text(tr('Check now')),
+                subtitle: _c.checking
+                    ? Text(tr('Checking…'))
+                    : (result == null ? null : Text(result)),
+                onTap: _checkNow,
+              ),
+              if (offered != null)
+                ListTile(
+                  key: const ValueKey('settings-update'),
+                  minTileHeight: 56,
+                  enabled: !_c.busy,
+                  leading: Icon(Icons.system_update_outlined,
+                      color: _c.busy ? null : Theme.of(context).colorScheme.primary),
+                  title: Text(tr('Update')),
+                  subtitle: Text(tr('Glassbed {version} is available', {'version': offered.version})),
+                  onTap: () => widget.extras.updateFromSettings(context),
+                ),
+              ListTile(
+                minTileHeight: 56,
+                leading: const Icon(Icons.privacy_tip_outlined),
+                title: Text(tr('Learn more')),
+                trailing: const Icon(Icons.open_in_new, size: 20),
+                onTap: () => widget.extras.openUrl(learnMoreUrl),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

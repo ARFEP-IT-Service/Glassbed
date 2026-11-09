@@ -355,6 +355,69 @@ void main() {
       expect(c.showBanner, isTrue);
     });
 
+    test('the offer survives a restart without a new request, until installed or switched off',
+        () async {
+      SharedPreferences.setMockInitialValues({keyAsked: true, keyEnabled: true});
+      await make().check();
+      expect(calls, hasLength(1));
+
+      // restart within the day: no check is due, the banner is still there
+      final restarted = make();
+      await restarted.checkIfDue();
+      expect(calls, hasLength(1));
+      expect(restarted.showBanner, isTrue);
+      expect(await restarted.updateUrl(), '$_dl/android-v0.9.0/Glassbed-android-0.9.0-arm64-v8a.apk');
+
+      // after installing it, the stored offer is dropped
+      final installed = UpdateController(currentVersion: '0.9.0', clock: () => now);
+      await installed.load();
+      expect(installed.release, isNull);
+      final prefs = await SharedPreferences.getInstance();
+      expect(prefs.getString(keyOffered), isNull);
+
+      await restarted.check();
+      await restarted.setEnabled(false);
+      expect(prefs.getString(keyOffered), isNull);
+      await restarted.setEnabled(true);
+      final off = make();
+      await off.load();
+      expect(off.showBanner, isFalse);
+    });
+
+    test('a stored offer goes through the link checks again', () async {
+      SharedPreferences.setMockInitialValues({
+        keyAsked: true,
+        keyEnabled: true,
+        keyLastCheck: now.toIso8601String(),
+        keyOffered: jsonEncode(release('android-v0.9.0', assets: [
+          asset(apkName('0.9.0', 'arm64-v8a'), 'https://evil.example/x.apk'),
+        ])),
+      });
+      final c = make();
+      await c.checkIfDue();
+      expect(calls, isEmpty);
+      expect(c.showBanner, isTrue);
+      expect(await c.updateUrl(), '$releasesPage/tag/android-v0.9.0');
+
+      SharedPreferences.setMockInitialValues({keyAsked: true, keyEnabled: true, keyOffered: '{'});
+      final broken = make();
+      await broken.load();
+      expect(broken.release, isNull);
+    });
+
+    test('Check now un-skips a skipped version, so it stays offered after a restart', () async {
+      SharedPreferences.setMockInitialValues({keyAsked: true, keyEnabled: true, keySkipped: '0.9.0'});
+      final c = make();
+      await c.check(silent: true);
+      expect(c.showBanner, isFalse);
+      expect((await c.check())?.version, '0.9.0');
+      final prefs = await SharedPreferences.getInstance();
+      expect(prefs.getString(keySkipped), isNull);
+      final restarted = make();
+      await restarted.load();
+      expect(restarted.showBanner, isTrue);
+    });
+
     test('update URL follows the device ABI', () async {
       SharedPreferences.setMockInitialValues({keyAsked: true, keyEnabled: true});
       final c = make(abi: 'x86_64');

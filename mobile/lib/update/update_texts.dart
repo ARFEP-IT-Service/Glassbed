@@ -112,10 +112,9 @@ const mobileUpdateTexts = <String, Map<String, String>>{
   },
   allowInstallText: {
     'en': allowInstallText,
-    'de': 'Erlaube Glassbed, Updates zu installieren, und tippe dann noch einmal auf '
-        '„Aktualisieren“.',
-    'tr': "Glassbed'in güncellemeleri yüklemesine izin verin, ardından tekrar \"Güncelle\" "
-        'düğmesine dokunun.',
+    'de': 'Erlaube Glassbed, Updates zu installieren. Danach geht das Update von selbst weiter.',
+    'tr': "Glassbed'in güncellemeleri yüklemesine izin verin. Güncelleme ardından kendiliğinden "
+        'devam eder.',
   },
   installStartedText: {
     'en': installStartedText,
@@ -136,7 +135,8 @@ const downloadingText = 'Downloading Glassbed {version}… {done} MB';
 const verifyingText = 'Checking the download…';
 const checksumMismatchText =
     'The download does not match its checksum and was deleted. Nothing was installed.';
-const allowInstallText = 'Allow Glassbed to install updates, then tap Update again.';
+const allowInstallText =
+    'Allow Glassbed to install updates. The update then continues by itself.';
 const installStartedText =
     'Android now asks whether to install Glassbed {version}. Your settings are kept.';
 const downloadFailedText = 'Download failed: {error}';

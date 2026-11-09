@@ -14,5 +14,7 @@ class UpdateInstaller(activity: Activity) {
 
     fun cleanup() {}
 
+    fun canInstall(): Boolean = false
+
     fun install(path: String?): String = "unsupported"
 }

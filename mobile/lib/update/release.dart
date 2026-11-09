@@ -86,6 +86,22 @@ class AndroidRelease {
 
   /// What "Update" opens: the matching APK, or the release page.
   String updateUrl(String? abi) => apkFor(abi) ?? pageUrl;
+
+  /// This release as an entry of GitHub's release list, so a stored copy goes through
+  /// [selectRelease] (and all its link checks) again when it is read back.
+  Map<String, Object?> toJson() => {
+        'tag_name': 'android-v$version',
+        'draft': false,
+        'prerelease': false,
+        'html_url': pageUrl,
+        'assets': [
+          for (final abi in apkUrls.keys) ...[
+            {'name': apkName(version, abi), 'browser_download_url': apkUrls[abi]},
+            if (shaUrls[abi] case final sha?)
+              {'name': '${apkName(version, abi)}.sha256', 'browser_download_url': sha},
+          ],
+        ],
+      };
 }
 
 /// Whether the banner should offer [release] (newer than [current] and not skipped).

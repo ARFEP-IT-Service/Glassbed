@@ -93,6 +93,7 @@ class MainActivity : FlutterActivity() {
             // first entry = the ABI the device prefers (picks the matching APK of a release)
             "deviceAbi" -> result.success(Build.SUPPORTED_ABIS.firstOrNull())
             "updatesDir" -> result.success(updates.dir()?.path)
+            "canInstallUpdates" -> result.success(updates.canInstall())
             "installUpdate" -> try {
                 result.success(updates.install(call.argument<String>("path")))
             } catch (e: Exception) {

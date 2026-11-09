@@ -6,12 +6,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:glassbed/update/installer.dart';
 import 'package:glassbed/update/update_controller.dart';
+import 'package:glassbed/update/update_texts.dart' show allowInstallText, installStartedText;
 import 'package:glassbed/update/update_ui.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'update_download_test.dart' show FakeInstaller, apk, apkBytes, apkHash, withSha;
+import 'update_download_test.dart' show FakeInstaller, apk, apkBytes, apkHash, github, withSha;
 import 'update_test.dart' show release;
 
 void main() {
@@ -214,8 +215,166 @@ void main() {
     });
     await tester.pump();
     expect(installer.installed, hasLength(1));
-    expect(find.text('Allow Glassbed to install updates, then tap Update again.'), findsOneWidget);
+    expect(find.text(allowInstallText), findsOneWidget);
     expect(find.text('Update'), findsOneWidget);
+    expect(opened, isEmpty);
+  });
+  /// Home with the banner and a settings button, like HomeScreen and SettingsScreen.
+  Future<void> pumpHomeWithSettings(WidgetTester tester, UpdateExtras ui) async {
+    await tester.pumpWidget(MaterialApp(
+      home: Builder(builder: (context) {
+        return Scaffold(
+          body: ListView(children: [
+            TextButton(
+              onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) =>
+                      Scaffold(appBar: AppBar(), body: ListView(children: ui.settingsSection(context))),
+                ),
+              ),
+              child: const Text('settings'),
+            ),
+            ui.homeBanner(context),
+          ]),
+        );
+      }),
+    ));
+  }
+
+  testWidgets('settings: Check now shows a skipped version on the home screen too, Update there',
+      (tester) async {
+    SharedPreferences.setMockInitialValues({
+      keyAsked: true,
+      keyEnabled: true,
+      keySkipped: '0.9.0',
+      keyLastCheck: DateTime.now().toUtc().toIso8601String(),
+    });
+    await pumpHomeWithSettings(tester, extras);
+    await tester.tap(find.text('settings'));
+    await tester.pumpAndSettle();
+    final row = find.byKey(const ValueKey('settings-update'));
+    expect(row, findsNothing);
+
+    await tester.tap(find.text('Check now'));
+    await tester.pumpAndSettle();
+    expect(calls, hasLength(1));
+    // the result is said once, by the Update row
+    expect(find.text('Glassbed 0.9.0 is available'), findsOneWidget);
+    expect(find.descendant(of: row, matching: find.text('Update')), findsOneWidget);
+    expect((await prefs()).getString(keySkipped), isNull);
+
+    // back home: the banner is there
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+    expect(find.text('Glassbed 0.9.0 is available'), findsOneWidget);
+    expect(find.widgetWithText(FilledButton, 'Update'), findsOneWidget);
+
+    // Update in the settings: back home, the update starts there (here without an installer,
+    // so the APK opens in the browser and its hint appears over the home screen)
+    await tester.tap(find.text('settings'));
+    await tester.pumpAndSettle();
+    await tester.tap(row);
+    await tester.pumpAndSettle();
+    expect(find.text('Check now'), findsNothing);
+    expect(find.text('settings'), findsOneWidget);
+    expect(opened.single.toString(), endsWith('Glassbed-android-0.9.0-arm64-v8a.apk'));
+    expect(find.textContaining('Install the downloaded APK'), findsOneWidget);
+    await tester.tap(find.text('Done'));
+    await tester.pumpAndSettle();
+    expect(find.text('Glassbed 0.9.0 is available'), findsOneWidget);
+    expect(calls, hasLength(1));
+  });
+
+  testWidgets('settings: the Update row also comes from the daily check, not after Later',
+      (tester) async {
+    SharedPreferences.setMockInitialValues({keyAsked: true, keyEnabled: true});
+    await pumpHome(tester); // the daily check finds 0.9.0
+    expect(calls, hasLength(1));
+    await tester.pumpWidget(MaterialApp(
+      home: Builder(
+        builder: (context) => Scaffold(body: ListView(children: extras.settingsSection(context))),
+      ),
+    ));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('settings-update')), findsOneWidget);
+    expect(find.text('Glassbed 0.9.0 is available'), findsOneWidget);
+
+    extras.controller.later();
+    await tester.pump();
+    expect(find.byKey(const ValueKey('settings-update')), findsNothing);
+  });
+
+  testWidgets('allow install: back in the app the update goes on by itself', (tester) async {
+    SharedPreferences.setMockInitialValues({
+      keyAsked: true,
+      keyEnabled: true,
+      keyLastCheck: DateTime.now().toUtc().toIso8601String(),
+    });
+    final dir = (await tester.runAsync(() => Directory.systemTemp.createTemp('glassbed_ui')))!;
+    addTearDown(() => dir.deleteSync(recursive: true));
+    final downloads = <http.BaseRequest>[];
+    final installer =
+        FakeInstaller(dir, results: [InstallResult.needsPermission, InstallResult.started]);
+    final c = UpdateController(
+      newClient: () => github(downloads),
+      deviceAbi: () async => 'arm64-v8a',
+      installer: installer,
+    )..release = withSha('0.9.0');
+    final ui = UpdateExtras(c, openUrl: (url) async {
+      opened.add(url);
+      return true;
+    });
+    await tester.pumpWidget(MaterialApp(
+      home: Builder(builder: (context) => Scaffold(body: ListView(children: [ui.homeBanner(context)]))),
+    ));
+
+    /// Leaves the app (Android's settings page) and comes back; the reused file is read and
+    /// hashed for real, so that part runs outside the fake clock.
+    Future<void> leaveAndComeBack() async {
+      await tester.runAsync(() async {
+        for (final state in [
+          AppLifecycleState.inactive,
+          AppLifecycleState.hidden,
+          AppLifecycleState.paused,
+          AppLifecycleState.hidden,
+          AppLifecycleState.inactive,
+          AppLifecycleState.resumed,
+        ]) {
+          tester.binding.handleAppLifecycleStateChanged(state);
+        }
+        await Future<void>.delayed(const Duration(milliseconds: 50));
+        while (c.busy) {
+          await Future<void>.delayed(const Duration(milliseconds: 10));
+        }
+      });
+      await tester.pump();
+    }
+
+    await tester.runAsync(() async {
+      expect(await c.downloadAndInstall(), UpdateOutcome.needsPermission);
+    });
+    await tester.pump();
+    expect(find.text(allowInstallText), findsOneWidget);
+    expect(downloads, hasLength(4));
+
+    // not allowed: nothing happens, the hint stays
+    installer.allowed = false;
+    await leaveAndComeBack();
+    expect(installer.installed, hasLength(1));
+    expect(find.text(allowInstallText), findsOneWidget);
+
+    // allowed: the verified file goes to the installer, without a new download or a tap
+    installer.allowed = true;
+    await leaveAndComeBack();
+    expect(installer.installed, hasLength(2));
+    expect(downloads, hasLength(4));
+    expect(c.outcome, UpdateOutcome.installStarted);
+    expect(find.text(installStartedText.replaceAll('{version}', '0.9.0')), findsOneWidget);
+
+    // coming back again does not start it a second time
+    await leaveAndComeBack();
+    expect(installer.installed, hasLength(2));
     expect(opened, isEmpty);
   });
 }

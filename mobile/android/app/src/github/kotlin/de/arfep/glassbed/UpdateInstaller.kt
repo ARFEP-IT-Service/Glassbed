@@ -25,6 +25,9 @@ class UpdateInstaller(private val activity: Activity) {
         File(activity.cacheDir, DIR).listFiles()?.forEach { it.deleteRecursively() }
     }
 
+    /** Whether Glassbed may install apps (the user allowed it in Android's settings). */
+    fun canInstall(): Boolean = activity.packageManager.canRequestPackageInstalls()
+
     /**
      * "started": the installer is open; "needs_permission": Glassbed may not install apps yet
      * and Android's settings page for that was opened; "invalid": not an APK in [dir].
