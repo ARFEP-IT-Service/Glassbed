@@ -338,11 +338,11 @@ void main() {
       expect((await next.check())?.version, '0.9.0');
       expect(next.showBanner, isTrue);
 
-      body = [release('android-v0.2.1')];
+      body = [release('android-v0.9.1')];
       final later = make();
       await later.check(silent: true);
       expect(later.showBanner, isTrue);
-      expect(later.release?.version, '0.2.1');
+      expect(later.release?.version, '0.9.1');
     });
 
     test('later hides until the next check', () async {
