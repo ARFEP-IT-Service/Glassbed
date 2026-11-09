@@ -138,6 +138,12 @@ Tam olarak `.python-version` dosyasındaki Python sürümü gerekir. `build.ps1`
 ./build.ps1          # → dist/Glassbed-<version>-setup.exe ve dist/Glassbed-<version>-windows-portable.zip
 ```
 
+### Android – geliştiriliyor
+
+Bir Android uygulaması (tarama, düzenleme ve karartma, PDF/JPG/PNG olarak kaydetme, paylaşma)
+[`mobile/`](mobile) klasöründe geliştiriliyor. Henüz indirme yok. Windows uygulaması gibi yalnızca
+yerel ağınızdaki yazıcınızla konuşur – analiz yok, çökme raporu yok, Google hizmetleri yok.
+
 ## Başlarken
 
 1. Glassbed'i başlatın. Ağı tarar ve yazıcınızı seçer; bulamazsa yazıcının IP adresini üstteki

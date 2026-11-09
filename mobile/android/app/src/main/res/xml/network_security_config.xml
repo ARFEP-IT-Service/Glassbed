@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Printers on the local network speak plain HTTP (eSCL on port 80, IPP on port 631) and are
+  reached by IP addresses that change (DHCP) or by .local names. Android only allows per-domain
+  cleartext exceptions, not per-subnet ones, so cleartext has to be permitted in the base config.
+
+  This does not open the app to the internet: every request goes through lib/core/lan.dart,
+  which refuses any host that is not on the local network (private/link-local IPv4, IPv6 ULA and
+  link-local, *.local). The app has no other network traffic.
+-->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="true">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+</network-security-config>

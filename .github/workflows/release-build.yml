@@ -4,7 +4,7 @@ name: Release build
 # Runs for version tags and can be started by hand (Actions → Release build → Run workflow).
 on:
   push:
-    tags: ["v*"]
+    tags: ["v*"]          # Windows only; the Android app uses android-v* (mobile-build.yml)
   workflow_dispatch:
 
 permissions:

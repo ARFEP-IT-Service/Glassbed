@@ -1,0 +1,135 @@
+{
+  "_comment": "Texts used only by the Android app. Shared texts live in shared.json (generated, do not duplicate them here).",
+  "languages": {
+    "de": "Deutsch",
+    "en": "English",
+    "tr": "Türkçe"
+  },
+  "texts": {
+    "Connect": {
+      "en": "Connect",
+      "de": "Verbinden",
+      "tr": "Bağlan"
+    },
+    "Continue": {
+      "en": "Continue",
+      "de": "Weiter",
+      "tr": "Devam"
+    },
+    "Not now": {
+      "en": "Not now",
+      "de": "Nicht jetzt",
+      "tr": "Şimdi değil"
+    },
+    "Local network": {
+      "en": "Local network",
+      "de": "Lokales Netzwerk",
+      "tr": "Yerel ağ"
+    },
+    "Glassbed needs access to your local network to find and use your printer. It connects to nothing else.": {
+      "en": "Glassbed needs access to your local network to find and use your printer. It connects to nothing else.",
+      "de": "Glassbed braucht Zugriff auf dein lokales Netzwerk, um deinen Drucker zu finden und zu nutzen. Mit nichts anderem wird eine Verbindung hergestellt.",
+      "tr": "Glassbed, yazıcınızı bulmak ve kullanmak için yerel ağınıza erişmeye ihtiyaç duyar. Başka hiçbir yere bağlanmaz."
+    },
+    "Without access to the local network Glassbed cannot reach your printer. You can allow it in the system settings.": {
+      "en": "Without access to the local network Glassbed cannot reach your printer. You can allow it in the system settings.",
+      "de": "Ohne Zugriff auf das lokale Netzwerk kann Glassbed deinen Drucker nicht erreichen. Du kannst ihn in den Systemeinstellungen erlauben.",
+      "tr": "Yerel ağa erişim olmadan Glassbed yazıcınıza ulaşamaz. Bu izni sistem ayarlarından verebilirsiniz."
+    },
+    "Only devices on the local network can be used ({host}).": {
+      "en": "Only devices on the local network can be used ({host}).",
+      "de": "Es können nur Geräte im lokalen Netzwerk verwendet werden ({host}).",
+      "tr": "Yalnızca yerel ağdaki cihazlar kullanılabilir ({host})."
+    },
+    "The printer does not respond. Check the address and the Wi-Fi connection.": {
+      "en": "The printer does not respond. Check the address and the Wi-Fi connection.",
+      "de": "Der Drucker antwortet nicht. Prüfe die Adresse und die WLAN-Verbindung.",
+      "tr": "Yazıcı yanıt vermiyor. Adresi ve Wi-Fi bağlantısını kontrol edin."
+    },
+    "Could not connect to the printer.": {
+      "en": "Could not connect to the printer.",
+      "de": "Verbindung zum Drucker fehlgeschlagen.",
+      "tr": "Yazıcıya bağlanılamadı."
+    },
+    "Search failed.": {
+      "en": "Search failed.",
+      "de": "Suche fehlgeschlagen.",
+      "tr": "Arama başarısız oldu."
+    },
+    "Share": {
+      "en": "Share",
+      "de": "Teilen",
+      "tr": "Paylaş"
+    },
+    "File name": {
+      "en": "File name",
+      "de": "Dateiname",
+      "tr": "Dosya adı"
+    },
+    "One file per page: name_001, name_002, …": {
+      "en": "One file per page: name_001, name_002, …",
+      "de": "Eine Datei je Seite: Name_001, Name_002, …",
+      "tr": "Sayfa başına bir dosya: ad_001, ad_002, …"
+    },
+    "Page options": {
+      "en": "Page options",
+      "de": "Seitenoptionen",
+      "tr": "Sayfa seçenekleri"
+    },
+    "Discard": {
+      "en": "Discard",
+      "de": "Verwerfen",
+      "tr": "At"
+    },
+    "{n} scanned page(s) have not been saved. Leave anyway?": {
+      "en": "{n} scanned page(s) have not been saved. Leave anyway?",
+      "de": "{n} gescannte Seite(n) wurden nicht gespeichert. Trotzdem beenden?",
+      "tr": "Taranan {n} sayfa kaydedilmedi. Yine de çıkmak istiyor musunuz?"
+    },
+    "{n} scanned page(s) have not been saved. Remove them anyway?": {
+      "en": "{n} scanned page(s) have not been saved. Remove them anyway?",
+      "de": "{n} gescannte Seite(n) wurden nicht gespeichert. Trotzdem entfernen?",
+      "tr": "Taranan {n} sayfa kaydedilmedi. Yine de kaldırmak istiyor musunuz?"
+    },
+    "Discard changes?": {
+      "en": "Discard changes?",
+      "de": "Änderungen verwerfen?",
+      "tr": "Değişiklikler silinsin mi?"
+    },
+    "Your changes to this page will be lost.": {
+      "en": "Your changes to this page will be lost.",
+      "de": "Deine Änderungen an dieser Seite gehen verloren.",
+      "tr": "Bu sayfadaki değişiklikleriniz kaybolacak."
+    },
+    "Tone": {
+      "en": "Tone",
+      "de": "Tonwerte",
+      "tr": "Ton"
+    },
+    "Drag the corners or edges to crop.": {
+      "en": "Drag the corners or edges to crop.",
+      "de": "Ziehe an den Ecken oder Kanten, um zuzuschneiden.",
+      "tr": "Kırpmak için köşeleri veya kenarları sürükleyin."
+    },
+    "Draw a box with one finger. Pinch to zoom, move with two fingers.": {
+      "en": "Draw a box with one finger. Pinch to zoom, move with two fingers.",
+      "de": "Zieh mit einem Finger ein Rechteck auf. Mit zwei Fingern zoomen und verschieben.",
+      "tr": "Tek parmakla bir alan çizin. İki parmakla yakınlaştırın ve kaydırın."
+    },
+    "Third-party licenses": {
+      "en": "Third-party licenses",
+      "de": "Lizenzen von Drittanbietern",
+      "tr": "Üçüncü taraf lisansları"
+    },
+    "Version {version} · MIT license": {
+      "en": "Version {version} · MIT license",
+      "de": "Version {version} · MIT-Lizenz",
+      "tr": "Sürüm {version} · MIT lisansı"
+    },
+    "Glassbed only talks to your printer on the local network. No accounts, no tracking.": {
+      "en": "Glassbed only talks to your printer on the local network. No accounts, no tracking.",
+      "de": "Glassbed spricht nur mit deinem Drucker im lokalen Netzwerk. Kein Konto, kein Tracking.",
+      "tr": "Glassbed yalnızca yerel ağdaki yazıcınızla iletişim kurar. Hesap yok, izleme yok."
+    }
+  }
+}

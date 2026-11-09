@@ -1,8 +1,13 @@
 name: CI
 
 on:
+  # the Windows app; the Android app in mobile/ has its own workflows
   push:
+    paths-ignore:
+      - "mobile/**"
   pull_request:
+    paths-ignore:
+      - "mobile/**"
 
 jobs:
   test:

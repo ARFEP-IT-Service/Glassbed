@@ -1,0 +1,43 @@
+name: Mobile CI
+
+# Android app (mobile/) – only when the app or the shared files change
+on:
+  push:
+    paths:
+      - "mobile/**"
+      - "shared/**"
+      - "tools/export_shared.py"
+      - ".github/workflows/mobile-*.yml"
+  pull_request:
+    paths:
+      - "mobile/**"
+      - "shared/**"
+      - "tools/export_shared.py"
+      - ".github/workflows/mobile-*.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: mobile
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version-file: .python-version
+      # shared/ and mobile/assets/ must match the Windows app's texts and icon
+      - run: python tools/export_shared.py --check
+        working-directory: .
+      - uses: subosito/flutter-action@v2.23.0
+        with:
+          flutter-version: 3.47.9
+          channel: stable
+          cache: true
+      - run: flutter config --no-analytics
+      - run: flutter pub get --enforce-lockfile
+      - run: flutter analyze
+      - run: flutter test

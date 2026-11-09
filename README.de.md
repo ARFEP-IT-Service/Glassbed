@@ -139,6 +139,12 @@ Umgebung aus der gepinnten `build-requirements.txt` an und lädt die festgelegte
 ./build.ps1          # → dist/Glassbed-<version>-setup.exe und dist/Glassbed-<version>-windows-portable.zip
 ```
 
+### Android – in Entwicklung
+
+Eine Android-App (Scannen, Bearbeiten und Schwärzen, Speichern als PDF/JPG/PNG, Teilen) entsteht
+in [`mobile/`](mobile). Einen Download gibt es noch nicht. Wie die Windows-App spricht sie nur mit
+deinem Drucker im lokalen Netzwerk – keine Analyse, kein Absturzbericht, keine Google-Dienste.
+
 ## Erste Schritte
 
 1. Glassbed starten. Es sucht im Netzwerk und wählt deinen Drucker; findet es keinen, trage die

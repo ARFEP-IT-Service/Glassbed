@@ -137,6 +137,12 @@ environment from the pinned `build-requirements.txt` and downloads the pinned NS
 ./build.ps1          # → dist/Glassbed-<version>-setup.exe and dist/Glassbed-<version>-windows-portable.zip
 ```
 
+### Android – in development
+
+An Android app (scan, edit and redact, save as PDF/JPG/PNG, share) is being built in
+[`mobile/`](mobile). There is no download yet. Like the Windows app it only talks to your printer
+on the local network – no analytics, no crash reporting, no Google services.
+
 ## Getting started
 
 1. Start Glassbed. It searches the network and picks your printer; if it doesn't find one,

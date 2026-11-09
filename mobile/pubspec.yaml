@@ -1,0 +1,35 @@
+name: glassbed
+description: Scan on network multifunction printers – Glassbed for Android.
+publish_to: none
+version: 0.1.0+1
+
+environment:
+  sdk: ">=3.13.0 <4.0.0"
+  flutter: 3.47.9
+
+# Every package is pinned. Licenses are checked by tool/third_party_notices.dart
+# (no GPL, no analytics, no Google services).
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  http: 1.6.0                 # BSD-3-Clause – eSCL/IPP requests to the printer
+  xml: 7.1.0                  # MIT – eSCL capabilities and scan settings
+  multicast_dns: 0.3.3+1      # BSD-3-Clause – find printers (_uscan._tcp)
+  image: 4.12.0               # MIT – edit, redact, JPG/PNG without metadata
+  pdf: 3.13.1                 # Apache-2.0 – PDF of image pages
+  share_plus: 13.3.1          # BSD-3-Clause – Android share menu
+  url_launcher: 6.3.3         # BSD-3-Clause – open the legal pages in the browser
+  shared_preferences: 2.5.6   # BSD-3-Clause – language and last printer
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: 6.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/i18n/
+    - assets/icon/

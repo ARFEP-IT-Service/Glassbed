@@ -18,3 +18,8 @@ CLAUDE.md
 AGENTS.md
 .cursor/
 .aider*
+
+# Android signing – keystore and passwords never go into the repository
+*.jks
+*.keystore
+key.properties
