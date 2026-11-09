@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../core/device.dart';
 import '../../core/ipp.dart';
 import '../../i18n.dart';
+import '../print/print_runner.dart' show problemText;
 import '../theme.dart';
 
 /// Connection state of the selected printer.
@@ -136,11 +137,13 @@ class _StatusLine extends StatelessWidget {
           _ => (tr('Ready'), const Color(0xFF2DB56B)),
         },
     };
+    // jam, open door, empty paper or toner: say so under the status
+    final problem = link == Link.online && info != null ? problemFromReasons(info!.stateReasons) : null;
     final model = info?.makeAndModel ?? '';
     final name = device == null
         ? ''
         : (model.isNotEmpty && model != device!.name ? '$model · ${device!.host}' : device!.name);
-    return Row(
+    final row = Row(
       children: [
         if (link == Link.connecting)
           const SizedBox.square(dimension: 12, child: CircularProgressIndicator(strokeWidth: 2))
@@ -162,6 +165,15 @@ class _StatusLine extends StatelessWidget {
             ),
           ),
         ],
+      ],
+    );
+    if (problem == null || problem == PrintProblem.busy) return row;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        row,
+        const SizedBox(height: 6),
+        Text(problemText(problem), style: TextStyle(color: p.danger, fontWeight: FontWeight.w600)),
       ],
     );
   }

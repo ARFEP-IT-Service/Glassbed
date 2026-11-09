@@ -49,6 +49,7 @@ class _HomeScreenState extends State<HomeScreen> {
   EsclClient? _escl;
   ScannerCaps? _caps;
   PrinterInfo? _info;
+  Timer? _statusTimer;   // keeps status, toner and printer problems current
   Link _link = Link.none;
   int _connectGeneration = 0;
 
@@ -83,6 +84,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     _restore();
+    _statusTimer = Timer.periodic(const Duration(seconds: 10), (_) => _refreshStatus());
     // The copy button is disabled while a print job runs (and the other way round).
     _print.addListener(() {
       if (mounted && _print.busy != _printBusy) setState(() => _printBusy = _print.busy);
@@ -94,6 +96,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   void dispose() {
+    _statusTimer?.cancel();
     _cancel?.cancel();
     _copyCancel?.cancel();
     _print.dispose();
@@ -205,6 +208,17 @@ class _HomeScreenState extends State<HomeScreen> {
     if (caps == null && error != null) {
       showSnack(context, errorText(error!, fallback: 'Could not connect to the printer.'), error: true);
     }
+  }
+
+  /// Re-reads state, reasons and toner of the connected printer (a jam or an open door shows up
+  /// without reconnecting). A failed read keeps the last known state.
+  Future<void> _refreshStatus() async {
+    final device = _device;
+    if (device == null || _link != Link.online) return;
+    try {
+      final info = await getPrinterInfo(device.ippUri, timeout: const Duration(seconds: 5));
+      if (mounted && identical(device, _device)) setState(() => _info = info);
+    } catch (_) {}
   }
 
   /// Keeps the chosen options valid for the connected scanner.
