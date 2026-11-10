@@ -27,7 +27,7 @@ from .icons import app_icon
 from .tray import TrayController
 from . import update_ui
 from .update_ui import UpdateBanner, UpdateController
-from .widgets import CmykStripe, TonerBar
+from .widgets import CmykStripe, TonerBar, svg_pixmap
 from .worker import run_task
 
 
@@ -80,11 +80,12 @@ class MainWindow(QMainWindow):
         """(Re)build every widget. Called again after a language/theme change – same window."""
         wordmark = QLabel("Glassbed")
         wordmark.setObjectName("wordmark")
-        byline = QPushButton("by ARFEP")
-        byline.setObjectName("byline")
-        byline.setCursor(Qt.CursorShape.PointingHandCursor)
-        byline.setToolTip(f"{brand.COMPANY} · {brand.website(i18n.LANG)}")
-        byline.clicked.connect(lambda: QDesktopServices.openUrl(QUrl(brand.website(i18n.LANG))))
+        # the ARFEP logo next to the name – a mark only, it opens nothing
+        byline = QLabel()
+        byline.setObjectName("bylinelogo")
+        byline.setPixmap(svg_pixmap(brand.logo(theme.dark()), 18))
+        byline.setToolTip(brand.COMPANY)
+        byline.setAccessibleName(brand.COMPANY)
         self.tab_buttons = QButtonGroup(self)
         scan_tab_btn = QPushButton(tr("Scan"))
         print_tab_btn = QPushButton(tr("Print"))

@@ -89,11 +89,7 @@ QWidget#sidebar {{ border-right: 1px solid {line}; }}
 QWidget#outbar {{ border-top: 1px solid {line}; }}
 QWidget#toolbar {{ background: {platen}; }}
 
-QPushButton#byline {{
-    background: transparent; border: none; padding: 0 0 4px 6px; color: {muted};
-    font-family: "{mono}"; font-size: 8pt;
-}}
-QPushButton#byline:hover {{ color: {accent}; }}
+QLabel#bylinelogo {{ background: transparent; padding: 0 0 5px 8px; }}
 QWidget#divider {{ background: {line}; }}
 QLabel#wordmark {{ font-family: "{display}"; font-size: 15pt; font-weight: 600; letter-spacing: 0.5px; }}
 QLabel#eyebrow {{ font-family: "{display}"; font-size: 8.5pt; padding-top: 2px; color: {muted}; letter-spacing: 1.6px; }}
