@@ -1,5 +1,4 @@
 """Only devices on the local network – address ranges, every connection and every redirect hop."""
-import io
 import os
 import socket
 import time
