@@ -900,6 +900,11 @@
       "en": "Send this report to the developer if the device does not work with Glassbed. It contains the device's address, model and supported protocols – nothing else.",
       "de": "Schick diesen Bericht an den Entwickler, wenn das Gerät nicht mit Glassbed funktioniert. Er enthält Adresse, Modell und unterstützte Protokolle des Geräts – sonst nichts.",
       "tr": "Cihaz Glassbed ile çalışmıyorsa bu raporu geliştiriciye gönderin. Yalnızca cihazın adresini, modelini ve desteklenen protokolleri içerir."
+    },
+    "Only devices on the local network can be used ({host}).": {
+      "en": "Only devices on the local network can be used ({host}).",
+      "de": "Es können nur Geräte im lokalen Netzwerk verwendet werden ({host}).",
+      "tr": "Yalnızca yerel ağdaki cihazlar kullanılabilir ({host})."
     }
   }
 }

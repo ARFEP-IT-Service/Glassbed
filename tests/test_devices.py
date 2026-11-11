@@ -74,7 +74,7 @@ def window(monkeypatch, tmp_path):
     old = i18n.LANG
     i18n.set_language("en")
     settings = QSettings(str(tmp_path / "glassbed.ini"), QSettings.Format.IniFormat)
-    settings.setValue("device/host", "192.0.2.10")
+    settings.setValue("device/host", "192.168.250.10")
     settings.setValue("device/name", "Test printer")
     settings.setValue("update/asked", True)
     monkeypatch.setattr(config, "settings", lambda: settings)

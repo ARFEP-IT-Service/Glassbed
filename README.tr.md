@@ -209,6 +209,11 @@ Glassbed gizlilik bildirimi: [arfep.de/datenschutz-glassbed](https://arfep.de/da
 - Glassbed yalnızca yerel ağınızdaki **yazıcınızla** konuşur – ve yalnızca izin verirseniz,
   güncelleme denetimi için GitHub ile. Bulut yok, hesap yok, telemetri yok. Yalnızca tıkladığınız
   web sayfaları açılır (yazıcının web arayüzü, arfep.de).
+- **Yalnızca yerel adresler.** Bir cihaza yapılan her bağlantıdan önce – durum, tarama,
+  yazdırma, *Cihazı kontrol et*, elle yazılan bir adres de dahil – Glassbed adresin yerel
+  olduğunu denetler: `10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16`, `169.254.0.0/16`, IPv6 `fc00::/7` ve `fe80::/10` (ve `.local` adları). Diğer adresler
+  bir mesajla reddedilir, hiçbir şey gönderilmez. Bir cihazın HTTP yönlendirmeleri yalnızca bu
+  tür adreslere izlenir, her adım denetlenir.
 - **Güncelleme denetimi** – varsayılan olarak kapalıdır; Glassbed ilk açılışta bir kez sorar,
   *Ayarlar*'dan değiştirebilirsiniz. Açıksa Glassbed, başlangıçta en fazla 24 saatte bir veya
   *Şimdi denetle*'ye tıkladığınızda, en son yayımlanan sürümü GitHub'a (`api.github.com`) sorar.

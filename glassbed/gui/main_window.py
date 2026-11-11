@@ -15,6 +15,7 @@ from ..discovery import Device, discover
 from ..escl import EsclScanner
 from ..i18n import tr
 from ..ipp import IppPrinter
+from ..lan import is_local_host
 from . import theme
 from .print_tab import PrintTab
 from .scan_tab import ScanTab
@@ -458,7 +459,17 @@ class MainWindow(QMainWindow):
             return
         self._set_device(self._devices.get(host) or Device.from_host(host))
 
+    def _not_local(self, host: str) -> bool:
+        """True (and a message) for an address outside the local network – nothing is sent there."""
+        if is_local_host(host):
+            return False
+        self.show_alert("info", tr("Only devices on the local network can be used ({host}).", host=host), "")
+        return True
+
     def _set_device(self, device: Device) -> None:
+        if self._not_local(device.host):
+            self._fill_box()
+            return
         self._device = device
         self._devices.setdefault(device.host, device)
         self._fill_box()
@@ -536,6 +547,8 @@ class MainWindow(QMainWindow):
             host = self._device.host
         if not host:
             self.statusBar().showMessage(tr("No printer selected."), 5000)
+            return
+        if self._not_local(host):
             return
         self.show_page(DeviceCheckPage(host))
 

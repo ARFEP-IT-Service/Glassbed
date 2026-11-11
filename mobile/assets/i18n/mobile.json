@@ -36,11 +36,6 @@
       "de": "Ohne Zugriff auf das lokale Netzwerk kann Glassbed deinen Drucker nicht erreichen. Du kannst ihn in den Systemeinstellungen erlauben.",
       "tr": "Yerel ağa erişim olmadan Glassbed yazıcınıza ulaşamaz. Bu izni sistem ayarlarından verebilirsiniz."
     },
-    "Only devices on the local network can be used ({host}).": {
-      "en": "Only devices on the local network can be used ({host}).",
-      "de": "Es können nur Geräte im lokalen Netzwerk verwendet werden ({host}).",
-      "tr": "Yalnızca yerel ağdaki cihazlar kullanılabilir ({host})."
-    },
     "The printer does not respond. Check the address and the Wi-Fi connection.": {
       "en": "The printer does not respond. Check the address and the Wi-Fi connection.",
       "de": "Der Drucker antwortet nicht. Prüfe die Adresse und die WLAN-Verbindung.",

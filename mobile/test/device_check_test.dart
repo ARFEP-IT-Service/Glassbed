@@ -10,6 +10,8 @@ import 'package:glassbed/core/ipp.dart';
 import 'package:glassbed/ui/home/device_check_screen.dart';
 import 'package:glassbed/ui/home/printer_card.dart';
 import 'package:glassbed/ui/theme.dart';
+import 'package:http/http.dart' as http;
+import 'package:http/testing.dart';
 
 const hp = '192.168.178.50';
 const epson = '192.168.178.60';
@@ -207,6 +209,46 @@ Verdict: print=IPP, scan=eSCL
     expect(report, contains('mDNS: no services from this host\n'));
     expect(report, contains('IPP: timeout\n'));
     expect(report, contains('eSCL: timeout\n'));
+  });
+
+  group('LAN only', () {
+    /// The real IPP and eSCL clients on a fake HTTP stack; [redirect] answers every request.
+    (DeviceCheckNet, List<http.Request>) httpNet({String? redirect}) {
+      final requests = <http.Request>[];
+      final client = MockClient((r) async {
+        requests.add(r);
+        return redirect == null
+            ? http.Response('', 404)
+            : http.Response('', 307, headers: {'location': redirect});
+      });
+      final net = DeviceCheckNet(
+        resolve: resolveLocal,
+        port: (address, port) async => 'open',
+        browse: (types, {Duration timeout = Duration.zero}) async => const [],
+        printerCaps: (uri) => getPrinterCaps(uri, client: client),
+        scannerCaps: (base) => EsclClient(base, client: client).capabilities(),
+        wsd: (target, {Duration wait = Duration.zero}) async => const [],
+      );
+      return (net, requests);
+    }
+
+    test('a public address is refused before any request', () async {
+      final (net, requests) = httpNet();
+      final r = await checkDevice('8.8.8.8', appVersion: '1', flavor: 'play', net: net, now: () => time);
+      expect(requests, isEmpty);
+      expect(r.ipp.error, 'not a local address');
+      expect(r.escl.error, 'not a local address');
+    });
+
+    test('a redirect to a public address is refused', () async {
+      final (net, requests) = httpNet(redirect: 'http://8.8.8.8/x');
+      final r = await checkDevice(hp, appVersion: '1', flavor: 'play', net: net, now: () => time);
+      expect(r.ipp.error, 'not a local address');
+      expect(r.escl.error, 'not a local address');
+      expect(requests, isNotEmpty);
+      expect(requests.where((q) => q.url.host != hp), isEmpty);
+      expect(requests.where((q) => q.followRedirects), isEmpty);
+    });
   });
 
   group('WS-Discovery', () {

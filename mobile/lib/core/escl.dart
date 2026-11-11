@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:isolate';
 import 'dart:typed_data';
 
@@ -290,15 +291,14 @@ class EsclClient {
     CancelToken? cancel,
   }) async {
     checkLocal(uri);
-    final req = http.Request(method, uri);
-    if (body != null) {
-      req.headers['Content-Type'] = 'text/xml';
-      req.body = body;
-    }
-    final future = _client
-        .send(req)
-        .then(http.Response.fromStream)
-        .timeout(timeout ?? this.timeout);
+    final future = sendLocal(
+      _client,
+      method,
+      uri,
+      headers: {if (body != null) 'Content-Type': 'text/xml; charset=utf-8'},
+      body: body == null ? null : utf8.encode(body),
+      error: ScannerError.new,
+    ).timeout(timeout ?? this.timeout);
     try {
       return await _race(future, cancel);
     } on TimeoutException {

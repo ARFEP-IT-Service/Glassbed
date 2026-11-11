@@ -144,4 +144,78 @@ void main() {
         throwsA(isA<NotLocalNetwork>()));
     expect(calls, 0);
   });
+
+  group('redirects', () {
+    final printer = Uri.parse('ipp://192.168.178.33:631/ipp/print');
+
+    /// Answers by URL: [redirects] maps a URL to (status, Location); everything else is the HP.
+    (MockClient, List<http.Request>) redirecting(Map<String, (int, String)> redirects) {
+      final requests = <http.Request>[];
+      final client = MockClient((r) async {
+        requests.add(r);
+        final to = redirects[r.url.toString()];
+        if (to != null) return http.Response('', to.$1, headers: {'location': to.$2});
+        return http.Response.bytes(hpResponse(), 200, headers: {'content-type': 'application/ipp'});
+      });
+      return (client, requests);
+    }
+
+    void noAutoRedirects(List<http.Request> requests) {
+      expect(requests, isNotEmpty);
+      for (final r in requests) {
+        expect(r.followRedirects, isFalse, reason: '${r.method} ${r.url}');
+      }
+    }
+
+    for (final target in ['http://8.8.8.8:631/ipp/print', 'http://[2001:4860:4860::8888]:631/ipp/print']) {
+      test('307 to $target is refused', () async {
+        final (client, requests) = redirecting({
+          'http://192.168.178.33:631/ipp/print': (307, target),
+        });
+        await expectLater(getPrinterInfo(printer, client: client),
+            throwsA(isA<NotLocalNetwork>().having((e) => e.host, 'host', Uri.parse(target).host)));
+        expect(requests.map((r) => r.url.host), ['192.168.178.33']);
+        noAutoRedirects(requests);
+      });
+    }
+
+    test('308 to a local address is followed with the same body', () async {
+      final (client, requests) = redirecting({
+        'http://192.168.178.33:631/ipp/print': (308, 'http://192.168.178.34:631/ipp/printer'),
+      });
+      final info = await getPrinterInfo(printer, client: client);
+      expect(info.markers, hasLength(4));
+      expect(requests.map((r) => r.url.toString()),
+          ['http://192.168.178.33:631/ipp/print', 'http://192.168.178.34:631/ipp/printer']);
+      expect(requests.map((r) => r.method), ['POST', 'POST']);
+      expect(requests[1].bodyBytes, requests[0].bodyBytes);
+      expect(requests[1].headers['Content-Type'], 'application/ipp');
+      noAutoRedirects(requests);
+    });
+
+    test('301/302/303 are not followed for the POST', () async {
+      for (final status in [301, 302, 303]) {
+        final (client, requests) = redirecting({
+          'http://192.168.178.33:631/ipp/print': (status, 'http://192.168.178.34:631/ipp/print'),
+        });
+        await expectLater(
+            getPrinterCaps(printer, client: client),
+            throwsA(isA<IppError>()
+                .having((e) => e.message, 'message', 'Printer answered HTTP $status')));
+        expect(requests, hasLength(1));
+        noAutoRedirects(requests);
+      }
+    });
+
+    test('a redirect loop stops after 5 redirects', () async {
+      final (client, requests) = redirecting({
+        'http://192.168.178.33:631/ipp/print': (307, '/ipp/other'),
+        'http://192.168.178.33:631/ipp/other': (307, '/ipp/print'),
+      });
+      await expectLater(getPrinterInfo(printer, client: client),
+          throwsA(isA<IppError>().having((e) => e.message, 'message', 'Too many redirects')));
+      expect(requests, hasLength(maxRedirects + 1));
+      noAutoRedirects(requests);
+    });
+  });
 }

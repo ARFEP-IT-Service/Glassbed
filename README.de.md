@@ -211,6 +211,11 @@ Datenschutzerklärung für Glassbed: [arfep.de/datenschutz-glassbed](https://arf
 - Glassbed spricht nur mit **deinem Drucker** im lokalen Netzwerk – und, nur wenn du zustimmst,
   mit GitHub für die Update-Prüfung. Keine Cloud, kein Konto, keine Telemetrie. Webseiten öffnen
   sich nur, wenn du sie anklickst (Drucker-Webseite, arfep.de).
+- **Nur lokale Adressen.** Vor jeder Verbindung zu einem Gerät – Status, Scan, Druck,
+  *Gerät prüfen*, auch bei einer eingetippten Adresse – prüft Glassbed, dass sie lokal ist:
+  `10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16`, `169.254.0.0/16`, IPv6 `fc00::/7` und `fe80::/10` (und `.local`-Namen). Alles andere wird mit einer Meldung
+  abgelehnt, es wird nichts gesendet. HTTP-Weiterleitungen eines Geräts folgt Glassbed nur zu
+  solchen Adressen, jeder Schritt wird geprüft.
 - **Update-Prüfung** – standardmäßig aus; Glassbed fragt einmal beim ersten Start, ändern kannst
   du es in den *Einstellungen*. Ist sie an, fragt Glassbed GitHub (`api.github.com`) höchstens
   einmal in 24 Stunden beim Start, oder wenn du auf *Jetzt suchen* klickst, nach dem neuesten

@@ -1,5 +1,7 @@
 import 'dart:io';
 
+import 'package:http/http.dart' as http;
+
 /// True for hosts on the local network: private IPv4 (10/8, 172.16/12, 192.168/16),
 /// link-local 169.254/16, IPv6 fc00::/7 and fe80::/10, and names ending in ".local".
 ///
@@ -48,4 +50,54 @@ class NotLocalNetwork implements Exception {
 /// Throws [NotLocalNetwork] unless [uri] points to the local network.
 void checkLocal(Uri uri) {
   if (!isLocalHost(uri.host)) throw NotLocalNetwork(uri.host);
+}
+
+/// Redirects followed by [sendLocal] before it gives up.
+const maxRedirects = 5;
+
+const _redirectAny = {'GET', 'HEAD', 'DELETE'};
+
+/// Sends one request to a device on the local network and follows redirects by hand
+/// (the HTTP stack never follows them: `followRedirects` is false on every request).
+///
+/// GET/HEAD/DELETE follow 301, 302, 303, 307 and 308; other methods (POST) only 307
+/// and 308, with the same method and body. Every hop goes through [checkLocal] before
+/// it is sent, so a redirect can never lead outside the local network ([NotLocalNetwork]).
+/// Any other 3xx is returned as it is. More than [maxRedirects] redirects or a redirect
+/// without a usable Location throw `error(message)`.
+Future<http.Response> sendLocal(
+  http.Client client,
+  String method,
+  Uri uri, {
+  Map<String, String> headers = const {},
+  List<int>? body,
+  required Exception Function(String message) error,
+}) async {
+  var url = uri;
+  for (var hop = 0;; hop++) {
+    checkLocal(url);
+    final req = http.Request(method, url)
+      ..followRedirects = false
+      ..headers.addAll(headers);
+    if (body != null) req.bodyBytes = body;
+    final r = await http.Response.fromStream(await client.send(req));
+    final code = r.statusCode;
+    final follow = code == 307 ||
+        code == 308 ||
+        (_redirectAny.contains(method) && (code == 301 || code == 302 || code == 303));
+    if (!follow) return r;
+    if (hop >= maxRedirects) throw error('Too many redirects');
+    final location = r.headers['location']?.trim() ?? '';
+    if (location.isEmpty) throw error('Redirect without a target');
+    final Uri next;
+    try {
+      next = url.resolve(location);
+    } on FormatException {
+      throw error('Redirect to an invalid address');
+    }
+    if (next.scheme != 'http' && next.scheme != 'https') {
+      throw error('Redirect to an unsupported address');
+    }
+    url = next;
+  }
 }

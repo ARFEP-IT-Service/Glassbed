@@ -8,6 +8,7 @@ from pathlib import Path
 from .discovery import Device, discover
 from .escl import EsclScanner, ScanSettings
 from .ipp import IppPrinter
+from .lan import is_local_host
 from .printing import print_pages
 from .render import MEDIA, open_document, parse_page_range, save_pages
 
@@ -15,9 +16,15 @@ MEDIA_ALIASES = {"a4": "iso_a4_210x297mm", "letter": "na_letter_8.5x11in",
                  "legal": "na_legal_8.5x14in", "a5": "iso_a5_148x210mm"}
 
 
+def _local(host: str) -> str:
+    if not is_local_host(host):
+        sys.exit(f"Only devices on the local network can be used ({host}).")
+    return host
+
+
 def _device(args) -> Device:
     if args.host:
-        return Device.from_host(args.host)
+        return Device.from_host(_local(args.host))
     devices = discover(3.0)
     if not devices:
         sys.exit("No device found – pass --host <ip>")
@@ -67,7 +74,7 @@ def cmd_check(args) -> None:
     from .device_check import build_report, run_check
     if not args.host:
         sys.exit("Pass --host <ip> for the device to check")
-    print(build_report(run_check(args.host)))
+    print(build_report(run_check(_local(args.host))))
 
 
 def main(argv: list[str] | None = None) -> None:

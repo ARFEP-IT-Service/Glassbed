@@ -436,6 +436,7 @@ PrinterCaps parsePrinterCaps(Uint8List body) {
 }
 
 /// POSTs an IPP request to http://host:631/path (the ipp:// URI's port and path).
+/// Redirects: only 307/308 to a local address (see [sendLocal]).
 Future<Uint8List> _post(Uri ippUri, Uint8List body, http.Client? client, Duration timeout) async {
   checkLocal(ippUri);
   final httpUri = ippUri.replace(
@@ -444,8 +445,8 @@ Future<Uint8List> _post(Uri ippUri, Uint8List body, http.Client? client, Duratio
   );
   final c = client ?? http.Client();
   try {
-    final r = await c
-        .post(httpUri, headers: {'Content-Type': 'application/ipp'}, body: body)
+    final r = await sendLocal(c, 'POST', httpUri,
+            headers: {'Content-Type': 'application/ipp'}, body: body, error: IppError.new)
         .timeout(timeout);
     if (r.statusCode != 200) throw IppError('Printer answered HTTP ${r.statusCode}');
     return r.bodyBytes;

@@ -45,6 +45,7 @@ def test_placeholders_match():
 # texts added after 0.3.0 (devices that only print)
 # and the device check
 ADDED = {"This device cannot scan – printing only.", "Printer only", "Scanner + printer",
+         "Only devices on the local network can be used ({host}).",
          "Check device", "Device check", "Checking the device…", "Copy report", "Share report", "Copied.", "Send this report to the developer if the device does not work with Glassbed. It contains the device's address, model and supported protocols – nothing else."}
 
 

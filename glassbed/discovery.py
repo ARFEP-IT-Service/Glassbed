@@ -5,6 +5,8 @@ import socket
 import time
 from dataclasses import dataclass
 
+from .lan import is_local_host
+
 SERVICES = ["_uscan._tcp.local.", "_ipp._tcp.local.", "_ipps._tcp.local."]
 
 
@@ -31,7 +33,9 @@ class Device:
 
 def add_service(found: dict[str, dict], type_: str, name: str, host: str, port: int,
                 props: dict[str, str]) -> None:
-    """Record one resolved mDNS service in ``found`` (one entry per host)."""
+    """Record one resolved mDNS service in ``found`` (one entry per host); non-local hosts are ignored."""
+    if not is_local_host(host):
+        return
     entry = found.setdefault(host, {"name": name.split("._")[0]})
     if type_.startswith("_uscan"):
         rs = props.get("rs", "eSCL").strip("/")

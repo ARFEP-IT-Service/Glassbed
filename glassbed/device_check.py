@@ -18,8 +18,9 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 
 from . import __version__
-from .escl import parse_capabilities
+from .escl import open_local, parse_capabilities
 from .ipp import IppPrinter
+from .lan import NotLocalNetwork, check_host
 
 PORTS = (80, 443, 515, 631, 1865, 9100)
 MDNS_TYPES = ("_ipp._tcp", "_ipps._tcp", "_uscan._tcp", "_uscans._tcp", "_printer._tcp",
@@ -85,6 +86,8 @@ def parse_probe_match(xml: str) -> tuple[str, str] | None:
 
 
 def _error(e: BaseException) -> str:
+    if isinstance(e, NotLocalNetwork):
+        return f"not a local address ({e.host})"
     if isinstance(e, urllib.error.HTTPError):
         return f"HTTP {e.code}"
     reason = getattr(e, "reason", None) or e
@@ -161,7 +164,7 @@ def check_escl(host: str, rs: str | None = None, port: int = 80) -> tuple[bool, 
     for path in paths:
         url = f"http://{host}:{port}/{path}/ScannerCapabilities"
         try:
-            with urllib.request.urlopen(url, timeout=4) as resp:
+            with open_local(urllib.request.Request(url), 4) as resp:
                 caps = parse_capabilities(resp.read())
         except Exception as e:  # noqa: BLE001
             last = _error(e)
@@ -214,8 +217,9 @@ def probe_wsd(host: str, seconds: float = 3.0) -> tuple[str, str] | None:
 
 
 def run_check(host: str) -> CheckResult:
-    """All checks, in parallel where possible (about 6–10 seconds)."""
+    """All checks, in parallel where possible (about 6–10 seconds). Only for local hosts."""
     host = host.strip()
+    check_host(host)                    # NotLocalNetwork: nothing is sent at all
     r = CheckResult(host=host, time=datetime.now(timezone.utc).isoformat(timespec="seconds"))
     with concurrent.futures.ThreadPoolExecutor(max_workers=10) as pool:
         ports = {p: pool.submit(check_port, host, p) for p in PORTS}

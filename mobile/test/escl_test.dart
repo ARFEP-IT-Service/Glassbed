@@ -5,6 +5,7 @@ import 'dart:typed_data';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:glassbed/core/escl.dart';
 import 'package:glassbed/core/lan.dart';
+import 'package:glassbed/ui/dialogs.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:image/image.dart' as img;
@@ -297,6 +298,152 @@ void main() {
       final fake = FakeScanner(location: 'http://203.0.113.5/eSCL/ScanJobs/1');
       await expectLater(fake.escl().scan(ScanSettings()).toList(), throwsA(isA<NotLocalNetwork>()));
       expect(fake.requests.where((r) => r.url.host == '203.0.113.5'), isEmpty);
+    });
+  });
+
+  group('redirects', () {
+    /// Answers [routes] by "METHOD url"; anything else is 404. Records every request.
+    (MockClient, List<http.Request>) redirecting(Map<String, http.Response Function()> routes) {
+      final requests = <http.Request>[];
+      final client = MockClient((r) async {
+        requests.add(r);
+        return routes['${r.method} ${r.url}']?.call() ?? http.Response('', 404);
+      });
+      return (client, requests);
+    }
+
+    http.Response to(int status, String location) =>
+        http.Response('', status, headers: {'location': location});
+
+    void noAutoRedirects(List<http.Request> requests) {
+      expect(requests, isNotEmpty);
+      for (final r in requests) {
+        expect(r.followRedirects, isFalse, reason: '${r.method} ${r.url}');
+      }
+    }
+
+    for (final target in [
+      'http://8.8.8.8/eSCL/ScannerCapabilities',
+      'http://[2001:4860:4860::8888]/eSCL/ScannerCapabilities',
+    ]) {
+      test('capabilities: a redirect to $target is refused', () async {
+        final (client, requests) = redirecting({
+          'GET http://192.168.178.33/eSCL/ScannerCapabilities': () => to(302, target),
+          'GET $target': () => http.Response(capsXml, 200),
+        });
+        Object? error;
+        try {
+          await EsclClient(base, client: client).capabilities();
+        } catch (e) {
+          error = e;
+        }
+        final host = Uri.parse(target).host;
+        expect(error, isA<NotLocalNetwork>().having((e) => e.host, 'host', host));
+        expect(errorText(error!), 'Only devices on the local network can be used ($host).');
+        expect(requests.map((r) => r.url.host), ['192.168.178.33']);
+        noAutoRedirects(requests);
+      });
+    }
+
+    test('capabilities: a redirect to another local address is followed', () async {
+      for (final status in [301, 302, 303, 307, 308]) {
+        final (client, requests) = redirecting({
+          'GET http://192.168.178.33/eSCL/ScannerCapabilities': () =>
+              to(status, 'http://192.168.1.50:8080/eSCL/ScannerCapabilities'),
+          'GET http://192.168.1.50:8080/eSCL/ScannerCapabilities': () => http.Response(capsXml, 200),
+        });
+        final caps = await EsclClient(base, client: client).capabilities();
+        expect(caps.makeAndModel, 'HP Color Laser MFP 178 179', reason: 'HTTP $status');
+        expect(requests.map((r) => r.url.toString()), [
+          'http://192.168.178.33/eSCL/ScannerCapabilities',
+          'http://192.168.1.50:8080/eSCL/ScannerCapabilities',
+        ]);
+        noAutoRedirects(requests);
+      }
+    });
+
+    test('a relative Location is resolved against the current URL', () async {
+      final (client, requests) = redirecting({
+        'GET http://192.168.178.33/eSCL/ScannerCapabilities': () => to(301, '/scan/ScannerCapabilities'),
+        'GET http://192.168.178.33/scan/ScannerCapabilities': () => http.Response(capsXml, 200),
+      });
+      expect((await EsclClient(base, client: client).capabilities()).version, '2.63');
+      expect(requests, hasLength(2));
+      noAutoRedirects(requests);
+    });
+
+    test('a redirect loop stops after 5 redirects', () async {
+      final (client, requests) = redirecting({
+        'GET http://192.168.178.33/eSCL/ScannerCapabilities': () => to(302, '/a'),
+        'GET http://192.168.178.33/a': () => to(302, '/eSCL/ScannerCapabilities'),
+      });
+      await expectLater(EsclClient(base, client: client).capabilities(),
+          throwsA(isA<ScannerError>().having((e) => e.message, 'message', 'Too many redirects')));
+      expect(requests, hasLength(maxRedirects + 1));
+      noAutoRedirects(requests);
+    });
+
+    test('a redirect without Location is an error', () async {
+      final (client, requests) = redirecting({
+        'GET http://192.168.178.33/eSCL/ScannerStatus': () => http.Response('', 302),
+      });
+      await expectLater(
+          EsclClient(base, client: client).state(),
+          throwsA(isA<ScannerError>()
+              .having((e) => e.message, 'message', 'Redirect without a target')));
+      noAutoRedirects(requests);
+    });
+
+    test('ScanJobs: 302 is not followed', () async {
+      final (client, requests) = redirecting({
+        'GET http://192.168.178.33/eSCL/ScannerCapabilities': () => http.Response(capsXml, 200),
+        'POST http://192.168.178.33/eSCL/ScanJobs': () =>
+            to(302, 'http://192.168.178.33/other/ScanJobs'),
+      });
+      final escl = EsclClient(base, client: client, busyWait: Duration.zero);
+      await expectLater(escl.scan(ScanSettings()).toList(),
+          throwsA(isA<ScannerError>().having((e) => e.message, 'message', contains('HTTP 302'))));
+      expect(requests.map((r) => '${r.method} ${r.url.path}'),
+          ['GET /eSCL/ScannerCapabilities', 'POST /eSCL/ScanJobs']);
+      noAutoRedirects(requests);
+    });
+
+    test('ScanJobs: 307 to a local address is followed with the same body', () async {
+      var pages = 0;
+      final (client, requests) = redirecting({
+        'GET http://192.168.178.33/eSCL/ScannerCapabilities': () => http.Response(capsXml, 200),
+        'POST http://192.168.178.33/eSCL/ScanJobs': () =>
+            to(307, 'http://192.168.178.40/eSCL/ScanJobs'),
+        'POST http://192.168.178.40/eSCL/ScanJobs': () => http.Response('', 201,
+            headers: {'location': 'http://192.168.178.40/eSCL/ScanJobs/9'}),
+        'GET http://192.168.178.40/eSCL/ScanJobs/9/NextDocument': () => pages++ == 0
+            ? http.Response.bytes(jpegPage(), 200, headers: {'content-type': 'image/jpeg'})
+            : http.Response('', 404),
+      });
+      expect(await EsclClient(base, client: client).scan(ScanSettings()).toList(), hasLength(1));
+      final posts = requests.where((r) => r.method == 'POST').toList();
+      expect(posts.map((r) => r.url.host), ['192.168.178.33', '192.168.178.40']);
+      expect(posts[1].body, posts[0].body);
+      expect(posts[1].body, contains('<pwg:InputSource>Platen</pwg:InputSource>'));
+      expect(posts[1].headers['Content-Type'], startsWith('text/xml'));
+      noAutoRedirects(requests);
+    });
+
+    test('ScanJobs: 307 to a public address is refused', () async {
+      final (client, requests) = redirecting({
+        'GET http://192.168.178.33/eSCL/ScannerCapabilities': () => http.Response(capsXml, 200),
+        'POST http://192.168.178.33/eSCL/ScanJobs': () => to(307, 'http://8.8.8.8/eSCL/ScanJobs'),
+      });
+      await expectLater(EsclClient(base, client: client).scan(ScanSettings()).toList(),
+          throwsA(isA<NotLocalNetwork>()));
+      expect(requests.where((r) => r.url.host == '8.8.8.8'), isEmpty);
+      noAutoRedirects(requests);
+    });
+
+    test('every request of a normal scan has followRedirects off', () async {
+      final fake = FakeScanner(pages: 1);
+      await fake.escl().scan(ScanSettings(source: ScanSource.feeder)).toList();
+      noAutoRedirects(fake.requests);
     });
   });
 }

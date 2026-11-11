@@ -226,6 +226,11 @@
       "de": "{name}: noch {level} %",
       "tr": "{name}: %{level} kaldı"
     },
+    "Only devices on the local network can be used ({host}).": {
+      "en": "Only devices on the local network can be used ({host}).",
+      "de": "Es können nur Geräte im lokalen Netzwerk verwendet werden ({host}).",
+      "tr": "Yalnızca yerel ağdaki cihazlar kullanılabilir ({host})."
+    },
     "This device cannot scan – printing only.": {
       "en": "This device cannot scan – printing only.",
       "de": "Dieses Gerät kann nicht scannen – nur Drucken.",

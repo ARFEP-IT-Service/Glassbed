@@ -17,6 +17,8 @@ from urllib.parse import urljoin
 
 from PIL import Image
 
+from .lan import check_url
+
 NS = {
     "scan": "http://schemas.hp.com/imaging/escl/2011/05/03",
     "pwg": "http://www.pwg.org/schemas/2010/12/sm",
@@ -155,6 +157,25 @@ def build_scan_settings(settings: ScanSettings, caps: ScannerCaps) -> bytes:
 """.encode("utf-8")
 
 
+class LocalRedirects(urllib.request.HTTPRedirectHandler):
+    """Follow an HTTP redirect only to the local network – every hop is checked (at most 5)."""
+
+    max_redirections = 5
+
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        check_url(newurl)
+        return super().redirect_request(req, fp, code, msg, headers, newurl)
+
+
+_OPENER = urllib.request.build_opener(LocalRedirects())
+
+
+def open_local(req: urllib.request.Request, timeout: float):
+    """urlopen for a device on the local network; a non-local URL raises NotLocalNetwork."""
+    check_url(req.full_url)
+    return _OPENER.open(req, timeout=timeout)
+
+
 class EsclScanner:
     def __init__(self, base_url: str, timeout: float = 15.0):
         # base_url like "http://192.168.1.20/eSCL/"
@@ -167,7 +188,7 @@ class EsclScanner:
                  timeout: float | None = None):
         headers = {"Content-Type": "text/xml"} if data is not None else {}
         req = urllib.request.Request(url, data=data, method=method, headers=headers)
-        return urllib.request.urlopen(req, timeout=timeout or self.timeout)
+        return open_local(req, timeout or self.timeout)
 
     # -- API ----------------------------------------------------------------
     def capabilities(self, refresh: bool = False) -> ScannerCaps:

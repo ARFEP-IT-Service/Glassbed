@@ -5,7 +5,9 @@ import http.client
 import struct
 from dataclasses import dataclass, field
 from itertools import count
-from urllib.parse import urlsplit
+from urllib.parse import urljoin, urlsplit
+
+from .lan import check_host, check_url
 
 # Operation ids
 PRINT_JOB = 0x0002
@@ -137,19 +139,31 @@ class IppPrinter:
         self.timeout = timeout
 
     def _post(self, body: bytes, timeout: float | None = None) -> tuple[int, dict]:
-        conn = http.client.HTTPConnection(self.host, self.port, timeout=timeout or self.timeout)
-        try:
-            conn.request("POST", self.path, body=body, headers={
-                "Content-Type": "application/ipp",
-                "Content-Length": str(len(body)),
-            })
-            resp = conn.getresponse()
-            payload = resp.read()
+        host, port, path = self.host, self.port, self.path
+        check_host(host)
+        for _hop in range(6):
+            conn = http.client.HTTPConnection(host, port, timeout=timeout or self.timeout)
+            try:
+                conn.request("POST", path, body=body, headers={
+                    "Content-Type": "application/ipp",
+                    "Content-Length": str(len(body)),
+                })
+                resp = conn.getresponse()
+                payload = resp.read()
+                location = resp.getheader("Location")
+            finally:
+                conn.close()
+            if resp.status in (307, 308) and location:
+                # a redirect keeps the POST; followed only to the local network
+                target = urljoin(f"http://{host}:{port}{path}", location)
+                check_url(target)
+                parts = urlsplit(target)
+                host, port, path = parts.hostname or "", parts.port or 80, parts.path or "/"
+                continue
             if resp.status != 200:
                 raise IppError(f"Printer answered HTTP {resp.status}")
-        finally:
-            conn.close()
-        return decode_response(payload)
+            return decode_response(payload)
+        raise IppError("Too many redirects")
 
     def get_info(self) -> PrinterInfo:
         status, a = self._post(encode_request(GET_PRINTER_ATTRIBUTES, self.uri))

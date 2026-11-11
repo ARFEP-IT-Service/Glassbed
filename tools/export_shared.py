@@ -37,6 +37,7 @@ ANDROID_KEYS = [
     "Search", "Searching for devices…", "No devices found. Enter the IP address manually.",
     "Found {n} device(s).", "IP address or host name", "Ready", "Busy", "Stopped", "Offline",
     "Connecting…", "No printer selected.", "Toner low", "{name}: {level} % left",
+    "Only devices on the local network can be used ({host}).",
     "This device cannot scan – printing only.", "Printer only", "Scanner + printer",
     # device check
     "Check device",

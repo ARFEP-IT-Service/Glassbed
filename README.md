@@ -208,6 +208,10 @@ Full privacy policy for Glassbed: [arfep.de/datenschutz-glassbed](https://arfep.
 - Glassbed only talks to **your printer** in your local network – and, only if you agree, to
   GitHub for the update check. No cloud, no account, no telemetry. The only web pages it opens
   are the ones you click (printer web page, arfep.de).
+- **Only local addresses.** Before every connection to a device – status, scan, print,
+  *Check device*, also an address you type – Glassbed checks that it is local: `10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16`, `169.254.0.0/16`, IPv6 `fc00::/7` and `fe80::/10`
+  (and `.local` names). Anything else is refused with a message and nothing is sent. HTTP
+  redirects from a device are followed only to such addresses, every step is checked.
 - **Update check** – off by default; Glassbed asks once on the first start and you can change it
   in *Settings*. When on, it asks GitHub (`api.github.com`) at most once every 24 hours at
   start-up, or when you click *Check now*, for the latest published release. GitHub sees your IP
